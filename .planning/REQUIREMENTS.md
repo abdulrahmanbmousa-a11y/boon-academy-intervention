@@ -169,4 +169,4 @@
 
 ---
 *Requirements defined: 2026-05-21*
-*Last updated: 2026-05-21 after initial definition*
+*Last updated: 2026-05-21 after roadmap creation — traceability confirmed against ROADMAP.md*
