@@ -2,50 +2,55 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-05-22T05:55:56.151Z"
+status: in_progress
+last_updated: "2026-05-22T09:15:00.000Z"
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State: boon-academy-intervention
 
 ## Current Status
 
-- **Phase:** 0 (Not started)
-- **Active phase:** None
+- **Phase:** 1 (In Progress)
+- **Active phase:** Phase 1 — Foundation + Data Ingestion
 - **Completed phases:** None
-- **Last updated:** 2026-05-21
+- **Last updated:** 2026-05-22
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Ready to begin Phase 1
+**Current focus:** Phase 1 execution — Wave 2 (01-02 data gen + 01-03 ingestion) — Plan 01-01 scaffold complete
 
 ## Phase Progress
 
-| Phase | Name | Status |
-|-------|------|--------|
-| 1 | Foundation + Data Ingestion | Pending |
-| 2 | Risk Scoring Engine | Pending |
-| 3 | Claude API Integration | Pending |
-| 4 | Excel + CSV Output Generation | Pending |
-| 5 | HTML Dashboard + Word Report | Pending |
-| 6 | Documentation Suite | Pending |
-| 7 | Test Suite | Pending |
-| 8 | End-to-End Integration + Polish | Pending |
+| Phase | Name | Plans Done | Status |
+|-------|------|------------|--------|
+| 1 | Foundation + Data Ingestion | 1 / 3 | In Progress |
+| 2 | Risk Scoring Engine | 0 / ? | Pending |
+| 3 | Claude API Integration | 0 / ? | Pending |
+| 4 | Excel + CSV Output Generation | 0 / ? | Pending |
+| 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
+| 6 | Documentation Suite | 0 / ? | Pending |
+| 7 | Test Suite | 0 / ? | Pending |
+| 8 | End-to-End Integration + Polish | 0 / ? | Pending |
 
 ## Performance Metrics
 
+| Phase | Plan | Duration | Tasks | Files |
+|-------|------|----------|-------|-------|
+| 01 | 01-01 | ~20 min | 3/3 | 17 |
+
 - **Phases completed:** 0 / 8
-- **Requirements delivered:** 0 / 52
-- **Test coverage:** Unknown (no tests yet)
+- **Plans completed:** 1 / 3 (Phase 1)
+- **Requirements delivered:** 9 / 52 (INFRA-01 through INFRA-09)
+- **Test coverage:** 8 tests passing (test_config, test_no_hardcoded_paths, test_package_structure)
 
 ## Accumulated Context
 
@@ -58,6 +63,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - respx (not responses) for mocking — Anthropic SDK uses httpx, not requests
 - pandas 2.2.3 (not 3.x) — avoid mandatory Copy-on-Write breaking chained assignment patterns
 - python-docx 1.1.2 (not 1.2.0) — 1.2.0 has open OxmlElement + table-border issues
+- D-07: All 17 column constants + risk thresholds + weights in src/config.py from day 1
+- D-08: Only ANTHROPIC_API_KEY uses os.environ (fail-loud); paths use os.getenv with safe defaults
+- D-05/D-06: run_log dict built in-memory throughout run, written once at end via output_generator
+- Python 3.12 required for test execution — pandas==2.2.3 has no wheel for Python 3.14 (system default)
 
 ### Known Pitfalls (from research)
 
@@ -78,7 +87,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ### Todos
 
-- (none yet)
+- Use `py -3.12` when running pytest/main.py — Python 3.14 (system default) has no pandas==2.2.3 wheel
 
 ### Blockers
 
@@ -97,4 +106,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-21 after roadmap creation*
+*Last updated: 2026-05-22 after Plan 01-01 execution (17 files, 8 tests passing)*

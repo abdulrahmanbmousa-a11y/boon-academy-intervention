@@ -3,7 +3,7 @@
 **Project:** boon-academy-intervention
 **Granularity:** Fine (8 phases)
 **Coverage:** 52/52 requirements mapped
-**Last updated:** 2026-05-21
+**Last updated:** 2026-05-22
 
 ---
 
@@ -33,7 +33,7 @@
   4. `make demo`, `make test`, and `make clean` all execute without error from a fresh clone
   5. No hardcoded file paths or API key strings appear anywhere in the source files
 **Plans:** 3 plans
-- [ ] 01-01-PLAN.md - Project scaffold + src/config.py (env vars, constants) + Phase 2/3/4 stubs + main.py orchestrator (INFRA-01..09)
+- [x] 01-01-PLAN.md - Project scaffold + src/config.py (env vars, constants) + Phase 2/3/4 stubs + main.py orchestrator (INFRA-01..09) — COMPLETE 2026-05-22
 - [ ] 01-02-PLAN.md - src/generate_data.py synthetic CSV generator + tests/fixtures/ inventory + conftest (DATA-01)
 - [ ] 01-03-PLAN.md - src/ingestion.py CSV-to-DataFrame pipeline + test_ingestion.py + end-to-end smoke (DATA-02..08)
 
@@ -125,14 +125,14 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Data Ingestion | 0/0 | Not started | - |
-| 2. Risk Scoring Engine | 0/0 | Not started | - |
-| 3. Claude API Integration | 0/0 | Not started | - |
-| 4. Excel + CSV Output Generation | 0/0 | Not started | - |
-| 5. HTML Dashboard + Word Report | 0/0 | Not started | - |
-| 6. Documentation Suite | 0/0 | Not started | - |
-| 7. Test Suite | 0/0 | Not started | - |
-| 8. End-to-End Integration + Polish | 0/0 | Not started | - |
+| 1. Foundation + Data Ingestion | 1/3 | In Progress | - |
+| 2. Risk Scoring Engine | 0/? | Not started | - |
+| 3. Claude API Integration | 0/? | Not started | - |
+| 4. Excel + CSV Output Generation | 0/? | Not started | - |
+| 5. HTML Dashboard + Word Report | 0/? | Not started | - |
+| 6. Documentation Suite | 0/? | Not started | - |
+| 7. Test Suite | 0/? | Not started | - |
+| 8. End-to-End Integration + Polish | 0/? | Not started | - |
 
 ---
 
@@ -156,4 +156,4 @@
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-21 after initial creation*
+*Last updated: 2026-05-22 after Plan 01-01 completion (scaffold + config + stubs + tests)*

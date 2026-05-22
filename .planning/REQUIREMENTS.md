@@ -69,15 +69,15 @@
 
 ### INFRA — Project Infrastructure
 
-- [ ] **INFRA-01**: `main.py` reads like plain English — orchestrates ingestion → risk scoring → LLM → output generation, uses Python `logging` module throughout (no print statements)
-- [ ] **INFRA-02**: `src/config.py` — loads all env vars, fails loudly with clear error if required vars missing, defines all column name constants
-- [ ] **INFRA-03**: `requirements.txt` — all dependencies pinned to exact versions (pandas==2.2.3, openpyxl==3.1.5, python-docx==1.1.2, anthropic==0.103.1, etc.)
-- [ ] **INFRA-04**: `.env.example` — documents all env vars with descriptions and defaults: ANTHROPIC_API_KEY, DATA_DIR, OUTPUT_DIR, DOCS_DIR, LOG_LEVEL, MAX_STUDENTS_PER_LLM_CALL, RISK_THRESHOLD_CRITICAL, RISK_THRESHOLD_HIGH
-- [ ] **INFRA-05**: `Makefile` — `make demo` target runs full pipeline, `make test` runs pytest, `make clean` removes outputs/
-- [ ] **INFRA-06**: `README.md` — under 30 lines, explains how to run from fresh clone (install deps, set env vars, run main.py)
-- [ ] **INFRA-07**: All file paths read from env vars — zero hardcoded paths anywhere in source files
-- [ ] **INFRA-08**: Type hints on all functions, docstrings on all public classes and methods
-- [ ] **INFRA-09**: `src/__init__.py` exists to make src a proper Python package
+- [x] **INFRA-01**: `main.py` reads like plain English — orchestrates ingestion → risk scoring → LLM → output generation, uses Python `logging` module throughout (no print statements)
+- [x] **INFRA-02**: `src/config.py` — loads all env vars, fails loudly with clear error if required vars missing, defines all column name constants
+- [x] **INFRA-03**: `requirements.txt` — all dependencies pinned to exact versions (pandas==2.2.3, openpyxl==3.1.5, python-docx==1.1.2, anthropic==0.103.1, etc.)
+- [x] **INFRA-04**: `.env.example` — documents all env vars with descriptions and defaults: ANTHROPIC_API_KEY, DATA_DIR, OUTPUT_DIR, DOCS_DIR, LOG_LEVEL, MAX_STUDENTS_PER_LLM_CALL, RISK_THRESHOLD_CRITICAL, RISK_THRESHOLD_HIGH
+- [x] **INFRA-05**: `Makefile` — `make demo` target runs full pipeline, `make test` runs pytest, `make clean` removes outputs/
+- [x] **INFRA-06**: `README.md` — under 30 lines, explains how to run from fresh clone (install deps, set env vars, run main.py)
+- [x] **INFRA-07**: All file paths read from env vars — zero hardcoded paths anywhere in source files
+- [x] **INFRA-08**: Type hints on all functions, docstrings on all public classes and methods
+- [x] **INFRA-09**: `src/__init__.py` exists to make src a proper Python package
 
 ## v2 Requirements
 
