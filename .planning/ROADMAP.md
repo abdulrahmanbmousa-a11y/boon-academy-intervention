@@ -34,7 +34,7 @@
   5. No hardcoded file paths or API key strings appear anywhere in the source files
 **Plans:** 3 plans
 - [x] 01-01-PLAN.md - Project scaffold + src/config.py (env vars, constants) + Phase 2/3/4 stubs + main.py orchestrator (INFRA-01..09) — COMPLETE 2026-05-22
-- [ ] 01-02-PLAN.md - src/generate_data.py synthetic CSV generator + tests/fixtures/ inventory + conftest (DATA-01)
+- [x] 01-02-PLAN.md - src/generate_data.py synthetic CSV generator + tests/fixtures/ inventory + conftest (DATA-01) — COMPLETE 2026-05-22
 - [ ] 01-03-PLAN.md - src/ingestion.py CSV-to-DataFrame pipeline + test_ingestion.py + end-to-end smoke (DATA-02..08)
 
 ### Phase 2: Risk Scoring Engine

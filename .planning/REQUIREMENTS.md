@@ -7,7 +7,7 @@
 
 ### DATA — Data Ingestion & Synthetic Generation
 
-- [ ] **DATA-01**: System generates realistic synthetic CSV data for all 3 input files (student_daily_metrics.csv, facilitator_notes.csv, student_metadata.csv) covering 14 days, multiple campuses, realistic edge cases
+- [x] **DATA-01**: System generates realistic synthetic CSV data for all 3 input files (student_daily_metrics.csv, facilitator_notes.csv, student_metadata.csv) covering 14 days, multiple campuses, realistic edge cases
 - [ ] **DATA-02**: System reads CSV files using pandas with explicit `dtype=` mapping — no silent type coercion (phone numbers stay strings, IDs stay strings)
 - [ ] **DATA-03**: System fills missing `session_attended_min` and `practice_questions` with 0, logs warnings for each fill
 - [ ] **DATA-04**: System detects and deduplicates duplicate `student_id` rows, logging each removal
@@ -108,7 +108,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | Phase 1 | Pending |
+| DATA-01 | Phase 1 | Done — Plan 01-02 (2026-05-22) |
 | DATA-02 | Phase 1 | Pending |
 | DATA-03 | Phase 1 | Pending |
 | DATA-04 | Phase 1 | Pending |

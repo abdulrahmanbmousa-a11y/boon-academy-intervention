@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-22T09:15:00.000Z"
+last_updated: "2026-05-22T06:27:03.689Z"
 progress:
   total_phases: 8
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 3
+  percent: 0
 ---
 
 # Project State: boon-academy-intervention
@@ -26,13 +26,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 1 execution — Wave 2 (01-02 data gen + 01-03 ingestion) — Plan 01-01 scaffold complete
+**Current focus:** Phase 1 execution — Wave 2 (01-03 ingestion) — Plans 01-01 scaffold + 01-02 data generator complete
 
 ## Phase Progress
 
 | Phase | Name | Plans Done | Status |
 |-------|------|------------|--------|
-| 1 | Foundation + Data Ingestion | 1 / 3 | In Progress |
+| 1 | Foundation + Data Ingestion | 2 / 3 | In Progress |
 | 2 | Risk Scoring Engine | 0 / ? | Pending |
 | 3 | Claude API Integration | 0 / ? | Pending |
 | 4 | Excel + CSV Output Generation | 0 / ? | Pending |
@@ -46,11 +46,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 01 | 01-01 | ~20 min | 3/3 | 17 |
+| 01 | 01-02 | ~15 min | 2/2 | 11 |
 
 - **Phases completed:** 0 / 8
-- **Plans completed:** 1 / 3 (Phase 1)
-- **Requirements delivered:** 9 / 52 (INFRA-01 through INFRA-09)
-- **Test coverage:** 8 tests passing (test_config, test_no_hardcoded_paths, test_package_structure)
+- **Plans completed:** 2 / 3 (Phase 1)
+- **Requirements delivered:** 10 / 52 (INFRA-01 through INFRA-09, DATA-01)
+- **Test coverage:** 15 tests passing (test_config, test_no_hardcoded_paths, test_package_structure, test_generate_data x7)
 
 ## Accumulated Context
 
@@ -67,6 +68,9 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - D-08: Only ANTHROPIC_API_KEY uses os.environ (fail-loud); paths use os.getenv with safe defaults
 - D-05/D-06: run_log dict built in-memory throughout run, written once at end via output_generator
 - Python 3.12 required for test execution — pandas==2.2.3 has no wheel for Python 3.14 (system default)
+- D-02: np.random.default_rng(42) for reproducible synthetic data; sha256 of student_metadata.csv verified identical across two runs
+- D-04: _assign_risk_cohort() uses index buckets (15/25/40/20%) — deterministic cohort assignment, not RNG-dependent
+- inject_edge_cases() appends 9 dupe rows to metadata, blanks ~210 numeric cells in metrics (5% of 4200), sets ~84 type-mismatch strings
 
 ### Known Pitfalls (from research)
 
@@ -106,4 +110,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-22 after Plan 01-01 execution (17 files, 8 tests passing)*
+*Last updated: 2026-05-22 after Plan 01-02 execution (11 files, 7 new tests passing, DATA-01 satisfied)*
