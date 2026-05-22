@@ -1,0 +1,6 @@
+student_id,metric_date,session_attended_min,practice_questions
+S0101,2026-05-01,45,10
+S0101,not-a-date,50,12
+S0102,2026/13/45,30,5
+S0102,,28,4
+S0201,2026-05-03,40,8

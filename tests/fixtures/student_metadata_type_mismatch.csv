@@ -1,0 +1,6 @@
+student_id,student_name,campus_id,parent_phone,facilitator_email
+S0101,Student S0101,C01,0501234567,facilitator.c01@boon.academy
+S0102,Student S0102,C01,abc,facilitator.c01@boon.academy
+S0201,Student S0201,C02,0501456789,facilitator.c02@boon.academy
+S0202,Student S0202,C02,0501567890,facilitator.c02@boon.academy
+S0301,Student S0301,C03,0501678901,facilitator.c03@boon.academy
