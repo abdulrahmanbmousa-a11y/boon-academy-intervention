@@ -32,7 +32,10 @@
   3. `src/config.py` fails loudly with a clear error message when ANTHROPIC_API_KEY is absent from the environment
   4. `make demo`, `make test`, and `make clean` all execute without error from a fresh clone
   5. No hardcoded file paths or API key strings appear anywhere in the source files
-**Plans:** TBD
+**Plans:** 3 plans
+- [ ] 01-01-PLAN.md - Project scaffold + src/config.py (env vars, constants) + Phase 2/3/4 stubs + main.py orchestrator (INFRA-01..09)
+- [ ] 01-02-PLAN.md - src/generate_data.py synthetic CSV generator + tests/fixtures/ inventory + conftest (DATA-01)
+- [ ] 01-03-PLAN.md - src/ingestion.py CSV-to-DataFrame pipeline + test_ingestion.py + end-to-end smoke (DATA-02..08)
 
 ### Phase 2: Risk Scoring Engine
 **Goal:** Every student in the merged DataFrame receives a deterministic risk_score (0-100), a risk_level (CRITICAL/HIGH/MEDIUM/LOW), and all four component scores, computed by a pure function with no I/O.
