@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-22T06:27:03.689Z"
+last_updated: "2026-05-22T09:37:00.000Z"
 progress:
   total_phases: 8
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
   completed_plans: 3
-  percent: 0
+  percent: 13
 ---
 
 # Project State: boon-academy-intervention
 
 ## Current Status
 
-- **Phase:** 1 (In Progress)
-- **Active phase:** Phase 1 — Foundation + Data Ingestion
-- **Completed phases:** None
+- **Phase:** 1 (Complete)
+- **Active phase:** Phase 2 — Risk Scoring Engine (next)
+- **Completed phases:** Phase 1 — Foundation + Data Ingestion
 - **Last updated:** 2026-05-22
 
 ## Project Reference
@@ -26,13 +26,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 1 execution — Wave 2 (01-03 ingestion) — Plans 01-01 scaffold + 01-02 data generator complete
+**Current focus:** Phase 1 complete — all 3 plans executed. Phase 2 risk scoring engine is next.
 
 ## Phase Progress
 
 | Phase | Name | Plans Done | Status |
 |-------|------|------------|--------|
-| 1 | Foundation + Data Ingestion | 2 / 3 | In Progress |
+| 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
 | 2 | Risk Scoring Engine | 0 / ? | Pending |
 | 3 | Claude API Integration | 0 / ? | Pending |
 | 4 | Excel + CSV Output Generation | 0 / ? | Pending |
@@ -47,11 +47,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 |-------|------|----------|-------|-------|
 | 01 | 01-01 | ~20 min | 3/3 | 17 |
 | 01 | 01-02 | ~15 min | 2/2 | 11 |
+| 01 | 01-03 | ~25 min | 3/3 | 2 |
 
-- **Phases completed:** 0 / 8
-- **Plans completed:** 2 / 3 (Phase 1)
-- **Requirements delivered:** 10 / 52 (INFRA-01 through INFRA-09, DATA-01)
-- **Test coverage:** 15 tests passing (test_config, test_no_hardcoded_paths, test_package_structure, test_generate_data x7)
+- **Phases completed:** 1 / 8
+- **Plans completed:** 3 / 3 (Phase 1 complete)
+- **Requirements delivered:** 18 / 52 (INFRA-01 through INFRA-09, DATA-01 through DATA-08, INFRA-08)
+- **Test coverage:** 25 tests passing (test_config x6, test_no_hardcoded_paths x1, test_package_structure x1, test_generate_data x7, test_ingestion x10)
 
 ## Accumulated Context
 
@@ -71,6 +72,8 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - D-02: np.random.default_rng(42) for reproducible synthetic data; sha256 of student_metadata.csv verified identical across two runs
 - D-04: _assign_risk_cohort() uses index buckets (15/25/40/20%) — deterministic cohort assignment, not RNG-dependent
 - inject_edge_cases() appends 9 dupe rows to metadata, blanks ~210 numeric cells in metrics (5% of 4200), sets ~84 type-mismatch strings
+- Numeric columns loaded as "string" dtype in DTYPE_METRICS (not "Float64") — pd.read_csv crashes on type mismatch strings with Float64; string load + pd.to_numeric(errors='coerce') in _fill_numeric_with_zero is the safe pattern
+- Post-merge fill (0) added for session_total_min/practice_total_q/attendance_days — students with no metrics get 0 activity, consistent with D-09
 
 ### Known Pitfalls (from research)
 
@@ -110,4 +113,5 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-22 after Plan 01-02 execution (11 files, 7 new tests passing, DATA-01 satisfied)*
+*Last updated: 2026-05-22 after Plan 01-03 execution (2 files, 10 new tests passing, DATA-02 through DATA-08 + INFRA-08 satisfied)*
+*Phase 1 complete. Next: /gsd:discuss-phase 2 → /gsd:plan-phase 2 → /gsd:execute-phase 2*

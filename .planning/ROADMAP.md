@@ -9,7 +9,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Foundation + Data Ingestion** - Project scaffold, config, synthetic data, and a clean unified DataFrame
+- [x] **Phase 1: Foundation + Data Ingestion** - Project scaffold, config, synthetic data, and a clean unified DataFrame — COMPLETE 2026-05-22
 - [ ] **Phase 2: Risk Scoring Engine** - Deterministic weighted risk formula producing risk_score and risk_level for every student
 - [ ] **Phase 3: Claude API Integration** - Campus-batched LLM calls with three-layer error handling and PII-safe logging
 - [ ] **Phase 4: Excel + CSV Output Generation** - intervention_priority_list.xlsx, per-campus dashboards, whatsapp_messages.csv, run_log.json
@@ -35,7 +35,7 @@
 **Plans:** 3 plans
 - [x] 01-01-PLAN.md - Project scaffold + src/config.py (env vars, constants) + Phase 2/3/4 stubs + main.py orchestrator (INFRA-01..09) — COMPLETE 2026-05-22
 - [x] 01-02-PLAN.md - src/generate_data.py synthetic CSV generator + tests/fixtures/ inventory + conftest (DATA-01) — COMPLETE 2026-05-22
-- [ ] 01-03-PLAN.md - src/ingestion.py CSV-to-DataFrame pipeline + test_ingestion.py + end-to-end smoke (DATA-02..08)
+- [x] 01-03-PLAN.md - src/ingestion.py CSV-to-DataFrame pipeline + test_ingestion.py + end-to-end smoke (DATA-02..08) — COMPLETE 2026-05-22
 
 ### Phase 2: Risk Scoring Engine
 **Goal:** Every student in the merged DataFrame receives a deterministic risk_score (0-100), a risk_level (CRITICAL/HIGH/MEDIUM/LOW), and all four component scores, computed by a pure function with no I/O.
@@ -125,7 +125,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation + Data Ingestion | 1/3 | In Progress | - |
+| 1. Foundation + Data Ingestion | 3/3 | Complete | 2026-05-22 |
 | 2. Risk Scoring Engine | 0/? | Not started | - |
 | 3. Claude API Integration | 0/? | Not started | - |
 | 4. Excel + CSV Output Generation | 0/? | Not started | - |
@@ -156,4 +156,4 @@
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-22 after Plan 01-01 completion (scaffold + config + stubs + tests)*
+*Last updated: 2026-05-22 after Plan 01-03 completion (Phase 1 all 3 plans done — ingestion module, 25 tests green)*

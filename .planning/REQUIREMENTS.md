@@ -8,13 +8,13 @@
 ### DATA — Data Ingestion & Synthetic Generation
 
 - [x] **DATA-01**: System generates realistic synthetic CSV data for all 3 input files (student_daily_metrics.csv, facilitator_notes.csv, student_metadata.csv) covering 14 days, multiple campuses, realistic edge cases
-- [ ] **DATA-02**: System reads CSV files using pandas with explicit `dtype=` mapping — no silent type coercion (phone numbers stay strings, IDs stay strings)
-- [ ] **DATA-03**: System fills missing `session_attended_min` and `practice_questions` with 0, logs warnings for each fill
-- [ ] **DATA-04**: System detects and deduplicates duplicate `student_id` rows, logging each removal
-- [ ] **DATA-05**: System handles type mismatches (e.g., string where int expected) without crashing — logs warning, applies safe default
-- [ ] **DATA-06**: System merges all 3 CSVs into a single unified student DataFrame with one row per student
-- [ ] **DATA-07**: System logs all data quality issues as structured entries in `outputs/run_log.json`
-- [ ] **DATA-08**: No single bad record crashes the pipeline — errors are caught per-row, logged, pipeline continues
+- [x] **DATA-02**: System reads CSV files using pandas with explicit `dtype=` mapping — no silent type coercion (phone numbers stay strings, IDs stay strings)
+- [x] **DATA-03**: System fills missing `session_attended_min` and `practice_questions` with 0, logs warnings for each fill
+- [x] **DATA-04**: System detects and deduplicates duplicate `student_id` rows, logging each removal
+- [x] **DATA-05**: System handles type mismatches (e.g., string where int expected) without crashing — logs warning, applies safe default
+- [x] **DATA-06**: System merges all 3 CSVs into a single unified student DataFrame with one row per student
+- [x] **DATA-07**: System logs all data quality issues as structured entries in `outputs/run_log.json`
+- [x] **DATA-08**: No single bad record crashes the pipeline — errors are caught per-row, logged, pipeline continues
 
 ### RISK — Risk Scoring Engine
 
