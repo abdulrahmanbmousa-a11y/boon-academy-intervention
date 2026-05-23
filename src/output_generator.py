@@ -13,6 +13,8 @@ Plans 04-02 and 04-03 add the remaining helpers and complete write_outputs().
 """
 import json
 import logging
+import math
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -104,11 +106,15 @@ def _write_html_dashboard(df: pd.DataFrame, output_dir: Path) -> Path:
 
     df_copy = df.copy()
 
-    # Select display columns; replace NaN/NA with None so json.dumps serialises cleanly
+    # Select display columns; replace NaN/NA with None so json.dumps serialises cleanly.
+    # Cast to object dtype first so nullable dtypes (pd.StringDtype, pd.Int64Dtype) have
+    # their pd.NA values converted to np.nan, which .where() can then replace with None
+    # without the nullable array coercing None back to pd.NA (WR-01).
     display_cols = list(cfg.DISPLAY_COLS_DASHBOARD)
+    display_df = df_copy[display_cols].astype(object)
     records = (
-        df_copy[display_cols]
-        .where(df_copy[display_cols].notna(), other=None)
+        display_df
+        .where(display_df.notna(), other=None)
         .to_dict(orient="records")
     )
 
@@ -139,6 +145,20 @@ def _write_html_dashboard(df: pd.DataFrame, output_dir: Path) -> Path:
     path.write_text(html, encoding="utf-8")
     logger.info("Wrote HTML dashboard: %s (%d students)", path, len(df_copy))
     return path
+
+
+def _str_or_na(val: object) -> str:
+    """Return str(val) or 'N/A' for None / pd.NA / float NaN (WR-02).
+
+    student.get() always returns the actual cell value when the column exists,
+    so the default-parameter fallback never fires. float('nan') is truthy, so
+    `or "N/A"` also fails to rescue it. This helper covers all three NA forms.
+    """
+    if val is None or val is pd.NA:
+        return "N/A"
+    if isinstance(val, float) and math.isnan(val):
+        return "N/A"
+    return str(val)
 
 
 def _write_report(df: pd.DataFrame, run_log: dict, output_dir: Path) -> Path:
@@ -322,8 +342,8 @@ def _write_report(df: pd.DataFrame, run_log: dict, output_dir: Path) -> Path:
             comp_table.cell(comp_row_idx, 0).text = label
             comp_table.cell(comp_row_idx, 1).text = str(value)
 
-        facilitator_summary = student.get(cfg.COL_FACILITATOR_SUMMARY, "N/A") or "N/A"
-        recommended_action = student.get(cfg.COL_RECOMMENDED_ACTION, "N/A") or "N/A"
+        facilitator_summary = _str_or_na(student[cfg.COL_FACILITATOR_SUMMARY])
+        recommended_action = _str_or_na(student[cfg.COL_RECOMMENDED_ACTION])
         doc.add_paragraph(f"Facilitator Summary: {facilitator_summary}")
         doc.add_paragraph(f"Recommended Action: {recommended_action}")
 
@@ -512,7 +532,7 @@ def _write_campus_dashboards(
         # Create workbook and write header row (row 1)
         wb = Workbook()
         ws = wb.active
-        ws.title = str(campus_id)
+        ws.title = str(campus_id)[:31]  # openpyxl sheet name limit (WR-03)
         header_fill = PatternFill(fill_type="solid", fgColor=cfg.COLOR_HEADER)
         header_font = Font(bold=True, color=cfg.FONT_WHITE)
         for col_idx, col_name in enumerate(cfg.OUTPUT_COLS_CAMPUS, start=1):
@@ -555,10 +575,12 @@ def _write_campus_dashboards(
                     value = None  # D-06: empty cell, not "N/A"
                 else:
                     value = row[col_name]
-                    # Normalise pandas NA to Python None for openpyxl
-                    if value is pd.NA:
+                    # Normalise pandas NA / float NaN to Python None for openpyxl (CR-03)
+                    if value is pd.NA or value is None:
                         value = None
-                    elif not isinstance(value, (str, int, float, bool)) and value is not None:
+                    elif isinstance(value, float) and pd.isna(value):
+                        value = None  # float('nan') caught before the isinstance guard
+                    elif not isinstance(value, (str, int, float, bool)):
                         try:
                             if pd.isna(value):
                                 value = None
@@ -580,7 +602,10 @@ def _write_campus_dashboards(
 
         # Freeze header row only (D-08: freeze_panes="A2")
         ws.freeze_panes = "A2"
-        path = output_dir / f"facilitator_dashboard_{campus_id}.xlsx"
+        # Sanitise campus_id before embedding in filename — prevents path traversal
+        # for untrusted CSV input (WR-03); re imported at module level
+        safe_campus_id = re.sub(r'[^\w\-]', '_', str(campus_id))
+        path = output_dir / f"facilitator_dashboard_{safe_campus_id}.xlsx"
         wb.save(path)
         logger.info("Wrote campus dashboard: %s (%d students)", path, total)
         results[f"campus_{campus_id}"] = path
