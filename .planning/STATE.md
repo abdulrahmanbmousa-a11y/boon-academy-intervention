@@ -121,10 +121,9 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 - `ingestion.ingest(data_paths) -> DataFrame` — clean, merged, deduped
 - `risk_engine.score_risk(df) -> DataFrame` — pure function, no I/O
-- `llm_engine.enrich_with_llm(df, api_key, http_client=None) -> tuple[pd.DataFrame, dict]` — never raises; dict = {api_calls_made, tokens_used: {input, output}, fallbacks_triggered}
+- `llm_engine.enrich_with_llm(df, api_key, http_client=None) -> tuple[DataFrame, dict]` — never raises; dict keys: api_calls_made (int), tokens_used (dict[str,int]), fallbacks_triggered (int)
 - `output_generator.write_outputs(df, output_dir) -> dict[str, Path]` — idempotent
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after Phase 3 planning (3 plans: Wave 1 prerequisites, Wave 2 llm_engine.py impl, Wave 3 main.py wiring + tests)*
-*Phase 3 planned. Next: /gsd:execute-phase 3*
+*Last updated: 2026-05-23 after Phase 3 planning (03-01 prerequisites — tuple return contract locked, D-09 constants added)*
