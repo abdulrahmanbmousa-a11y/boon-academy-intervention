@@ -3,21 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T13:00:00.000Z"
+last_updated: "2026-05-23T13:49:00.000Z"
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 11
-  completed_plans: 8
-  percent: 38
+  completed_plans: 9
+  percent: 41
 ---
 
 # Project State: boon-academy-intervention
 
 ## Current Status
 
-- **Phase:** 4 — Excel + CSV Output Generation (ready to execute)
-- **Active plan:** 04-01 (planned — ready to execute)
+- **Phase:** 4 — Excel + CSV Output Generation (in progress)
+- **Active plan:** 04-02 (next to execute)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration
 - **Last updated:** 2026-05-23
 
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 4 planned — 3 plans ready to execute (04-01 → 04-02 → 04-03).
+**Current focus:** Phase 4 in progress — 04-01 complete, executing 04-02 → 04-03.
 
 ## Phase Progress
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
 | 3 | Claude API Integration | 3 / 3 | Complete |
-| 4 | Excel + CSV Output Generation | 0 / 3 | Planned |
+| 4 | Excel + CSV Output Generation | 1 / 3 | In Progress |
 | 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
 | 6 | Documentation Suite | 0 / ? | Pending |
 | 7 | Test Suite | 0 / ? | Pending |
@@ -53,11 +53,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 03 | 03-01 | ~8 min | 3/3 | 4 |
 | 03 | 03-02 | ~15 min | 1/1 | 1 |
 | 03 | 03-03 | ~20 min | 2/2 | 2 |
+| 04 | 04-01 | ~3 min | 2/2 | 4 |
 
 - **Phases completed:** 3 / 8
-- **Plans completed:** 8 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans)
-- **Requirements delivered:** 45 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09 all complete)
-- **Test coverage:** 65 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3, all GREEN)
+- **Plans completed:** 9 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 1/3 plans)
+- **Requirements delivered:** 47 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-03, OUT-06 complete)
+- **Test coverage:** 79 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 14 Phase 4-01, all GREEN)
 
 ## Accumulated Context
 
@@ -94,6 +95,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - student_data prompt list uses cfg.COL_* as dict keys — no bare DataFrame column name strings anywhere in llm_engine.py production code
 - _write_results_back() uses result.get(cfg.COL_GENERATED_BY, generated_by) — works for both LLM results (no key present, falls to "llm") and template results (key from _apply_templates)
 - Plan verification script step 5 flags unavoidable JSON Schema vocabulary ("type", "object", "required") — these are not DataFrame column names; targeted check confirms zero bare DF column name strings
+- D-10: COLOR_* constants use 8-char ARGB format (FF prefix) matching openpyxl PatternFill fgColor contract — test assertions use same 8-char value (not 6-char)
+- OUTPUT_COLS_CAMPUS defined as OUTPUT_COLS_PRIORITY + 3 LLM cols — guarantees superset relationship without duplication
+- _write_whatsapp_csv uses encoding="utf-8-sig" (UTF-8 BOM) for Excel compatibility with Arabic characters
+- _write_run_log uses json.dumps(default=str) to handle datetime or Path objects without TypeError
 - httpx.MockTransport(respx_mock.handler) is the correct respx 0.23.1 injection pattern — respx_mock fixture is a MockRouter (not a transport); httpx.Client(transport=respx_mock) silently bypasses the mock
 - test_no_bare_column_strings_in_llm_engine uses expanded allowed set (23 entries) covering JSON Schema vocab, Anthropic API structure keys, return dict keys, and tool name — all 24 known column name values asserted absent
 - main.py Phase 3 wiring: df, llm_counts = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY); run_log updated from llm_counts; logger.info with aggregate counts only (no PII)
@@ -139,4 +144,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after 03-03 execution (Phase 3 complete — main.py wired, 12-test LLM suite passing, 65 total tests GREEN)*
+*Last updated: 2026-05-23 after 04-01 execution (Phase 4 plan 1 complete — 9 config constants, _write_whatsapp_csv, _write_run_log, 14 new tests, 79 total tests GREEN)*

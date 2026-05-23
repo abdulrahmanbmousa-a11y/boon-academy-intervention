@@ -75,7 +75,7 @@
   3. `outputs/whatsapp_messages.csv` contains columns student_id, student_name, parent_phone, facilitator_email, campus_id, risk_level, message_text, generated_by â€” and every CRITICAL/HIGH student has a row
   4. `outputs/run_log.json` exists and contains run_timestamp, students_processed, api_calls_made, tokens_used, errors_encountered, fallbacks_triggered, and data_quality_warnings
 **Plans:** 3 plans
-- [ ] 04-01-PLAN.md — Config constants + _write_whatsapp_csv + _write_run_log + unit tests (OUT-03, OUT-06)
+- [x] 04-01-PLAN.md — Config constants + _write_whatsapp_csv + _write_run_log + unit tests (OUT-03, OUT-06) — COMPLETE 2026-05-23
 - [ ] 04-02-PLAN.md — _write_priority_list + _write_campus_dashboards + Excel format tests (OUT-01, OUT-02)
 - [ ] 04-03-PLAN.md — write_outputs orchestrator + main.py wiring + integration test (OUT-01, OUT-02, OUT-03, OUT-06)
 **UI hint**: yes
@@ -136,7 +136,7 @@
 | 1. Foundation + Data Ingestion | 3/3 | Complete | 2026-05-22 |
 | 2. Risk Scoring Engine | 2/2 | Complete | 2026-05-23 |
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
-| 4. Excel + CSV Output Generation | 0/? | Not started | - |
+| 4. Excel + CSV Output Generation | 1/3 | In Progress | - |
 | 5. HTML Dashboard + Word Report | 0/? | Not started | - |
 | 6. Documentation Suite | 0/? | Not started | - |
 | 7. Test Suite | 0/? | Not started | - |
@@ -164,4 +164,4 @@
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-23 after 03-03 execution (Phase 3 complete â€” main.py wired, 12-test LLM suite passing, 65 total tests GREEN)*
+*Last updated: 2026-05-23 after 04-01 execution (Phase 4 plan 1 complete â€” 9 config constants, _write_whatsapp_csv, _write_run_log, 14 new tests, 79 total tests GREEN)*
