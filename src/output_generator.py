@@ -16,6 +16,7 @@ import logging
 from pathlib import Path
 
 import pandas as pd
+from docx import Document
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -137,6 +138,245 @@ def _write_html_dashboard(df: pd.DataFrame, output_dir: Path) -> Path:
     path = output_dir / "facilitator_dashboard.html"
     path.write_text(html, encoding="utf-8")
     logger.info("Wrote HTML dashboard: %s (%d students)", path, len(df_copy))
+    return path
+
+
+def _write_report(df: pd.DataFrame, run_log: dict, output_dir: Path) -> Path:
+    """Write intervention_report.docx — programmatic python-docx builder (OUT-04).
+
+    Builds a 7-section Word document using only Document(), add_heading(),
+    add_paragraph(), and add_table() — no OxmlElement, no custom styles (D-10).
+    All headings use built-in levels (level=0/1/2) per D-11. All tables use
+    style="Table Grid" per D-12. Section order follows D-13.
+
+    Sections produced (D-13 order):
+      1. Cover page — title, run date, campus count, students processed
+      2. Executive Summary — narrative paragraph + risk breakdown table
+      3. Top 10 Most At-Risk Students — ranked table (capped at 10 rows, T-05-06)
+      4. Campus Summary — per-campus totals, critical/high counts, coverage %
+      5. Student Deep-Dives — up to 4 sections, one per risk tier (D-08 graceful degradation)
+      6. Data Quality Notes — warnings from run_log['data_quality_warnings']
+      7. Methodology Appendix — weighted formula table + risk threshold paragraphs
+
+    Args:
+        df: Fully enriched one-row-per-student DataFrame from enrich_with_llm().
+            Must contain COL_RISK_LEVEL, COL_RISK_SCORE, COL_STUDENT_NAME,
+            COL_CAMPUS_ID, COL_ATTENDANCE_RATE, COL_AVG_PRACTICE, COL_TREND_DIR,
+            COL_DAYS_SINCE_NOTE, COL_FACILITATOR_SUMMARY, COL_RECOMMENDED_ACTION.
+            Component columns (COL_*_COMPONENT) are optional — missing columns are
+            handled gracefully with "N/A" fallback.
+        run_log: Pipeline run metadata dict. Keys used: run_timestamp,
+            students_processed, data_quality_warnings.
+        output_dir: Directory to write intervention_report.docx into.
+
+    Returns:
+        Path to the written intervention_report.docx file.
+    """
+    df_copy = df.copy()
+    doc = Document()
+
+    # -----------------------------------------------------------------------
+    # Section 1 — Cover page
+    # -----------------------------------------------------------------------
+    doc.add_heading("Boon Academy — Student Intervention Report", level=0)
+    doc.add_paragraph(f"Run date: {run_log.get('run_timestamp', 'N/A')}")
+    campus_count = df_copy[cfg.COL_CAMPUS_ID].nunique()
+    doc.add_paragraph(f"Campuses: {campus_count}")
+    doc.add_paragraph(
+        f"Students processed: {run_log.get('students_processed', len(df_copy))}"
+    )
+
+    # -----------------------------------------------------------------------
+    # Section 2 — Executive Summary
+    # -----------------------------------------------------------------------
+    doc.add_heading("Executive Summary", level=1)
+
+    total = len(df_copy)
+    risk_counts = df_copy[cfg.COL_RISK_LEVEL].value_counts()
+    critical_count = int(risk_counts.get("CRITICAL", 0))
+    high_count = int(risk_counts.get("HIGH", 0))
+    medium_count = int(risk_counts.get("MEDIUM", 0))
+    low_count = int(risk_counts.get("LOW", 0))
+
+    critical_pct = (critical_count / total * 100) if total > 0 else 0.0
+    doc.add_paragraph(
+        f"Of {total} students, {critical_count} ({critical_pct:.0f}%) are at CRITICAL "
+        "risk requiring immediate intervention. The pipeline has generated prioritised "
+        "facilitator action items and drafted WhatsApp parent messages for all CRITICAL "
+        "and HIGH risk students."
+    )
+
+    # Risk breakdown table: header + 4 risk level rows, 3 columns
+    risk_table = doc.add_table(rows=5, cols=3, style="Table Grid")
+    risk_table.cell(0, 0).text = "Risk Level"
+    risk_table.cell(0, 1).text = "Count"
+    risk_table.cell(0, 2).text = "% of Total"
+
+    for row_idx, (level, count) in enumerate(
+        [
+            ("CRITICAL", critical_count),
+            ("HIGH", high_count),
+            ("MEDIUM", medium_count),
+            ("LOW", low_count),
+        ],
+        start=1,
+    ):
+        pct = (count / total * 100) if total > 0 else 0.0
+        risk_table.cell(row_idx, 0).text = level
+        risk_table.cell(row_idx, 1).text = str(count)
+        risk_table.cell(row_idx, 2).text = f"{pct:.1f}%"
+
+    # -----------------------------------------------------------------------
+    # Section 3 — Top 10 Most At-Risk Students (T-05-06: hard cap at 10 rows)
+    # -----------------------------------------------------------------------
+    doc.add_heading("Top 10 Most At-Risk Students", level=1)
+
+    top10 = df_copy.nlargest(10, cfg.COL_RISK_SCORE)
+    top10_table = doc.add_table(rows=len(top10) + 1, cols=5, style="Table Grid")
+    top10_table.cell(0, 0).text = "Rank"
+    top10_table.cell(0, 1).text = "Student Name"
+    top10_table.cell(0, 2).text = "Campus"
+    top10_table.cell(0, 3).text = "Risk Score"
+    top10_table.cell(0, 4).text = "Risk Level"
+
+    for row_idx, (_, student) in enumerate(top10.iterrows(), start=1):
+        top10_table.cell(row_idx, 0).text = str(row_idx)
+        top10_table.cell(row_idx, 1).text = str(student[cfg.COL_STUDENT_NAME])
+        top10_table.cell(row_idx, 2).text = str(student[cfg.COL_CAMPUS_ID])
+        top10_table.cell(row_idx, 3).text = f"{student[cfg.COL_RISK_SCORE]:.1f}"
+        top10_table.cell(row_idx, 4).text = str(student[cfg.COL_RISK_LEVEL])
+
+    # -----------------------------------------------------------------------
+    # Section 4 — Campus Summary
+    # -----------------------------------------------------------------------
+    doc.add_heading("Campus Summary", level=1)
+
+    campus_groups = df_copy.groupby(cfg.COL_CAMPUS_ID, dropna=True)
+    campus_table = doc.add_table(
+        rows=campus_count + 1, cols=5, style="Table Grid"
+    )
+    campus_table.cell(0, 0).text = "Campus"
+    campus_table.cell(0, 1).text = "Total Students"
+    campus_table.cell(0, 2).text = "Critical"
+    campus_table.cell(0, 3).text = "High"
+    campus_table.cell(0, 4).text = "Intervention Coverage %"
+
+    for row_idx, (campus_id, campus_df) in enumerate(campus_groups, start=1):
+        c_total = len(campus_df)
+        c_critical = int((campus_df[cfg.COL_RISK_LEVEL] == "CRITICAL").sum())
+        c_high = int((campus_df[cfg.COL_RISK_LEVEL] == "HIGH").sum())
+        c_coverage = (
+            round((c_critical + c_high) / c_total * 100, 1) if c_total > 0 else 0.0
+        )
+        campus_table.cell(row_idx, 0).text = str(campus_id)
+        campus_table.cell(row_idx, 1).text = str(c_total)
+        campus_table.cell(row_idx, 2).text = str(c_critical)
+        campus_table.cell(row_idx, 3).text = str(c_high)
+        campus_table.cell(row_idx, 4).text = f"{c_coverage}%"
+
+    # -----------------------------------------------------------------------
+    # Section 5 — Student Deep-Dives (D-08: graceful degradation — skip empty tiers)
+    # -----------------------------------------------------------------------
+    doc.add_heading("Student Deep-Dives", level=1)
+
+    # End-user-facing component columns — always present in enriched DataFrame
+    component_cols = [
+        cfg.COL_ATTENDANCE_RATE,
+        cfg.COL_AVG_PRACTICE,
+        cfg.COL_TREND_DIR,
+        cfg.COL_DAYS_SINCE_NOTE,
+    ]
+    component_labels = [
+        "Attendance Rate",
+        "Avg Practice Questions",
+        "Trend Direction",
+        "Days Since Last Note",
+    ]
+
+    for tier in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
+        tier_df = df_copy[df_copy[cfg.COL_RISK_LEVEL] == tier]
+        if tier_df.empty:
+            continue  # D-08: skip tier with no students — no section added
+        student = tier_df.nlargest(1, cfg.COL_RISK_SCORE).iloc[0]
+        doc.add_heading(
+            f"{tier} — {student[cfg.COL_STUDENT_NAME]}", level=2
+        )
+        doc.add_paragraph(
+            f"Campus: {student[cfg.COL_CAMPUS_ID]} | "
+            f"Risk Score: {student[cfg.COL_RISK_SCORE]:.1f} | "
+            f"Level: {student[cfg.COL_RISK_LEVEL]}"
+        )
+
+        # Component scores table: header + 4 component rows, 2 columns
+        comp_table = doc.add_table(
+            rows=len(component_cols) + 1, cols=2, style="Table Grid"
+        )
+        comp_table.cell(0, 0).text = "Component"
+        comp_table.cell(0, 1).text = "Score"
+        for comp_row_idx, (col, label) in enumerate(
+            zip(component_cols, component_labels), start=1
+        ):
+            value = (
+                student[col] if col in df_copy.columns else "N/A"
+            )
+            comp_table.cell(comp_row_idx, 0).text = label
+            comp_table.cell(comp_row_idx, 1).text = str(value)
+
+        facilitator_summary = student.get(cfg.COL_FACILITATOR_SUMMARY, "N/A") or "N/A"
+        recommended_action = student.get(cfg.COL_RECOMMENDED_ACTION, "N/A") or "N/A"
+        doc.add_paragraph(f"Facilitator Summary: {facilitator_summary}")
+        doc.add_paragraph(f"Recommended Action: {recommended_action}")
+
+    # -----------------------------------------------------------------------
+    # Section 6 — Data Quality Notes
+    # -----------------------------------------------------------------------
+    doc.add_heading("Data Quality Notes", level=1)
+
+    warnings = run_log.get("data_quality_warnings", [])
+    if not warnings:
+        doc.add_paragraph("No data quality issues detected in this run.")
+    else:
+        for w in warnings:
+            doc.add_paragraph(f"• {w}")
+
+    # -----------------------------------------------------------------------
+    # Section 7 — Methodology Appendix
+    # -----------------------------------------------------------------------
+    doc.add_heading("Methodology Appendix", level=1)
+    doc.add_heading("Risk Score Formula", level=2)
+    doc.add_paragraph(
+        "Risk score (0-100) is computed as a weighted sum of four components:"
+    )
+
+    # Weights table: header + 4 component rows, 2 columns
+    weights_table = doc.add_table(rows=5, cols=2, style="Table Grid")
+    weights_table.cell(0, 0).text = "Component"
+    weights_table.cell(0, 1).text = "Weight"
+    weights_table.cell(1, 0).text = "Attendance Rate"
+    weights_table.cell(1, 1).text = f"{cfg.WEIGHT_ATTENDANCE:.0%}"
+    weights_table.cell(2, 0).text = "Avg Practice Questions"
+    weights_table.cell(2, 1).text = f"{cfg.WEIGHT_PRACTICE:.0%}"
+    weights_table.cell(3, 0).text = "Trend Direction"
+    weights_table.cell(3, 1).text = f"{cfg.WEIGHT_TREND:.0%}"
+    weights_table.cell(4, 0).text = "Days Since Last Note"
+    weights_table.cell(4, 1).text = f"{cfg.WEIGHT_NOTES:.0%}"
+
+    doc.add_heading("Risk Level Thresholds", level=2)
+    doc.add_paragraph(f"CRITICAL: score >= {cfg.RISK_THRESHOLD_CRITICAL}")
+    doc.add_paragraph(
+        f"HIGH: {cfg.RISK_THRESHOLD_HIGH} <= score < {cfg.RISK_THRESHOLD_CRITICAL}"
+    )
+    doc.add_paragraph(
+        f"MEDIUM: {cfg.RISK_THRESHOLD_MEDIUM} <= score < {cfg.RISK_THRESHOLD_HIGH}"
+    )
+    doc.add_paragraph(f"LOW: score < {cfg.RISK_THRESHOLD_MEDIUM}")
+
+    # -----------------------------------------------------------------------
+    # Save — str() required on Windows for python-docx 1.1.2 (STATE.md constraint)
+    # -----------------------------------------------------------------------
+    path = output_dir / "intervention_report.docx"
+    doc.save(str(path))
+    logger.info("Wrote Word report: %s (%d students)", path, len(df_copy))
     return path
 
 
