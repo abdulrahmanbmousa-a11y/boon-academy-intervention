@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ar-001">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boon Academy — Facilitator Intervention Dashboard</title>
+<style>
+  /* ------------------------------------------------------------------ */
+  /* Reset + base                                                         */
+  /* ------------------------------------------------------------------ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f5f5;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Header                                                               */
+  /* ------------------------------------------------------------------ */
+  header {
+    background: #1F4E79;
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  header h1 { font-size: 1.25rem; font-weight: 700; }
+  header .timestamp { font-size: 0.8rem; opacity: 0.75; }
+
+  /* ------------------------------------------------------------------ */
+  /* Stats bar                                                            */
+  /* ------------------------------------------------------------------ */
+  #statsBar {
+    display: flex;
+    gap: 16px;
+    padding: 12px 24px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: #f0f4f8;
+    border-radius: 6px;
+    padding: 10px 18px;
+    min-width: 140px;
+    text-align: center;
+  }
+  .stat-card .stat-label { font-size: 0.72rem; color: #555; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card .stat-value { font-size: 1.5rem; font-weight: 700; color: #1F4E79; }
+  .stat-card.critical .stat-value { color: #b00; }
+  .stat-card.high .stat-value { color: #b55000; }
+
+  /* ------------------------------------------------------------------ */
+  /* Filter bar                                                           */
+  /* ------------------------------------------------------------------ */
+  #filterBar {
+    display: flex;
+    gap: 12px;
+    padding: 12px 24px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  #filterBar label { font-size: 0.82rem; color: #444; white-space: nowrap; }
+  #campusFilter {
+    padding: 6px 10px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    min-width: 140px;
+  }
+  #nameSearch {
+    padding: 6px 10px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    min-width: 200px;
+  }
+  .risk-btn {
+    padding: 6px 14px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .risk-btn:hover { background: #e0e0e0; }
+  .risk-btn.active { border-color: #1F4E79; background: #1F4E79; color: #fff; }
+  .risk-btn.active.btn-CRITICAL { background: #c0392b; border-color: #c0392b; }
+  .risk-btn.active.btn-HIGH     { background: #e67e22; border-color: #e67e22; }
+  .risk-btn.active.btn-MEDIUM   { background: #f0c040; border-color: #f0c040; color: #333; }
+  .risk-btn.active.btn-LOW      { background: #27ae60; border-color: #27ae60; }
+
+  /* ------------------------------------------------------------------ */
+  /* Table                                                                */
+  /* ------------------------------------------------------------------ */
+  #tableWrapper {
+    padding: 16px 24px;
+    overflow-x: auto;
+  }
+  #studentTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+    min-width: 900px;
+  }
+  #studentTable thead th {
+    background: #1F4E79;
+    color: #fff;
+    padding: 10px 8px;
+    text-align: left;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  #studentTable tbody tr.data-row {
+    cursor: pointer;
+    transition: filter 0.1s;
+  }
+  #studentTable tbody tr.data-row:hover { filter: brightness(0.93); }
+  #studentTable tbody td {
+    padding: 8px 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    vertical-align: middle;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Risk-level row colours (matching Phase 4 Excel palette)             */
+  /* ------------------------------------------------------------------ */
+  .risk-CRITICAL { background-color: #FFCCCC; }
+  .risk-HIGH     { background-color: #FFE5CC; }
+  .risk-MEDIUM   { background-color: #FFFFCC; }
+  .risk-LOW      { background-color: #CCFFCC; }
+
+  /* Risk level badge */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .badge-CRITICAL { background: #c0392b; color: #fff; }
+  .badge-HIGH     { background: #e67e22; color: #fff; }
+  .badge-MEDIUM   { background: #f0c040; color: #333; }
+  .badge-LOW      { background: #27ae60; color: #fff; }
+
+  /* ------------------------------------------------------------------ */
+  /* Detail panel                                                         */
+  /* ------------------------------------------------------------------ */
+  tr.detail-row td {
+    padding: 0;
+    border-bottom: 2px solid #1F4E79;
+    background: #fff;
+  }
+  .detail-panel {
+    padding: 16px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 800px) {
+    .detail-panel { grid-template-columns: 1fr; }
+  }
+  .detail-section { }
+  .detail-section h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #1F4E79;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ddd;
+  }
+  .breakdown-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .breakdown-table td { padding: 4px 6px; border-bottom: 1px solid #eee; }
+  .breakdown-table td:last-child { text-align: right; font-weight: 600; }
+  .summary-text {
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .whatsapp-box {
+    grid-column: 1 / -1;
+    background: #f0f4f8;
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .whatsapp-box h3 {
+    color: #1F4E79;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ccc;
+  }
+  .whatsapp-text {
+    font-size: 0.84rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #222;
+    margin-bottom: 10px;
+  }
+  .copy-btn {
+    padding: 6px 16px;
+    background: #25D366;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  .copy-btn:hover { background: #1ebe5a; }
+
+  /* ------------------------------------------------------------------ */
+  /* Empty state                                                          */
+  /* ------------------------------------------------------------------ */
+  #emptyState {
+    text-align: center;
+    padding: 48px 24px;
+    color: #888;
+    font-size: 1rem;
+    display: none;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Footer                                                               */
+  /* ------------------------------------------------------------------ */
+  footer {
+    text-align: center;
+    padding: 12px 24px;
+    font-size: 0.75rem;
+    color: #999;
+    border-top: 1px solid #ddd;
+    background: #fff;
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Boon Academy — Facilitator Intervention Dashboard</h1>
+  <span class="timestamp">Generated: {{ run_timestamp }}</span>
+</header>
+
+<!-- Summary stats bar -->
+<div id="statsBar">
+  <div class="stat-card">
+    <div class="stat-label">Total Students</div>
+    <div class="stat-value" id="statTotal">—</div>
+  </div>
+  <div class="stat-card critical">
+    <div class="stat-label">Critical</div>
+    <div class="stat-value" id="statCritical">—</div>
+  </div>
+  <div class="stat-card high">
+    <div class="stat-label">High Risk</div>
+    <div class="stat-value" id="statHigh">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Intervention Coverage</div>
+    <div class="stat-value" id="statCoverage">—</div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div id="filterBar">
+  <label for="campusFilter">Campus:</label>
+  <select id="campusFilter">
+    <option value="">All Campuses</option>
+    {% for cid in campus_ids %}
+    <option value="{{ cid }}">{{ cid }}</option>
+    {% endfor %}
+  </select>
+
+  <label>Risk Level:</label>
+  <button class="risk-btn active" id="btn-ALL" data-level="ALL">ALL</button>
+  <button class="risk-btn btn-CRITICAL" id="btn-CRITICAL" data-level="CRITICAL">CRITICAL</button>
+  <button class="risk-btn btn-HIGH" id="btn-HIGH" data-level="HIGH">HIGH</button>
+  <button class="risk-btn btn-MEDIUM" id="btn-MEDIUM" data-level="MEDIUM">MEDIUM</button>
+  <button class="risk-btn btn-LOW" id="btn-LOW" data-level="LOW">LOW</button>
+
+  <label for="nameSearch">Search:</label>
+  <input id="nameSearch" type="text" placeholder="Student name...">
+</div>
+
+<!-- Student table -->
+<div id="tableWrapper">
+  <table id="studentTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Student ID</th>
+        <th>Name</th>
+        <th>Campus</th>
+        <th>Risk Score</th>
+        <th>Risk Level</th>
+        <th>Attendance %</th>
+        <th>Avg Practice Q</th>
+        <th>Trend</th>
+        <th>Days Since Note</th>
+        <th>Generated By</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div id="emptyState">No students match the current filters.</div>
+</div>
+
+<footer>
+  Boon Academy Intervention Pipeline &mdash; file:// self-contained &mdash; {{ run_timestamp }}
+</footer>
+
+<script>
+// All student data embedded as a JS const — no external requests
+const studentsData = {{ students_json }};
+
+// -------------------------------------------------------------------------
+// State
+// -------------------------------------------------------------------------
+let activeLevel = 'ALL';
+let openDetailRow = null;  // tracks the currently-open <tr.detail-row>
+
+// -------------------------------------------------------------------------
+// Summary stats (computed once on load from full dataset)
+// -------------------------------------------------------------------------
+function computeStats() {
+  const total = studentsData.length;
+  const critical = studentsData.filter(s => s.risk_level === 'CRITICAL').length;
+  const high = studentsData.filter(s => s.risk_level === 'HIGH').length;
+  const coverage = total > 0 ? ((critical + high) / total * 100).toFixed(1) : '0.0';
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statCritical').textContent = critical;
+  document.getElementById('statHigh').textContent = high;
+  document.getElementById('statCoverage').textContent = coverage + '%';
+}
+
+// -------------------------------------------------------------------------
+// Filter
+// -------------------------------------------------------------------------
+function filterAndRender() {
+  const campusVal = document.getElementById('campusFilter').value;
+  const nameVal = document.getElementById('nameSearch').value.toLowerCase();
+
+  let filtered = studentsData.slice();
+
+  if (campusVal) {
+    filtered = filtered.filter(s => s.campus_id === campusVal);
+  }
+  if (activeLevel !== 'ALL') {
+    filtered = filtered.filter(s => s.risk_level === activeLevel);
+  }
+  if (nameVal) {
+    filtered = filtered.filter(s =>
+      s.student_name && s.student_name.toLowerCase().includes(nameVal)
+    );
+  }
+
+  renderTable(filtered);
+}
+
+// -------------------------------------------------------------------------
+// Render table
+// -------------------------------------------------------------------------
+function renderTable(rows) {
+  // Sort by risk_score descending
+  rows = rows.slice().sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0));
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  openDetailRow = null;
+
+  const empty = document.getElementById('emptyState');
+  if (rows.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  rows.forEach((student, idx) => {
+    const level = student.risk_level || '';
+
+    // --- Data row ---
+    const tr = document.createElement('tr');
+    tr.className = 'data-row risk-' + level;
+
+    const cells = [
+      idx + 1,
+      student.student_id || '',
+      student.student_name || '',
+      student.campus_id || '',
+      student.risk_score != null ? Number(student.risk_score).toFixed(1) : '',
+      '',  // badge rendered separately
+      student.attendance_rate != null ? (Number(student.attendance_rate) * 100).toFixed(1) + '%' : '',
+      student.avg_practice_questions != null ? student.avg_practice_questions : '',
+      student.trend_direction || '',
+      student.days_since_last_note != null ? student.days_since_last_note : '',
+      student.generated_by || '',
+    ];
+
+    cells.forEach((val, colIdx) => {
+      const td = document.createElement('td');
+      if (colIdx === 5) {
+        // Risk level badge
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-' + level;
+        badge.textContent = level;
+        td.appendChild(badge);
+      } else {
+        td.textContent = val;
+      }
+      tr.appendChild(td);
+    });
+
+    // --- Detail row (hidden) ---
+    const detailTr = document.createElement('tr');
+    detailTr.className = 'detail-row';
+    detailTr.style.display = 'none';
+
+    const detailTd = document.createElement('td');
+    detailTd.setAttribute('colspan', '11');
+
+    const summary = student.facilitator_summary || '(No facilitator summary available)';
+    const whatsapp = student.whatsapp_message || '(No WhatsApp message available)';
+
+    detailTd.innerHTML = `
+      <div class="detail-panel">
+        <div class="detail-section">
+          <h3>Risk Breakdown</h3>
+          <table class="breakdown-table">
+            <tr><td>Attendance Component</td><td>${student.attendance_component != null ? Number(student.attendance_component).toFixed(1) : '—'}</td></tr>
+            <tr><td>Practice Component</td><td>${student.practice_component != null ? Number(student.practice_component).toFixed(1) : '—'}</td></tr>
+            <tr><td>Trend Component</td><td>${student.trend_component != null ? Number(student.trend_component).toFixed(1) : '—'}</td></tr>
+            <tr><td>Notes Component</td><td>${student.notes_component != null ? Number(student.notes_component).toFixed(1) : '—'}</td></tr>
+            <tr><td><strong>Total Risk Score</strong></td><td><strong>${student.risk_score != null ? Number(student.risk_score).toFixed(2) : '—'}</strong></td></tr>
+          </table>
+        </div>
+        <div class="detail-section">
+          <h3>Facilitator Summary</h3>
+          <p class="summary-text">${escapeHtml(summary)}</p>
+        </div>
+        <div class="whatsapp-box">
+          <h3>WhatsApp Message</h3>
+          <p class="whatsapp-text" id="wa-${idx}">${escapeHtml(whatsapp)}</p>
+          <button class="copy-btn" onclick="copyWhatsApp(${idx}, this)">Copy</button>
+        </div>
+      </div>
+    `;
+
+    detailTr.appendChild(detailTd);
+
+    // Row click handler — toggle detail; close any previously open row
+    tr.addEventListener('click', function() {
+      const isOpen = detailTr.style.display === 'table-row';
+
+      // Close the previously open detail row (if any)
+      if (openDetailRow && openDetailRow !== detailTr) {
+        openDetailRow.style.display = 'none';
+      }
+
+      if (isOpen) {
+        detailTr.style.display = 'none';
+        openDetailRow = null;
+      } else {
+        detailTr.style.display = 'table-row';
+        openDetailRow = detailTr;
+      }
+    });
+
+    tbody.appendChild(tr);
+    tbody.appendChild(detailTr);
+  });
+}
+
+// -------------------------------------------------------------------------
+// Copy button (Clipboard API + execCommand fallback)
+// -------------------------------------------------------------------------
+async function copyWhatsApp(idx, btn) {
+  const el = document.getElementById('wa-' + idx);
+  const msg = el ? el.textContent : '';
+  try {
+    await navigator.clipboard.writeText(msg);
+    btn.textContent = 'Copied!';
+  } catch {
+    // fallback: hidden textarea + execCommand
+    const ta = document.createElement('textarea');
+    ta.value = msg;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = 'Copied!';
+  }
+  setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+}
+
+// -------------------------------------------------------------------------
+// HTML escape helper (used for student-supplied text in detail panel)
+// -------------------------------------------------------------------------
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// -------------------------------------------------------------------------
+// Event listeners
+// -------------------------------------------------------------------------
+document.getElementById('campusFilter').addEventListener('change', filterAndRender);
+document.getElementById('nameSearch').addEventListener('input', filterAndRender);
+
+document.querySelectorAll('.risk-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    activeLevel = this.dataset.level;
+    filterAndRender();
+  });
+});
+
+// -------------------------------------------------------------------------
+// Init
+// -------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function() {
+  computeStats();
+  filterAndRender();
+});
+</script>
+</body>
+</html>
