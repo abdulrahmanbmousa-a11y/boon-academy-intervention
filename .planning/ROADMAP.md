@@ -62,7 +62,7 @@
   5. Medium and Low risk students have no LLM fields populated — only one API call per campus is made, not one per student
 **Plans:** 3 plans
 - [x] 03-01-PLAN.md - Wave 1: requirements.txt +PyYAML+respx, src/config.py D-09 constants, src/llm_templates.yaml, STATE.md contract update (LLM-04, LLM-07, LLM-09) — COMPLETE 2026-05-23
-- [ ] 03-02-PLAN.md - Wave 2: src/llm_engine.py full implementation — campus batching, tool-use, three-layer fallback, PII masking (LLM-01..LLM-08)
+- [x] 03-02-PLAN.md - Wave 2: src/llm_engine.py full implementation — campus batching, tool-use, three-layer fallback, PII masking (LLM-01..LLM-08) — COMPLETE 2026-05-23
 - [ ] 03-03-PLAN.md - Wave 3: main.py wiring + tests/test_llm_engine.py full suite (LLM-01..LLM-09)
 
 ### Phase 4: Excel + CSV Output Generation
@@ -132,7 +132,7 @@
 |-------|----------------|--------|-----------|
 | 1. Foundation + Data Ingestion | 3/3 | Complete | 2026-05-22 |
 | 2. Risk Scoring Engine | 2/2 | Complete | 2026-05-23 |
-| 3. Claude API Integration | 1/3 | In Progress | - |
+| 3. Claude API Integration | 2/3 | In Progress | - |
 | 4. Excel + CSV Output Generation | 0/? | Not started | - |
 | 5. HTML Dashboard + Word Report | 0/? | Not started | - |
 | 6. Documentation Suite | 0/? | Not started | - |
@@ -161,4 +161,4 @@
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-23 after 03-01 execution (Wave 1 prerequisites complete — PyYAML, respx, 9 D-09 constants, YAML templates, tuple contract locked)*
+*Last updated: 2026-05-23 after 03-02 execution (Wave 2 complete — enrich_with_llm() fully implemented: campus batching, tool-use, three-layer fallback, PII-safe logging, tuple return)*

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T11:08:00.000Z"
+last_updated: "2026-05-23T11:25:00.000Z"
 progress:
   total_phases: 8
   completed_phases: 2
   total_plans: 11
-  completed_plans: 6
-  percent: 29
+  completed_plans: 7
+  percent: 33
 ---
 
 # Project State: boon-academy-intervention
@@ -17,7 +17,7 @@ progress:
 ## Current Status
 
 - **Phase:** 3 — Claude API Integration (executing)
-- **Active plan:** 03-02 — llm_engine.py Wave 1 implementation (next)
+- **Active plan:** 03-03 — main.py wiring + test_llm_engine.py (next)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine
 - **Last updated:** 2026-05-23
 
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 3 executing — 03-01 complete (prerequisites), 03-02 next (llm_engine.py implementation with campus-batched Claude calls and three-layer fallback).
+**Current focus:** Phase 3 executing — 03-01 complete (prerequisites), 03-02 complete (llm_engine.py full implementation), 03-03 next (main.py wiring + test_llm_engine.py full suite).
 
 ## Phase Progress
 
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 |-------|------|------------|--------|
 | 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
-| 3 | Claude API Integration | 1 / 3 | In Progress |
+| 3 | Claude API Integration | 2 / 3 | In Progress |
 | 4 | Excel + CSV Output Generation | 0 / ? | Pending |
 | 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
 | 6 | Documentation Suite | 0 / ? | Pending |
@@ -51,11 +51,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 02 | 02-01 | ~5 min | 2/2 | 3 |
 | 02 | 02-02 | ~10 min | 2/2 | 3 |
 | 03 | 03-01 | ~8 min | 3/3 | 4 |
+| 03 | 03-02 | ~15 min | 1/1 | 1 |
 
 - **Phases completed:** 2 / 8
 - **Plans completed:** 6 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 1/3 plans)
-- **Requirements delivered:** 29 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-04, LLM-07, LLM-09 complete)
-- **Test coverage:** 53 tests passing (25 Phase 1 + 28 Phase 2, all GREEN — no new tests in 03-01)
+- **Requirements delivered:** 36 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09 complete)
+- **Test coverage:** 53 tests passing (25 Phase 1 + 28 Phase 2, all GREEN — no new tests in 03-01 or 03-02; full LLM test suite added in 03-03)
 
 ## Accumulated Context
 
@@ -88,6 +89,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - D-09 constants (9 total): ANTHROPIC_MODEL, LLM_ENABLED, MAX_TOKENS, TEMPERATURE, TIMEOUT_SECONDS, COL_FACILITATOR_SUMMARY, COL_WHATSAPP_MESSAGE, COL_GENERATED_BY, COL_LLM_ERROR_REASON added to src/config.py
 - Templates loaded once at module import (not per-call) via yaml.safe_load(); path = Path(__file__).parent / "llm_templates.yaml"
 - Three-layer fallback: Layer 1 = SDK max_retries=3 (automatic); Layer 2 = one re-prompt on APIConnectionError/RateLimitError/APIStatusError/APITimeoutError; Layer 3 = YAML template on re-prompt failure OR KeyError/StopIteration from malformed tool parse
+- INTERVENTION_TOOL uses cfg.COL_STUDENT_ID / cfg.COL_FACILITATOR_SUMMARY / cfg.COL_WHATSAPP_MESSAGE as JSON schema property names — all column names via cfg.COL_* including inside tool schema definition
+- student_data prompt list uses cfg.COL_* as dict keys — no bare DataFrame column name strings anywhere in llm_engine.py production code
+- _write_results_back() uses result.get(cfg.COL_GENERATED_BY, generated_by) — works for both LLM results (no key present, falls to "llm") and template results (key from _apply_templates)
+- Plan verification script step 5 flags unavoidable JSON Schema vocabulary ("type", "object", "required") — these are not DataFrame column names; targeted check confirms zero bare DF column name strings
 
 ### Known Pitfalls (from research)
 
@@ -130,4 +135,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after Phase 3 planning (03-01 prerequisites — tuple return contract locked, D-09 constants added)*
+*Last updated: 2026-05-23 after 03-02 execution (enrich_with_llm() fully implemented — campus batching, tool-use, three-layer fallback, PII-safe logging, tuple return)*
