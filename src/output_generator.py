@@ -593,14 +593,13 @@ def write_outputs(
     output_dir: Path,
     run_log: dict,
 ) -> dict[str, Path]:
-    """Write all Phase 4 output files for the intervention pipeline.
+    """Write all output files (Phase 4: Excel/CSV/JSON; Phase 5: HTML dashboard and Word report).
 
-    Orchestrates four private helpers — one per output type — and returns a unified
+    Orchestrates six private helpers — one per output type — and returns a unified
     dict mapping semantic keys to resolved Path objects (D-01, D-02).
 
     D-03: Creates output_dir (including parents) if it does not exist — idempotent.
-    D-04: Delegates to four independently-testable private helpers.
-    D-09: Phase 5 adds _write_html_dashboard() (OUT-05) called after run_log.
+    D-04: Delegates to six independently-testable private helpers.
 
     Args:
         df: Fully enriched one-row-per-student DataFrame from enrich_with_llm().
@@ -611,7 +610,9 @@ def write_outputs(
 
     Returns:
         Dict mapping output file keys to their resolved Path objects.
-        Keys: "priority_list", "campus_{campus_id}" per campus, "whatsapp", "run_log", "dashboard".
+        Keys: "priority_list", "campus_{campus_id}" per campus, "whatsapp", "run_log",
+              "dashboard" (Path to facilitator_dashboard.html, OUT-05),
+              "report" (Path to intervention_report.docx, OUT-04).
     """
     output_dir.mkdir(parents=True, exist_ok=True)   # D-03
 
@@ -636,6 +637,9 @@ def write_outputs(
 
     dashboard_path = _write_html_dashboard(df, output_dir)
     paths["dashboard"] = dashboard_path
+
+    report_path = _write_report(df, run_log, output_dir)
+    paths["report"] = report_path
 
     logger.info(
         "All outputs written to %s — keys: %s",
