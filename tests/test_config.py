@@ -51,7 +51,7 @@ class TestPathDefaults:
 
 
 class TestColumnConstants:
-    """D-07: All 17 column constants defined in config.py from day 1."""
+    """D-07: All 21 column constants defined in config.py from day 1 (17 from Phase 1 + 4 D-09 component columns from Phase 2)."""
 
     EXPECTED_COLUMN_CONSTANTS = [
         "COL_STUDENT_ID",
@@ -71,10 +71,14 @@ class TestColumnConstants:
         "COL_RISK_SCORE",
         "COL_RISK_LEVEL",
         "COL_RECOMMENDED_ACTION",
+        "COL_ATTENDANCE_COMPONENT",
+        "COL_PRACTICE_COMPONENT",
+        "COL_TREND_COMPONENT",
+        "COL_NOTES_COMPONENT",
     ]
 
     def test_column_constants_defined(self, monkeypatch):
-        """All 17 column name constants exist and are non-empty strings."""
+        """All 21 column name constants exist and are non-empty strings."""
         monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
         import src.config as cfg
         for name in self.EXPECTED_COLUMN_CONSTANTS:

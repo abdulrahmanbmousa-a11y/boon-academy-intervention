@@ -78,3 +78,9 @@ COL_DAYS_SINCE_NOTE: str = "days_since_last_note"
 COL_RISK_SCORE: str = "risk_score"
 COL_RISK_LEVEL: str = "risk_level"
 COL_RECOMMENDED_ACTION: str = "recommended_action"
+
+# D-09 component score columns (Phase 2)
+COL_ATTENDANCE_COMPONENT: str = "attendance_component"
+COL_PRACTICE_COMPONENT: str = "practice_component"
+COL_TREND_COMPONENT: str = "trend_component"
+COL_NOTES_COMPONENT: str = "notes_component"
