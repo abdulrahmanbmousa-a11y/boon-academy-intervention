@@ -91,7 +91,7 @@
 **Plans:** 3 plans
 
 **Wave 1** *(parallel)*
-- [ ] 05-01-PLAN.md — DISPLAY_COLS_DASHBOARD config constant + src/templates/dashboard.html.j2 Jinja2 template + _write_html_dashboard() helper + HTML unit tests (OUT-05)
+- [x] 05-01-PLAN.md — DISPLAY_COLS_DASHBOARD config constant + src/templates/dashboard.html.j2 Jinja2 template + _write_html_dashboard() helper + HTML unit tests (OUT-05) — COMPLETE 2026-05-23
 - [ ] 05-02-PLAN.md — _write_report() helper: all 7 docx sections programmatically via python-docx + report unit tests (OUT-04)
 
 **Wave 2** *(blocked on Wave 1 completion)*

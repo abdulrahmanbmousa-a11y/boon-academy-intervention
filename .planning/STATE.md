@@ -16,8 +16,8 @@ progress:
 
 ## Current Status
 
-- **Phase:** 5 — HTML Dashboard + Word Report (planned, ready to execute)
-- **Active plan:** 05-01 (next to execute)
+- **Phase:** 5 — HTML Dashboard + Word Report (in progress)
+- **Active plan:** 05-02 (next to execute)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation
 - **Last updated:** 2026-05-23
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
 | 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
-| 5 | HTML Dashboard + Word Report | 0 / 3 | Planned |
+| 5 | HTML Dashboard + Word Report | 1 / 3 | In Progress |
 | 6 | Documentation Suite | 0 / ? | Pending |
 | 7 | Test Suite | 0 / ? | Pending |
 | 8 | End-to-End Integration + Polish | 0 / ? | Pending |
@@ -56,11 +56,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 04 | 04-01 | ~3 min | 2/2 | 4 |
 | 04 | 04-02 | ~12 min | 2/2 | 2 |
 | 04 | 04-03 | ~8 min | 2/2 | 3 |
+| 05 | 05-01 | ~12 min | 2/2 | 4 |
 
 - **Phases completed:** 4 / 8
-- **Plans completed:** 11 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans)
-- **Requirements delivered:** 52 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-06 complete)
-- **Test coverage:** 99 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4, all GREEN)
+- **Plans completed:** 12 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 1/3 plans)
+- **Requirements delivered:** 53 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-05, OUT-06 complete)
+- **Test coverage:** 104 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 5 Phase 5-01, all GREEN)
 
 ## Accumulated Context
 
@@ -110,6 +111,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - write_outputs(df, output_dir, run_log) 3-arg orchestrator: output_dir.mkdir first, calls all 4 private helpers in order, returns unified dict (D-01..D-04)
 - T-04-05 confirmed: ANTHROPIC_API_KEY passed to enrich_with_llm() only, never stored in run_log dict; run_log has exactly 7 safe keys
 - main.py Phase 4 wiring: from src import output_generator at top; paths = output_generator.write_outputs(df, cfg.OUTPUT_DIR, run_log) uses 3 positional args (not keyword); logger.info logs list(paths.keys())
+- DISPLAY_COLS_DASHBOARD (12 cols): no COL_RANK (JS sorts client-side), no COL_RECOMMENDED_ACTION (COL_FACILITATOR_SUMMARY used instead per D-02)
+- Jinja2 loaded lazily inside _write_html_dashboard() (not at module import); autoescape=False because students_json is pre-serialised JSON in a script tag
+- dashboard.html.j2: zero external URLs; all CSS/JS inline; campus_ids template variable populates filter <select>; risk buttons use data-level attribute; one detail row open at a time
+- json.dumps(records).replace("</","<\\/") in _write_html_dashboard — T-05-01 script-tag injection guard; covered by test_html_dashboard_escape_script_tag
 
 ### Known Pitfalls (from research)
 
@@ -152,4 +157,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after 04-03 execution (Phase 4 complete — write_outputs orchestrator, main.py wiring, 3 new integration tests, 99 total tests GREEN)*
+*Last updated: 2026-05-23 after 05-01 execution (OUT-05 HTML dashboard — DISPLAY_COLS_DASHBOARD, dashboard.html.j2 template, _write_html_dashboard() helper, 5 new tests, 104 total tests GREEN)*
