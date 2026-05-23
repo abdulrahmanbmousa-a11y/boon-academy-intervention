@@ -67,6 +67,11 @@ def sample_df() -> pd.DataFrame:
                 None,
                 None,
             ],
+            # Component score columns required by DISPLAY_COLS_DASHBOARD (CR-01)
+            cfg.COL_ATTENDANCE_COMPONENT: [31.5, 17.5, 7.0, 1.0],
+            cfg.COL_PRACTICE_COMPONENT: [27.0, 21.0, 12.0, 3.0],
+            cfg.COL_TREND_COMPONENT: [20.0, 10.0, 10.0, 0.0],
+            cfg.COL_NOTES_COMPONENT: [11.5, 8.0, 3.0, 0.5],
         }
     )
 
@@ -540,6 +545,11 @@ def full_sample_df() -> pd.DataFrame:
                 None,
             ],
             cfg.COL_GENERATED_BY: ["llm", "template", None, "llm", "template", None],
+            # Component score columns required by DISPLAY_COLS_DASHBOARD (CR-01)
+            cfg.COL_ATTENDANCE_COMPONENT: [32.2, 15.8, 5.5, 30.1, 18.0, 1.5],
+            cfg.COL_PRACTICE_COMPONENT: [28.5, 20.0, 10.0, 25.0, 22.0, 3.0],
+            cfg.COL_TREND_COMPONENT: [20.0, 10.0, 10.0, 20.0, 10.0, 0.0],
+            cfg.COL_NOTES_COMPONENT: [11.3, 8.0, 3.0, 10.5, 5.0, 0.5],
         }
     )
 
@@ -678,6 +688,11 @@ def test_html_dashboard_escape_script_tag(
             cfg.COL_FACILITATOR_SUMMARY: ["Summary text"],
             cfg.COL_WHATSAPP_MESSAGE: ["</script><script>alert(1)</script>"],
             cfg.COL_GENERATED_BY: ["llm"],
+            # Component columns required by DISPLAY_COLS_DASHBOARD (CR-01)
+            cfg.COL_ATTENDANCE_COMPONENT: [28.0],
+            cfg.COL_PRACTICE_COMPONENT: [24.0],
+            cfg.COL_TREND_COMPONENT: [20.0],
+            cfg.COL_NOTES_COMPONENT: [8.0],
         }
     )
     path = _write_html_dashboard(injection_df, tmp_path)
