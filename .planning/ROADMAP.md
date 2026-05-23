@@ -75,9 +75,9 @@
   3. `outputs/whatsapp_messages.csv` contains columns student_id, student_name, parent_phone, facilitator_email, campus_id, risk_level, message_text, generated_by â€” and every CRITICAL/HIGH student has a row
   4. `outputs/run_log.json` exists and contains run_timestamp, students_processed, api_calls_made, tokens_used, errors_encountered, fallbacks_triggered, and data_quality_warnings
 **Plans:** 3 plans
-- [x] 04-01-PLAN.md — Config constants + _write_whatsapp_csv + _write_run_log + unit tests (OUT-03, OUT-06) — COMPLETE 2026-05-23
-- [ ] 04-02-PLAN.md — _write_priority_list + _write_campus_dashboards + Excel format tests (OUT-01, OUT-02)
-- [ ] 04-03-PLAN.md — write_outputs orchestrator + main.py wiring + integration test (OUT-01, OUT-02, OUT-03, OUT-06)
+- [x] 04-01-PLAN.md ï¿½ Config constants + _write_whatsapp_csv + _write_run_log + unit tests (OUT-03, OUT-06) ï¿½ COMPLETE 2026-05-23
+- [x] 04-02-PLAN.md ï¿½ _write_priority_list + _write_campus_dashboards + Excel format tests (OUT-01, OUT-02) - COMPLETE 2026-05-23
+- [ ] 04-03-PLAN.md ï¿½ write_outputs orchestrator + main.py wiring + integration test (OUT-01, OUT-02, OUT-03, OUT-06)
 **UI hint**: yes
 
 ### Phase 5: HTML Dashboard + Word Report
