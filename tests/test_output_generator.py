@@ -14,6 +14,7 @@ from openpyxl import load_workbook
 from src import config as cfg
 from src.output_generator import (
     _write_campus_dashboards,
+    _write_html_dashboard,
     _write_priority_list,
     _write_run_log,
     _write_whatsapp_csv,
@@ -576,6 +577,9 @@ def test_write_outputs_returns_all_keys(
     assert "run_log" in result, (
         f"Missing key 'run_log' in result: {list(result.keys())}"
     )
+    assert "dashboard" in result, (
+        f"Missing key 'dashboard' in result: {list(result.keys())}"
+    )
 
 
 def test_write_outputs_all_paths_exist(
@@ -602,3 +606,94 @@ def test_write_outputs_creates_output_dir(
     result = write_outputs(full_sample_df, nested_dir, sample_run_log_full)
     assert nested_dir.exists(), f"Expected output_dir to be created: {nested_dir}"
     assert len(result) > 0, "Expected non-empty result dict after write_outputs call"
+
+
+# ---------------------------------------------------------------------------
+# _write_html_dashboard tests (OUT-05)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def html_dashboard_path(sample_df: pd.DataFrame, tmp_path: Path) -> Path:
+    """Write HTML dashboard to tmp_path and return the path for round-trip assertions."""
+    return _write_html_dashboard(sample_df, tmp_path)
+
+
+def test_html_dashboard_returns_path(
+    sample_df: pd.DataFrame, tmp_path: Path
+) -> None:
+    """_write_html_dashboard returns a Path pointing to facilitator_dashboard.html."""
+    result = _write_html_dashboard(sample_df, tmp_path)
+    assert isinstance(result, Path), f"Expected Path, got {type(result)}"
+    assert result.exists(), f"Returned path does not exist: {result}"
+    assert result.name == "facilitator_dashboard.html"
+
+
+def test_html_dashboard_contains_student_data(html_dashboard_path: Path) -> None:
+    """Rendered HTML embeds the JS const studentsData with at least one student ID."""
+    content = html_dashboard_path.read_text(encoding="utf-8")
+    assert "studentsData" in content, "Expected JS const 'studentsData' in HTML"
+    assert "S001" in content, "Expected student_id S001 in embedded JSON"
+
+
+def test_html_dashboard_contains_campus_ids(html_dashboard_path: Path) -> None:
+    """Campus IDs from sample_df appear in the rendered HTML (campus filter options)."""
+    content = html_dashboard_path.read_text(encoding="utf-8")
+    assert "ALPHA" in content, "Expected campus_id 'ALPHA' in rendered HTML"
+    assert "BETA" in content, "Expected campus_id 'BETA' in rendered HTML"
+
+
+def test_html_dashboard_no_external_urls(html_dashboard_path: Path) -> None:
+    """HTML file contains no external http:// or https:// URLs — fully self-contained."""
+    content = html_dashboard_path.read_text(encoding="utf-8")
+    assert "https://" not in content, "Unexpected https:// URL found — file must be self-contained"
+    assert "http://" not in content, "Unexpected http:// URL found — file must be self-contained"
+
+
+def test_html_dashboard_escape_script_tag(
+    sample_df: pd.DataFrame, tmp_path: Path
+) -> None:
+    """json.dumps().replace('</','<\\/') prevents </script> injection in the JSON data block.
+
+    Builds a one-row DataFrame with a whatsapp_message containing a literal
+    </script> tag, renders the dashboard, then asserts the embedded JSON data
+    block does not contain an unescaped </script> sequence.
+    """
+    # Build minimal one-row DataFrame with injection payload
+    injection_df = pd.DataFrame(
+        {
+            cfg.COL_STUDENT_ID: ["INJ01"],
+            cfg.COL_STUDENT_NAME: ["Test Student"],
+            cfg.COL_CAMPUS_ID: ["CAMPUS_X"],
+            cfg.COL_RISK_SCORE: [80.0],
+            cfg.COL_RISK_LEVEL: ["CRITICAL"],
+            cfg.COL_ATTENDANCE_RATE: [0.3],
+            cfg.COL_AVG_PRACTICE: [2.0],
+            cfg.COL_TREND_DIR: ["declining"],
+            cfg.COL_DAYS_SINCE_NOTE: [15],
+            cfg.COL_FACILITATOR_SUMMARY: ["Summary text"],
+            cfg.COL_WHATSAPP_MESSAGE: ["</script><script>alert(1)</script>"],
+            cfg.COL_GENERATED_BY: ["llm"],
+        }
+    )
+    path = _write_html_dashboard(injection_df, tmp_path)
+    content = path.read_text(encoding="utf-8")
+
+    # Find the JSON data block that starts with the const declaration
+    json_start = content.find("const studentsData =")
+    assert json_start != -1, "Could not find 'const studentsData =' in rendered HTML"
+
+    # Extract from the const declaration to the closing semicolon of the array
+    # The JSON array ends with "];", look for the next ";" after the opening bracket
+    json_block_start = content.find("[", json_start)
+    json_block_end = content.find("];", json_block_start)
+    assert json_block_start != -1 and json_block_end != -1, (
+        "Could not delimit the studentsData JSON array in rendered HTML"
+    )
+    json_block = content[json_block_start : json_block_end + 2]
+
+    # The literal string "</script>" must NOT appear in the JSON data block
+    assert "</script>" not in json_block, (
+        "Unescaped </script> found in studentsData JSON block — "
+        "json.dumps().replace('</','<\\/') injection guard is broken"
+    )

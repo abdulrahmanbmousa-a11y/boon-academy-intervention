@@ -79,6 +79,67 @@ def _write_run_log(run_log: dict, output_dir: Path) -> Path:
     return path
 
 
+def _write_html_dashboard(df: pd.DataFrame, output_dir: Path) -> Path:
+    """Write facilitator_dashboard.html — fully self-contained HTML file (OUT-05).
+
+    Renders the dashboard.html.j2 Jinja2 template with all student records
+    embedded as a JS const (studentsData). The output file requires no server
+    and no network requests — it works via file:// in any modern browser.
+
+    JSON injection safety (CLAUDE.md critical pitfall): json.dumps().replace("</", "<\\/")
+    prevents </script> in student data from breaking the HTML script tag.
+
+    Jinja2 is loaded lazily inside this function (not at module import) to avoid
+    importing jinja2 unless the dashboard helper is actually called.
+
+    Args:
+        df: Fully enriched one-row-per-student DataFrame from enrich_with_llm().
+        output_dir: Directory to write facilitator_dashboard.html into.
+
+    Returns:
+        Path to the written facilitator_dashboard.html file.
+    """
+    from jinja2 import Environment, FileSystemLoader  # lazy import — D-01
+
+    df_copy = df.copy()
+
+    # Select display columns; replace NaN/NA with None so json.dumps serialises cleanly
+    display_cols = list(cfg.DISPLAY_COLS_DASHBOARD)
+    records = (
+        df_copy[display_cols]
+        .where(df_copy[display_cols].notna(), other=None)
+        .to_dict(orient="records")
+    )
+
+    # T-05-01: prevent </script> injection from student data (CLAUDE.md critical pitfall)
+    students_json = json.dumps(records).replace("</", "<\\/")
+
+    # Campus filter options — sorted unique campus IDs from data
+    campus_ids: list[str] = sorted(
+        df_copy[cfg.COL_CAMPUS_ID].dropna().unique().tolist()
+    )
+
+    # Load Jinja2 template from src/templates/dashboard.html.j2 (file-adjacent resource)
+    template_dir = Path(__file__).parent / "templates"
+    env = Environment(
+        loader=FileSystemLoader(str(template_dir)),
+        autoescape=False,  # students_json is pre-serialised JSON, not user HTML
+    )
+    template = env.get_template("dashboard.html.j2")
+
+    run_timestamp = str(pd.Timestamp.now().isoformat())
+    html = template.render(
+        students_json=students_json,
+        campus_ids=campus_ids,
+        run_timestamp=run_timestamp,
+    )
+
+    path = output_dir / "facilitator_dashboard.html"
+    path.write_text(html, encoding="utf-8")
+    logger.info("Wrote HTML dashboard: %s (%d students)", path, len(df_copy))
+    return path
+
+
 def _write_priority_list(df: pd.DataFrame, output_dir: Path) -> Path:
     """Write intervention_priority_list.xlsx — all students ranked by risk_score desc.
 
@@ -299,7 +360,7 @@ def write_outputs(
 
     D-03: Creates output_dir (including parents) if it does not exist — idempotent.
     D-04: Delegates to four independently-testable private helpers.
-    D-09: Phase 5 will add _write_report() and _write_html_dashboard() here.
+    D-09: Phase 5 adds _write_html_dashboard() (OUT-05) called after run_log.
 
     Args:
         df: Fully enriched one-row-per-student DataFrame from enrich_with_llm().
@@ -310,7 +371,7 @@ def write_outputs(
 
     Returns:
         Dict mapping output file keys to their resolved Path objects.
-        Keys: "priority_list", "campus_{campus_id}" per campus, "whatsapp", "run_log".
+        Keys: "priority_list", "campus_{campus_id}" per campus, "whatsapp", "run_log", "dashboard".
     """
     output_dir.mkdir(parents=True, exist_ok=True)   # D-03
 
@@ -332,6 +393,9 @@ def write_outputs(
 
     run_log_path = _write_run_log(run_log, output_dir)
     paths["run_log"] = run_log_path
+
+    dashboard_path = _write_html_dashboard(df, output_dir)
+    paths["dashboard"] = dashboard_path
 
     logger.info(
         "All outputs written to %s — keys: %s",
