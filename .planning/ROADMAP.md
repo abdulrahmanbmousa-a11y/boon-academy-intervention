@@ -10,7 +10,7 @@
 ## Phases
 
 - [x] **Phase 1: Foundation + Data Ingestion** - Project scaffold, config, synthetic data, and a clean unified DataFrame — COMPLETE 2026-05-22
-- [ ] **Phase 2: Risk Scoring Engine** - Deterministic weighted risk formula producing risk_score and risk_level for every student
+- [x] **Phase 2: Risk Scoring Engine** - Deterministic weighted risk formula producing risk_score and risk_level for every student — COMPLETE 2026-05-23
 - [ ] **Phase 3: Claude API Integration** - Campus-batched LLM calls with three-layer error handling and PII-safe logging
 - [ ] **Phase 4: Excel + CSV Output Generation** - intervention_priority_list.xlsx, per-campus dashboards, whatsapp_messages.csv, run_log.json
 - [ ] **Phase 5: HTML Dashboard + Word Report** - Self-contained HTML dashboard and intervention_report.docx
@@ -48,7 +48,7 @@
   4. All column name strings used in the scoring logic are imported from constants defined in `src/config.py` — no bare string literals appear in `risk_engine.py`
 **Plans:** 2 plans
 - [x] 02-01-PLAN.md - Wave 0: src/config.py +4 D-09 component constants + tests/test_config.py extension + tests/test_risk_engine.py failing-test scaffold (RISK-08 scaffolding) — COMPLETE 2026-05-23
-- [ ] 02-02-PLAN.md - Wave 1: src/risk_engine.py pure function (D-01..D-09) + main.py wiring (RISK-01..RISK-08)
+- [x] 02-02-PLAN.md - Wave 1: src/risk_engine.py pure function (D-01..D-09) + main.py wiring (RISK-01..RISK-08) — COMPLETE 2026-05-23
 
 ### Phase 3: Claude API Integration
 **Goal:** CRITICAL and HIGH risk students receive AI-generated facilitator summaries and WhatsApp messages via campus-batched API calls, with automatic fallback to labeled rule-based templates on any failure.
@@ -128,7 +128,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Data Ingestion | 3/3 | Complete | 2026-05-22 |
-| 2. Risk Scoring Engine | 0/2 | Planned | - |
+| 2. Risk Scoring Engine | 2/2 | Complete | 2026-05-23 |
 | 3. Claude API Integration | 0/? | Not started | - |
 | 4. Excel + CSV Output Generation | 0/? | Not started | - |
 | 5. HTML Dashboard + Word Report | 0/? | Not started | - |
