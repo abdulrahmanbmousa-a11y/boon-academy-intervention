@@ -9,6 +9,7 @@ import sys
 from datetime import datetime, timezone
 
 from src import config as cfg
+from src import llm_engine
 from src.ingestion import ingest
 from src.risk_engine import score_risk
 
@@ -71,11 +72,16 @@ def main() -> int:
     df = score_risk(df)
     logger.info(f"Scored {len(df)} students")
 
-    # Phase 3: LLM enrichment (wired in plan 03-01)
-    # df = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY)
-    # run_log["api_calls_made"] = ...
-    # run_log["tokens_used"] = ...
-    # run_log["fallbacks_triggered"] = ...
+    # Phase 3: LLM enrichment
+    df, llm_counts = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY)
+    run_log["api_calls_made"] = llm_counts["api_calls_made"]
+    run_log["tokens_used"] = llm_counts["tokens_used"]
+    run_log["fallbacks_triggered"] = llm_counts["fallbacks_triggered"]
+    logger.info(
+        f"LLM enrichment complete — "
+        f"api_calls={llm_counts['api_calls_made']}, "
+        f"fallbacks={llm_counts['fallbacks_triggered']}"
+    )
 
     # Phase 4: Output generation — D-06: single write-at-end point
     # write_outputs(df, cfg.OUTPUT_DIR, run_log=run_log)
