@@ -75,9 +75,9 @@
   3. `outputs/whatsapp_messages.csv` contains columns student_id, student_name, parent_phone, facilitator_email, campus_id, risk_level, message_text, generated_by — and every CRITICAL/HIGH student has a row
   4. `outputs/run_log.json` exists and contains run_timestamp, students_processed, api_calls_made, tokens_used, errors_encountered, fallbacks_triggered, and data_quality_warnings
 **Plans:** 3 plans
-- [x] 04-01-PLAN.md � Config constants + _write_whatsapp_csv + _write_run_log + unit tests (OUT-03, OUT-06) � COMPLETE 2026-05-23
-- [x] 04-02-PLAN.md � _write_priority_list + _write_campus_dashboards + Excel format tests (OUT-01, OUT-02) - COMPLETE 2026-05-23
-- [x] 04-03-PLAN.md � write_outputs orchestrator + main.py wiring + integration test (OUT-01, OUT-02, OUT-03, OUT-06)
+- [x] 04-01-PLAN.md — Config constants + _write_whatsapp_csv + _write_run_log + unit tests (OUT-03, OUT-06) — COMPLETE 2026-05-23
+- [x] 04-02-PLAN.md — _write_priority_list + _write_campus_dashboards + Excel format tests (OUT-01, OUT-02) — COMPLETE 2026-05-23
+- [x] 04-03-PLAN.md — write_outputs orchestrator + main.py wiring + integration test (OUT-01, OUT-02, OUT-03, OUT-06)
 **UI hint**: yes
 
 ### Phase 5: HTML Dashboard + Word Report
@@ -88,7 +88,19 @@
   1. Opening `outputs/facilitator_dashboard.html` directly in a browser via file:// shows the risk table, campus filter, risk-level filter buttons, and name search — all functional with no network requests
   2. Clicking a student row expands to show risk breakdown, facilitator summary, WhatsApp message, and a copy button that copies the message text to clipboard
   3. Opening `outputs/intervention_report.docx` in Word and Google Docs shows: cover page, executive summary with risk breakdown table, top 10 most at-risk students, campus summary table, 3-4 student deep-dives, data quality notes, and methodology appendix — all without rendering errors
-**Plans:** TBD
+**Plans:** 3 plans
+
+**Wave 1** *(parallel)*
+- [ ] 05-01-PLAN.md — DISPLAY_COLS_DASHBOARD config constant + src/templates/dashboard.html.j2 Jinja2 template + _write_html_dashboard() helper + HTML unit tests (OUT-05)
+- [ ] 05-02-PLAN.md — _write_report() helper: all 7 docx sections programmatically via python-docx + report unit tests (OUT-04)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 05-03-PLAN.md — Extend write_outputs() to call both new helpers + integration test asserting "dashboard" and "report" keys (OUT-04, OUT-05)
+
+**Cross-cutting constraints:**
+- All column names via cfg.COL_* — no bare string literals in output logic
+- json.dumps().replace("</", "<\\/") required before embedding data in script tags
+- python-docx: built-in heading levels + 'Table Grid' style only, no OxmlElement
 **UI hint**: yes
 
 ### Phase 6: Documentation Suite
@@ -136,8 +148,8 @@
 | 1. Foundation + Data Ingestion | 3/3 | Complete | 2026-05-22 |
 | 2. Risk Scoring Engine | 2/2 | Complete | 2026-05-23 |
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
-| 4. Excel + CSV Output Generation | 1/3 | In Progress | - |
-| 5. HTML Dashboard + Word Report | 0/? | Not started | - |
+| 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
+| 5. HTML Dashboard + Word Report | 0/3 | Planned | - |
 | 6. Documentation Suite | 0/? | Not started | - |
 | 7. Test Suite | 0/? | Not started | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
@@ -164,4 +176,4 @@
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-23 after 04-01 execution (Phase 4 plan 1 complete — 9 config constants, _write_whatsapp_csv, _write_run_log, 14 new tests, 79 total tests GREEN)*
+*Last updated: 2026-05-23 after Phase 5 planning (3 plans created — 05-01 HTML dashboard, 05-02 Word report, 05-03 write_outputs wiring)*
