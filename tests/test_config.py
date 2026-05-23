@@ -108,3 +108,65 @@ class TestWeightConstants:
         import src.config as cfg
         total = cfg.WEIGHT_ATTENDANCE + cfg.WEIGHT_PRACTICE + cfg.WEIGHT_TREND + cfg.WEIGHT_NOTES
         assert abs(total - 1.0) < 1e-9, f"Weights sum to {total}, expected 1.0"
+
+
+class TestPhase4FormattingConstants:
+    """D-10: Phase 4 output formatting constants — colors, fonts, and column lists."""
+
+    def test_color_constants_are_8char_hex(self, monkeypatch):
+        """Each COLOR_* value has len == 8 and starts with 'FF' (8-char openpyxl ARGB format)."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        color_constants = [
+            cfg.COLOR_CRITICAL,
+            cfg.COLOR_HIGH,
+            cfg.COLOR_MEDIUM,
+            cfg.COLOR_LOW,
+            cfg.COLOR_HEADER,
+        ]
+        for color in color_constants:
+            assert len(color) == 8, f"Expected 8-char hex, got {color!r} (len={len(color)})"
+            assert color.startswith("FF"), f"Expected FF prefix, got {color!r}"
+
+    def test_output_cols_priority_length(self, monkeypatch):
+        """OUTPUT_COLS_PRIORITY has exactly 12 elements (OUT-01 column spec)."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        assert len(cfg.OUTPUT_COLS_PRIORITY) == 12, (
+            f"Expected 12 columns, got {len(cfg.OUTPUT_COLS_PRIORITY)}: {cfg.OUTPUT_COLS_PRIORITY}"
+        )
+
+    def test_output_cols_campus_length(self, monkeypatch):
+        """OUTPUT_COLS_CAMPUS has exactly 15 elements (standard 12 + 3 LLM columns)."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        assert len(cfg.OUTPUT_COLS_CAMPUS) == 15, (
+            f"Expected 15 columns, got {len(cfg.OUTPUT_COLS_CAMPUS)}: {cfg.OUTPUT_COLS_CAMPUS}"
+        )
+
+    def test_output_cols_campus_is_superset(self, monkeypatch):
+        """Every column in OUTPUT_COLS_PRIORITY also appears in OUTPUT_COLS_CAMPUS."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        for col in cfg.OUTPUT_COLS_PRIORITY:
+            assert col in cfg.OUTPUT_COLS_CAMPUS, (
+                f"Column {col!r} from OUTPUT_COLS_PRIORITY missing from OUTPUT_COLS_CAMPUS"
+            )
+
+    def test_col_rank_constant_value(self, monkeypatch):
+        """COL_RANK == 'rank' (derived column added by write_outputs, not from risk_engine)."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        assert cfg.COL_RANK == "rank"
+
+    def test_font_white_value(self, monkeypatch):
+        """FONT_WHITE == 'FFFFFFFF' (8-char ARGB for openpyxl white header text)."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        assert cfg.FONT_WHITE == "FFFFFFFF"
+
+    def test_color_header_value(self, monkeypatch):
+        """COLOR_HEADER == 'FF1F4E79' (dark navy for header row background)."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        assert cfg.COLOR_HEADER == "FF1F4E79"

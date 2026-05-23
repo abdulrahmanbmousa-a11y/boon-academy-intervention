@@ -97,3 +97,29 @@ COL_FACILITATOR_SUMMARY: str = "facilitator_summary"
 COL_WHATSAPP_MESSAGE: str = "whatsapp_message"
 COL_GENERATED_BY: str = "generated_by"
 COL_LLM_ERROR_REASON: str = "llm_error_reason"
+
+# ---------------------------------------------------------------------------
+# Phase 4 output formatting constants (D-10)
+# ---------------------------------------------------------------------------
+COLOR_CRITICAL: str = "FFFFCCCC"   # light red  (8-char openpyxl ARGB, fill_type="solid")
+COLOR_HIGH: str = "FFFFE5CC"       # light orange
+COLOR_MEDIUM: str = "FFFFFFCC"     # light yellow
+COLOR_LOW: str = "FFCCFFCC"        # light green
+COLOR_HEADER: str = "FF1F4E79"     # dark navy (header row background)
+FONT_WHITE: str = "FFFFFFFF"       # white (header row text color)
+
+# Rank column (derived in _write_priority_list, not from risk_engine)
+COL_RANK: str = "rank"
+
+# OUT-01 column order — 12 columns, exact sequence for intervention_priority_list.xlsx
+OUTPUT_COLS_PRIORITY: list[str] = [
+    COL_RANK, COL_STUDENT_ID, COL_STUDENT_NAME, COL_CAMPUS_ID,
+    COL_FACILITATOR_EMAIL, COL_RISK_SCORE, COL_RISK_LEVEL,
+    COL_ATTENDANCE_RATE, COL_AVG_PRACTICE, COL_TREND_DIR,
+    COL_DAYS_SINCE_NOTE, COL_RECOMMENDED_ACTION,
+]
+
+# OUT-02 campus dashboard columns — standard 12 + 3 LLM columns = 15 total (D-05)
+OUTPUT_COLS_CAMPUS: list[str] = OUTPUT_COLS_PRIORITY + [
+    COL_FACILITATOR_SUMMARY, COL_WHATSAPP_MESSAGE, COL_GENERATED_BY,
+]
