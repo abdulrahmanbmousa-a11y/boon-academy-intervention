@@ -283,26 +283,50 @@ def _write_campus_dashboards(
     return results
 
 
-def write_outputs(df: pd.DataFrame, output_dir: Path) -> dict[str, Path]:
-    """Write all 6 output files for the intervention pipeline.
+def write_outputs(
+    df: pd.DataFrame,
+    output_dir: Path,
+    run_log: dict,
+) -> dict[str, Path]:
+    """Write all Phase 4 output files for the intervention pipeline.
 
-    Phase 4 implementation: writes intervention_priority_list.xlsx,
-    facilitator_dashboard_*.xlsx (one per campus), whatsapp_messages.csv,
-    intervention_report.docx, facilitator_dashboard.html, and run_log.json.
+    Orchestrates four private helpers — one per output type — and returns a unified
+    dict mapping semantic keys to resolved Path objects (D-01, D-02).
 
-    D-05 / D-06: run_log.json is built in-memory by main.py throughout the run
-    (schema: run_timestamp, students_processed, api_calls_made, tokens_used,
-    errors_encountered, fallbacks_triggered, data_quality_warnings) and written
-    exactly once here at pipeline end — no partial writes, no file locking needed.
+    D-03: Creates output_dir (including parents) if it does not exist — idempotent.
+    D-04: Delegates to four independently-testable private helpers.
+    D-09: Phase 5 will add _write_report() and _write_html_dashboard() here.
 
     Args:
         df: Fully enriched one-row-per-student DataFrame from enrich_with_llm().
         output_dir: Directory to write all output files into (cfg.OUTPUT_DIR).
+        run_log: In-memory run metadata dict built throughout the pipeline run (D-05/D-06).
+                 Keys: run_timestamp, students_processed, api_calls_made, tokens_used,
+                 errors_encountered, fallbacks_triggered, data_quality_warnings.
 
     Returns:
         Dict mapping output file keys to their resolved Path objects.
-
-    Raises:
-        NotImplementedError: Until Phase 4 plans 04-02 and 04-03 are implemented.
+        Keys: "priority_list", "campus_{campus_id}" per campus, "whatsapp", "run_log".
     """
-    raise NotImplementedError("Phase 4")
+    output_dir.mkdir(parents=True, exist_ok=True)   # D-03
+
+    paths: dict[str, Path] = {}
+
+    priority_path = _write_priority_list(df, output_dir)
+    paths["priority_list"] = priority_path
+
+    campus_paths = _write_campus_dashboards(df, output_dir)
+    paths.update(campus_paths)
+
+    whatsapp_path = _write_whatsapp_csv(df, output_dir)
+    paths["whatsapp"] = whatsapp_path
+
+    run_log_path = _write_run_log(run_log, output_dir)
+    paths["run_log"] = run_log_path
+
+    logger.info(
+        "All outputs written to %s — keys: %s",
+        output_dir,
+        list(paths.keys()),
+    )
+    return paths

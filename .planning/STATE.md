@@ -144,7 +144,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - `ingestion.ingest(data_paths) -> DataFrame` — clean, merged, deduped
 - `risk_engine.score_risk(df) -> DataFrame` — pure function, no I/O
 - `llm_engine.enrich_with_llm(df, api_key, http_client=None) -> tuple[DataFrame, dict]` — never raises; dict keys: api_calls_made (int), tokens_used (dict[str,int]), fallbacks_triggered (int)
-- `output_generator.write_outputs(df, output_dir) -> dict[str, Path]` — idempotent
+- `output_generator.write_outputs(df, output_dir, run_log) -> dict[str, Path]` — idempotent; run_log is required positional arg (D-01)
 
 ---
 *State initialized: 2026-05-21*
