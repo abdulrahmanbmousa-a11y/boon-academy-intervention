@@ -3,7 +3,7 @@
 **Project:** boon-academy-intervention
 **Granularity:** Fine (8 phases)
 **Coverage:** 52/52 requirements mapped
-**Last updated:** 2026-05-22
+**Last updated:** 2026-05-23
 
 ---
 
@@ -46,7 +46,9 @@
   2. A student with 0 attendance, 0 practice, declining trend, and no facilitator note receives risk_score >= 75 and risk_level == "CRITICAL"
   3. A student with perfect attendance, high practice volume, improving trend, and a recent note receives risk_score < 25 and risk_level == "LOW"
   4. All column name strings used in the scoring logic are imported from constants defined in `src/config.py` — no bare string literals appear in `risk_engine.py`
-**Plans:** TBD
+**Plans:** 2 plans
+- [ ] 02-01-PLAN.md - Wave 0: src/config.py +4 D-09 component constants + tests/test_config.py extension + tests/test_risk_engine.py failing-test scaffold (RISK-08 scaffolding)
+- [ ] 02-02-PLAN.md - Wave 1: src/risk_engine.py pure function (D-01..D-09) + main.py wiring (RISK-01..RISK-08)
 
 ### Phase 3: Claude API Integration
 **Goal:** CRITICAL and HIGH risk students receive AI-generated facilitator summaries and WhatsApp messages via campus-batched API calls, with automatic fallback to labeled rule-based templates on any failure.
@@ -126,7 +128,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation + Data Ingestion | 3/3 | Complete | 2026-05-22 |
-| 2. Risk Scoring Engine | 0/? | Not started | - |
+| 2. Risk Scoring Engine | 0/2 | Planned | - |
 | 3. Claude API Integration | 0/? | Not started | - |
 | 4. Excel + CSV Output Generation | 0/? | Not started | - |
 | 5. HTML Dashboard + Word Report | 0/? | Not started | - |
@@ -156,4 +158,4 @@
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-22 after Plan 01-03 completion (Phase 1 all 3 plans done — ingestion module, 25 tests green)*
+*Last updated: 2026-05-23 after Phase 2 planning (2 plans: Wave 0 scaffold + Wave 1 implementation)*
