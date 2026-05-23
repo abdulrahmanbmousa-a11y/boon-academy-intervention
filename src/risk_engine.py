@@ -11,6 +11,7 @@ Patterns applied (02-RESEARCH.md):
 - Pattern 5: df.copy() at function entry (purity + df.attrs preservation, Pitfall 8)
 """
 import logging
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -148,8 +149,9 @@ def score_risk(df: pd.DataFrame) -> pd.DataFrame:
     # Purity guarantee — preserves df.attrs in pandas 2.2.3 (Pitfall 8)
     df = df.copy()
 
-    # Called ONCE here — never inside .apply (Pitfall 7)
-    today = pd.Timestamp.now().normalize()
+    # Called ONCE here — never inside .apply (Pitfall 7).
+    # Uses stdlib datetime (patched by freezegun) not pd.Timestamp.now() (C extension, not patched).
+    today = pd.Timestamp(datetime.now()).normalize()
 
     # ------------------------------------------------------------------
     # RISK-07 domain columns
