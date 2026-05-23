@@ -443,6 +443,8 @@ function renderTable(rows) {
     const summary = student.facilitator_summary || '(No facilitator summary available)';
     const whatsapp = student.whatsapp_message || '(No WhatsApp message available)';
 
+    // Use placeholders for user-supplied text; set via textContent after innerHTML
+    // to prevent double-encoding of any pre-existing HTML entities in LLM output (CR-02)
     detailTd.innerHTML = `
       <div class="detail-panel">
         <div class="detail-section">
@@ -457,15 +459,19 @@ function renderTable(rows) {
         </div>
         <div class="detail-section">
           <h3>Facilitator Summary</h3>
-          <p class="summary-text">${escapeHtml(summary)}</p>
+          <p class="summary-text"></p>
         </div>
         <div class="whatsapp-box">
           <h3>WhatsApp Message</h3>
-          <p class="whatsapp-text" id="wa-${idx}">${escapeHtml(whatsapp)}</p>
+          <p class="whatsapp-text" id="wa-${idx}"></p>
           <button class="copy-btn" onclick="copyWhatsApp(${idx}, this)">Copy</button>
         </div>
       </div>
     `;
+    // Set user-supplied text via textContent — browser handles escaping automatically;
+    // no risk of double-encoding entities that are already in the raw LLM output
+    detailTd.querySelector('.summary-text').textContent = summary;
+    detailTd.querySelector('.whatsapp-text').textContent = whatsapp;
 
     detailTr.appendChild(detailTd);
 
