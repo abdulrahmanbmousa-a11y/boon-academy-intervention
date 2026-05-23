@@ -1,6 +1,7 @@
 """Tests for src/output_generator.py — private helper functions.
 
-Covers _write_whatsapp_csv (OUT-03) and _write_run_log (OUT-06).
+Covers _write_whatsapp_csv (OUT-03), _write_run_log (OUT-06),
+_write_priority_list (OUT-01), and _write_campus_dashboards (OUT-02).
 Each helper is tested independently using tmp_path for isolation.
 """
 import json
@@ -8,16 +9,23 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from openpyxl import load_workbook
 
 from src import config as cfg
-from src.output_generator import _write_whatsapp_csv, _write_run_log
+from src.output_generator import (
+    _write_campus_dashboards,
+    _write_priority_list,
+    _write_run_log,
+    _write_whatsapp_csv,
+)
 
 
 @pytest.fixture
 def sample_df() -> pd.DataFrame:
     """Minimal DataFrame with 4 rows covering all risk levels.
 
-    Columns match the full enriched DataFrame schema including LLM outputs.
+    Columns match the full enriched DataFrame schema including LLM outputs
+    and all columns required by OUTPUT_COLS_CAMPUS (15 cols).
     """
     return pd.DataFrame(
         {
@@ -31,7 +39,18 @@ def sample_df() -> pd.DataFrame:
                 "fac2@boon.sa",
             ],
             cfg.COL_CAMPUS_ID: ["ALPHA", "ALPHA", "BETA", "BETA"],
+            cfg.COL_RISK_SCORE: [90.0, 65.0, 40.0, 15.0],
             cfg.COL_RISK_LEVEL: ["CRITICAL", "HIGH", "MEDIUM", "LOW"],
+            cfg.COL_ATTENDANCE_RATE: [0.2, 0.5, 0.7, 0.9],
+            cfg.COL_AVG_PRACTICE: [1.0, 3.0, 5.0, 8.0],
+            cfg.COL_TREND_DIR: ["declining", "stable", "stable", "improving"],
+            cfg.COL_DAYS_SINCE_NOTE: [25, 10, 5, 2],
+            cfg.COL_RECOMMENDED_ACTION: [
+                "Contact parent immediately",
+                "Schedule check-in",
+                "Monitor progress",
+                "Acknowledge progress",
+            ],
             cfg.COL_WHATSAPP_MESSAGE: [
                 "Message for Alice",
                 "Message for Bob",
@@ -39,6 +58,12 @@ def sample_df() -> pd.DataFrame:
                 "",
             ],
             cfg.COL_GENERATED_BY: ["llm", "template", "", ""],
+            cfg.COL_FACILITATOR_SUMMARY: [
+                "Alice is at risk",
+                "Bob needs attention",
+                None,
+                None,
+            ],
         }
     )
 
@@ -157,4 +182,279 @@ def test_run_log_default_str_handles_non_serializable(tmp_path: Path) -> None:
     # datetime was serialized as a string — confirm it is readable
     assert isinstance(data["run_timestamp"], str), (
         f"Expected run_timestamp as str, got {type(data['run_timestamp'])}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# _write_priority_list fixtures and tests (OUT-01)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def priority_list_path(sample_df: pd.DataFrame, tmp_path: Path) -> Path:
+    """Write priority list to tmp_path and return the path for round-trip assertions."""
+    return _write_priority_list(sample_df, tmp_path)
+
+
+def test_priority_list_file_exists(priority_list_path: Path) -> None:
+    """_write_priority_list writes intervention_priority_list.xlsx to output_dir."""
+    assert priority_list_path.exists(), f"File not found: {priority_list_path}"
+    assert priority_list_path.name == "intervention_priority_list.xlsx"
+
+
+def test_priority_list_header_color(priority_list_path: Path) -> None:
+    """Header cell A1 has navy fill after save+reload (FF1F4E79)."""
+    wb = load_workbook(priority_list_path)
+    ws = wb.active
+    assert ws["A1"].fill.fgColor.rgb == cfg.COLOR_HEADER, (
+        f"Expected header fill {cfg.COLOR_HEADER}, got {ws['A1'].fill.fgColor.rgb}"
+    )
+
+
+def test_priority_list_header_font(priority_list_path: Path) -> None:
+    """Header cell A1 has bold white font after save+reload."""
+    wb = load_workbook(priority_list_path)
+    ws = wb.active
+    assert ws["A1"].font.bold is True, "Expected A1 font.bold to be True"
+    assert ws["A1"].font.color.rgb == cfg.FONT_WHITE, (
+        f"Expected header font color {cfg.FONT_WHITE}, got {ws['A1'].font.color.rgb}"
+    )
+
+
+def test_priority_list_freeze_panes(priority_list_path: Path) -> None:
+    """ws.freeze_panes == 'A2' after save+reload — header row is frozen."""
+    wb = load_workbook(priority_list_path)
+    ws = wb.active
+    assert ws.freeze_panes == "A2", (
+        f"Expected freeze_panes='A2', got {ws.freeze_panes!r}"
+    )
+
+
+def test_priority_list_critical_row_color(priority_list_path: Path) -> None:
+    """First data row (row 2) has CRITICAL fill color after save+reload."""
+    wb = load_workbook(priority_list_path)
+    ws = wb.active
+    # sample_df has CRITICAL (score=90) as first row — sorted desc it must be row 2
+    assert ws["A2"].fill.fgColor.rgb == cfg.COLOR_CRITICAL, (
+        f"Expected CRITICAL fill {cfg.COLOR_CRITICAL} at A2, got {ws['A2'].fill.fgColor.rgb}"
+    )
+
+
+def test_priority_list_sorted_desc(priority_list_path: Path) -> None:
+    """Rows are sorted by risk_score descending — row 2 has higher score than row 3."""
+    wb = load_workbook(priority_list_path)
+    ws = wb.active
+    # risk_score is column index 6 in OUTPUT_COLS_PRIORITY (1-based)
+    risk_score_col = cfg.OUTPUT_COLS_PRIORITY.index(cfg.COL_RISK_SCORE) + 1
+    score_row2 = ws.cell(row=2, column=risk_score_col).value
+    score_row3 = ws.cell(row=3, column=risk_score_col).value
+    assert score_row2 > score_row3, (
+        f"Expected row 2 score ({score_row2}) > row 3 score ({score_row3}) — must be sorted desc"
+    )
+
+
+def test_priority_list_rank_column(priority_list_path: Path) -> None:
+    """First data row has rank=1 in the rank column (A2)."""
+    wb = load_workbook(priority_list_path)
+    ws = wb.active
+    assert ws["A2"].value == 1, (
+        f"Expected rank=1 at A2 (first data row), got {ws['A2'].value}"
+    )
+
+
+def test_priority_list_column_count(priority_list_path: Path) -> None:
+    """Worksheet has exactly 12 columns (OUTPUT_COLS_PRIORITY length)."""
+    wb = load_workbook(priority_list_path)
+    ws = wb.active
+    assert ws.max_column == 12, (
+        f"Expected 12 columns (OUTPUT_COLS_PRIORITY), got {ws.max_column}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# _write_campus_dashboards fixtures and tests (OUT-02)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def multi_campus_df() -> pd.DataFrame:
+    """DataFrame with 2 campuses plus a NaN-campus row for dropna=True validation.
+
+    ALPHA: 1 CRITICAL + 1 MEDIUM
+    BETA:  1 HIGH + 1 LOW
+    Plus one row with campus_id=NaN (must be excluded from output files).
+    All 15 OUTPUT_COLS_CAMPUS columns are present. MEDIUM and LOW rows
+    have None in the 3 LLM columns per D-06.
+    """
+    import math
+
+    return pd.DataFrame(
+        {
+            cfg.COL_STUDENT_ID: ["S001", "S002", "S003", "S004", "S005"],
+            cfg.COL_STUDENT_NAME: ["Alice", "Carol", "Bob", "Dave", "Eve"],
+            cfg.COL_PARENT_PHONE: [
+                "0501111111",
+                "0503333333",
+                "0502222222",
+                "0504444444",
+                "0505555555",
+            ],
+            cfg.COL_FACILITATOR_EMAIL: [
+                "fac@alpha.sa",
+                "fac@alpha.sa",
+                "fac@beta.sa",
+                "fac@beta.sa",
+                "fac@unknown.sa",
+            ],
+            cfg.COL_CAMPUS_ID: ["ALPHA", "ALPHA", "BETA", "BETA", float("nan")],
+            cfg.COL_RISK_SCORE: [90.0, 35.0, 70.0, 15.0, 50.0],
+            cfg.COL_RISK_LEVEL: ["CRITICAL", "MEDIUM", "HIGH", "LOW", "HIGH"],
+            cfg.COL_ATTENDANCE_RATE: [0.2, 0.7, 0.5, 0.9, 0.6],
+            cfg.COL_AVG_PRACTICE: [1.0, 5.0, 3.0, 8.0, 4.0],
+            cfg.COL_TREND_DIR: ["declining", "stable", "stable", "improving", "stable"],
+            cfg.COL_DAYS_SINCE_NOTE: [25, 5, 10, 2, 7],
+            cfg.COL_RECOMMENDED_ACTION: [
+                "Contact parent immediately",
+                "Monitor progress",
+                "Schedule check-in",
+                "Acknowledge progress",
+                "Schedule check-in",
+            ],
+            cfg.COL_FACILITATOR_SUMMARY: [
+                "Alice is at critical risk",
+                None,
+                "Bob needs attention",
+                None,
+                "Eve needs attention",
+            ],
+            cfg.COL_WHATSAPP_MESSAGE: [
+                "Message for Alice",
+                None,
+                "Message for Bob",
+                None,
+                "Message for Eve",
+            ],
+            cfg.COL_GENERATED_BY: ["llm", None, "template", None, "llm"],
+        }
+    )
+
+
+@pytest.fixture
+def campus_dashboard_paths(
+    multi_campus_df: pd.DataFrame, tmp_path: Path
+) -> dict[str, Path]:
+    """Write campus dashboards to tmp_path and return the result dict."""
+    return _write_campus_dashboards(multi_campus_df, tmp_path)
+
+
+def test_campus_dashboard_files_created(
+    campus_dashboard_paths: dict[str, Path], tmp_path: Path
+) -> None:
+    """_write_campus_dashboards returns dict with keys for ALPHA and BETA; files exist."""
+    assert "campus_ALPHA" in campus_dashboard_paths, (
+        f"Missing key 'campus_ALPHA' in {list(campus_dashboard_paths.keys())}"
+    )
+    assert "campus_BETA" in campus_dashboard_paths, (
+        f"Missing key 'campus_BETA' in {list(campus_dashboard_paths.keys())}"
+    )
+    assert campus_dashboard_paths["campus_ALPHA"].exists()
+    assert campus_dashboard_paths["campus_BETA"].exists()
+
+
+def test_campus_dashboard_header_row(campus_dashboard_paths: dict[str, Path]) -> None:
+    """Header cell A1 has navy fill and bold font after save+reload."""
+    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    ws = wb.active
+    assert ws["A1"].fill.fgColor.rgb == cfg.COLOR_HEADER, (
+        f"Expected header fill {cfg.COLOR_HEADER}, got {ws['A1'].fill.fgColor.rgb}"
+    )
+    assert ws["A1"].font.bold is True, "Expected A1 font.bold to be True"
+
+
+def test_campus_dashboard_freeze_panes(campus_dashboard_paths: dict[str, Path]) -> None:
+    """ws.freeze_panes == 'A2' after save+reload."""
+    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    ws = wb.active
+    assert ws.freeze_panes == "A2", (
+        f"Expected freeze_panes='A2', got {ws.freeze_panes!r}"
+    )
+
+
+def test_campus_dashboard_column_count(campus_dashboard_paths: dict[str, Path]) -> None:
+    """Worksheet has exactly 15 columns (OUTPUT_COLS_CAMPUS length)."""
+    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    ws = wb.active
+    assert ws.max_column == 15, (
+        f"Expected 15 columns (OUTPUT_COLS_CAMPUS), got {ws.max_column}"
+    )
+
+
+def test_campus_dashboard_summary_row(campus_dashboard_paths: dict[str, Path]) -> None:
+    """Row 2 is the summary row — cell A2 contains 'Summary' text."""
+    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    ws = wb.active
+    assert ws["A2"].value == "Summary", (
+        f"Expected 'Summary' in A2 (summary row), got {ws['A2'].value!r}"
+    )
+
+
+def test_campus_dashboard_data_starts_row3(
+    campus_dashboard_paths: dict[str, Path],
+) -> None:
+    """Data rows start at row 3 — A3 contains rank 1 (first student by risk_score)."""
+    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    ws = wb.active
+    assert ws["A3"].value == 1, (
+        f"Expected rank=1 at A3 (first data row), got {ws['A3'].value}"
+    )
+
+
+def test_campus_dashboard_critical_row_color(
+    campus_dashboard_paths: dict[str, Path],
+) -> None:
+    """CRITICAL student data row (row 3+) has CRITICAL fill color after save+reload."""
+    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    ws = wb.active
+    # ALPHA has CRITICAL student as highest-scored — should be row 3 (first data row)
+    assert ws["A3"].fill.fgColor.rgb == cfg.COLOR_CRITICAL, (
+        f"Expected CRITICAL fill {cfg.COLOR_CRITICAL} at A3, got {ws['A3'].fill.fgColor.rgb}"
+    )
+
+
+def test_campus_dashboard_medium_llm_cells_empty(
+    campus_dashboard_paths: dict[str, Path],
+) -> None:
+    """MEDIUM student rows have None (empty) in LLM columns 13, 14, 15 (D-06)."""
+    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    ws = wb.active
+    risk_col_idx = cfg.OUTPUT_COLS_CAMPUS.index(cfg.COL_RISK_LEVEL) + 1
+    # Find the MEDIUM row (row 3 onward — skip header row 1 and summary row 2)
+    medium_row = None
+    for row in ws.iter_rows(min_row=3):
+        if row[risk_col_idx - 1].value == "MEDIUM":
+            medium_row = row
+            break
+    assert medium_row is not None, "Could not find MEDIUM student row in ALPHA dashboard"
+    # Columns 13 (facilitator_summary), 14 (whatsapp_message), 15 (generated_by) must be None
+    assert medium_row[12].value is None, (
+        f"Expected None in col 13 (facilitator_summary) for MEDIUM row, got {medium_row[12].value!r}"
+    )
+    assert medium_row[13].value is None, (
+        f"Expected None in col 14 (whatsapp_message) for MEDIUM row, got {medium_row[13].value!r}"
+    )
+    assert medium_row[14].value is None, (
+        f"Expected None in col 15 (generated_by) for MEDIUM row, got {medium_row[14].value!r}"
+    )
+
+
+def test_campus_dashboard_excludes_nan_campus(
+    campus_dashboard_paths: dict[str, Path], tmp_path: Path
+) -> None:
+    """No 'facilitator_dashboard_nan.xlsx' is created — dropna=True in groupby."""
+    nan_file = tmp_path / "facilitator_dashboard_nan.xlsx"
+    assert not nan_file.exists(), (
+        "facilitator_dashboard_nan.xlsx must not be created (dropna=True in groupby)"
+    )
+    assert "campus_nan" not in campus_dashboard_paths, (
+        "Key 'campus_nan' must not appear in results dict"
     )
