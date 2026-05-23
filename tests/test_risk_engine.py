@@ -374,10 +374,11 @@ def test_recommended_action_matches_level(level: str, expected_action: str) -> N
                 latest_note_date=pd.NaT,
             )
         elif level == "HIGH":
-            # attendance=100: 0 days; practice=0: 210q; trend=0: improving; notes=50: 15 days ago
+            # attendance=100: 0 days; practice=0: 210q; trend=50: neutral (< 3 values); notes=50: 15 days ago
+            # score = 100*0.35 + 0*0.30 + 50*0.20 + 50*0.15 = 35 + 0 + 10 + 7.5 = 52.5 → HIGH
             row = _build_student_row(
                 attendance_days=0, practice_total_q=210.0,
-                session_series=[0.0] * 11 + [30.0] * 3,  # improving → trend=0
+                session_series=[10.0, 20.0],  # < 3 values → neutral trend_component=50
                 latest_note_date=pd.Timestamp("2026-05-08"),  # 15 days ago → notes=50
             )
         elif level == "MEDIUM":
