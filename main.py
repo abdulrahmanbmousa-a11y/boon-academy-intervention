@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 from src import config as cfg
 from src.ingestion import ingest
+from src.risk_engine import score_risk
 
 
 def setup_logging() -> None:
@@ -66,8 +67,9 @@ def main() -> int:
     run_log["data_quality_warnings"] = df.attrs.get("data_quality_warnings", [])
     logger.info(f"Ingested {len(df)} students")
 
-    # Phase 2: Risk scoring (wired in plan 02-02)
-    # df = risk_engine.score_risk(df)
+    # Phase 2: Risk scoring
+    df = score_risk(df)
+    logger.info(f"Scored {len(df)} students")
 
     # Phase 3: LLM enrichment (wired in plan 03-01)
     # df = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY)
