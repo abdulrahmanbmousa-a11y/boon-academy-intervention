@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T11:25:00.000Z"
+last_updated: "2026-05-23T11:45:00.000Z"
 progress:
   total_phases: 8
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 7
-  percent: 33
+  completed_plans: 8
+  percent: 38
 ---
 
 # Project State: boon-academy-intervention
 
 ## Current Status
 
-- **Phase:** 3 — Claude API Integration (executing)
-- **Active plan:** 03-03 — main.py wiring + test_llm_engine.py (next)
-- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine
+- **Phase:** 4 — Excel + CSV Output Generation (next)
+- **Active plan:** 04-01 (not yet planned)
+- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration
 - **Last updated:** 2026-05-23
 
 ## Project Reference
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 3 executing — 03-01 complete (prerequisites), 03-02 complete (llm_engine.py full implementation), 03-03 next (main.py wiring + test_llm_engine.py full suite).
+**Current focus:** Phase 3 complete — all 3 plans done. Phase 4 next (Excel + CSV Output Generation).
 
 ## Phase Progress
 
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 |-------|------|------------|--------|
 | 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
-| 3 | Claude API Integration | 2 / 3 | In Progress |
+| 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 0 / ? | Pending |
 | 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
 | 6 | Documentation Suite | 0 / ? | Pending |
@@ -52,11 +52,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 02 | 02-02 | ~10 min | 2/2 | 3 |
 | 03 | 03-01 | ~8 min | 3/3 | 4 |
 | 03 | 03-02 | ~15 min | 1/1 | 1 |
+| 03 | 03-03 | ~20 min | 2/2 | 2 |
 
-- **Phases completed:** 2 / 8
-- **Plans completed:** 6 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 1/3 plans)
-- **Requirements delivered:** 36 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09 complete)
-- **Test coverage:** 53 tests passing (25 Phase 1 + 28 Phase 2, all GREEN — no new tests in 03-01 or 03-02; full LLM test suite added in 03-03)
+- **Phases completed:** 3 / 8
+- **Plans completed:** 8 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans)
+- **Requirements delivered:** 45 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09 all complete)
+- **Test coverage:** 65 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3, all GREEN)
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - student_data prompt list uses cfg.COL_* as dict keys — no bare DataFrame column name strings anywhere in llm_engine.py production code
 - _write_results_back() uses result.get(cfg.COL_GENERATED_BY, generated_by) — works for both LLM results (no key present, falls to "llm") and template results (key from _apply_templates)
 - Plan verification script step 5 flags unavoidable JSON Schema vocabulary ("type", "object", "required") — these are not DataFrame column names; targeted check confirms zero bare DF column name strings
+- httpx.MockTransport(respx_mock.handler) is the correct respx 0.23.1 injection pattern — respx_mock fixture is a MockRouter (not a transport); httpx.Client(transport=respx_mock) silently bypasses the mock
+- test_no_bare_column_strings_in_llm_engine uses expanded allowed set (23 entries) covering JSON Schema vocab, Anthropic API structure keys, return dict keys, and tool name — all 24 known column name values asserted absent
+- main.py Phase 3 wiring: df, llm_counts = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY); run_log updated from llm_counts; logger.info with aggregate counts only (no PII)
 
 ### Known Pitfalls (from research)
 
@@ -135,4 +139,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after 03-02 execution (enrich_with_llm() fully implemented — campus batching, tool-use, three-layer fallback, PII-safe logging, tuple return)*
+*Last updated: 2026-05-23 after 03-03 execution (Phase 3 complete — main.py wired, 12-test LLM suite passing, 65 total tests GREEN)*
