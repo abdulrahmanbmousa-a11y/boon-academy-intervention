@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 from src import config as cfg
 from src import llm_engine
+from src import output_generator
 from src.ingestion import ingest
 from src.risk_engine import score_risk
 
@@ -84,7 +85,8 @@ def main() -> int:
     )
 
     # Phase 4: Output generation — D-06: single write-at-end point
-    # write_outputs(df, cfg.OUTPUT_DIR, run_log=run_log)
+    paths = output_generator.write_outputs(df, cfg.OUTPUT_DIR, run_log)
+    logger.info("Outputs written: %s", list(paths.keys()))
 
     logger.info("Pipeline complete")
     return 0
