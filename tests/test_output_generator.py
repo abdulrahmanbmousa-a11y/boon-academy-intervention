@@ -581,6 +581,9 @@ def test_write_outputs_returns_all_keys(
     assert "dashboard" in result, (
         f"Missing key 'dashboard' in result: {list(result.keys())}"
     )
+    assert "report" in result, (
+        f"Missing key 'report' in result: {list(result.keys())}"
+    )
 
 
 def test_write_outputs_all_paths_exist(
@@ -776,4 +779,21 @@ def test_report_data_quality_no_warnings(report_path: Path) -> None:
     all_text = " ".join(p.text for p in doc.paragraphs)
     assert "No data quality issues" in all_text, (
         "Expected 'No data quality issues' paragraph when warnings list is empty"
+    )
+
+
+def test_write_outputs_html_contains_embedded_json(
+    full_sample_df: pd.DataFrame,
+    sample_run_log_full: dict,
+    tmp_path: Path,
+) -> None:
+    """write_outputs integration: facilitator_dashboard.html contains const studentsData."""
+    result = write_outputs(full_sample_df, tmp_path, sample_run_log_full)
+    html_path = result["dashboard"]
+    content = html_path.read_text(encoding="utf-8")
+    assert "const studentsData" in content, (
+        f"Expected 'const studentsData' in {html_path.name}, got first 200 chars: {content[:200]}"
+    )
+    assert "S001" in content, (
+        "Expected student_id S001 to appear in embedded JSON"
     )
