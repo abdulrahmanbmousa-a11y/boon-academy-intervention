@@ -3,21 +3,21 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T10:55:00.000Z"
+last_updated: "2026-05-23T11:08:00.000Z"
 progress:
   total_phases: 8
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 5
-  percent: 25
+  total_plans: 11
+  completed_plans: 6
+  percent: 29
 ---
 
 # Project State: boon-academy-intervention
 
 ## Current Status
 
-- **Phase:** 3 — Claude API Integration (ready to execute)
-- **Active plan:** None — Phase 3 planned (3 plans), ready for /gsd:execute-phase 3
+- **Phase:** 3 — Claude API Integration (executing)
+- **Active plan:** 03-02 — llm_engine.py Wave 1 implementation (next)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine
 - **Last updated:** 2026-05-23
 
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 3 planned (enrich_with_llm() — campus-batched Claude calls, three-layer fallback, respx tests). Ready to execute.
+**Current focus:** Phase 3 executing — 03-01 complete (prerequisites), 03-02 next (llm_engine.py implementation with campus-batched Claude calls and three-layer fallback).
 
 ## Phase Progress
 
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 |-------|------|------------|--------|
 | 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
-| 3 | Claude API Integration | 0 / 3 | Planned |
+| 3 | Claude API Integration | 1 / 3 | In Progress |
 | 4 | Excel + CSV Output Generation | 0 / ? | Pending |
 | 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
 | 6 | Documentation Suite | 0 / ? | Pending |
@@ -50,11 +50,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 01 | 01-03 | ~25 min | 3/3 | 2 |
 | 02 | 02-01 | ~5 min | 2/2 | 3 |
 | 02 | 02-02 | ~10 min | 2/2 | 3 |
+| 03 | 03-01 | ~8 min | 3/3 | 4 |
 
 - **Phases completed:** 2 / 8
-- **Plans completed:** 5 (Phase 1: 3 plans, Phase 2: 2 plans)
-- **Requirements delivered:** 26 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08 all complete)
-- **Test coverage:** 53 tests passing (25 Phase 1 + 28 Phase 2, all GREEN)
+- **Plans completed:** 6 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 1/3 plans)
+- **Requirements delivered:** 29 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-04, LLM-07, LLM-09 complete)
+- **Test coverage:** 53 tests passing (25 Phase 1 + 28 Phase 2, all GREEN — no new tests in 03-01)
 
 ## Accumulated Context
 
@@ -81,7 +82,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - enrich_with_llm() returns tuple (df, counts_dict) — df.attrs is fragile in pandas 2.2.x; main.py unpacks tuple to update run_log
 - http_client=None optional parameter on enrich_with_llm() — injected in tests (respx transport), None in production; eliminates monkeypatching
 - CRITICAL-first sort uses {"CRITICAL": 0, "HIGH": 1} map key — raw string sort produces HIGH-first (alphabetical order inverted)
-- PyYAML==6.0.3 and respx==0.23.1 confirmed missing from requirements.txt; added in Phase 3 Wave 0
+- PyYAML==6.0.3 and respx==0.23.1 added to requirements.txt in 03-01; both were already installed under py -3.12
+- LLM_ENABLED uses .lower() == "true" (not bool(os.getenv())) — bool() is always True for any non-empty string including "false"
+- YAML >- block scalars used for all template strings — prevents YAML parser misreading {format_placeholders} as flow mappings
+- D-09 constants (9 total): ANTHROPIC_MODEL, LLM_ENABLED, MAX_TOKENS, TEMPERATURE, TIMEOUT_SECONDS, COL_FACILITATOR_SUMMARY, COL_WHATSAPP_MESSAGE, COL_GENERATED_BY, COL_LLM_ERROR_REASON added to src/config.py
 - Templates loaded once at module import (not per-call) via yaml.safe_load(); path = Path(__file__).parent / "llm_templates.yaml"
 - Three-layer fallback: Layer 1 = SDK max_retries=3 (automatic); Layer 2 = one re-prompt on APIConnectionError/RateLimitError/APIStatusError/APITimeoutError; Layer 3 = YAML template on re-prompt failure OR KeyError/StopIteration from malformed tool parse
 
@@ -115,7 +119,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ## Session Continuity
 
-**Stack:** Python 3.11+, anthropic 0.103.1 (claude-sonnet-4-5), pandas 2.2.3, openpyxl 3.1.5, python-docx 1.1.2, jinja2 3.1.6, pytest 8.3.5, respx 0.23.1, freezegun 1.5.5
+**Stack:** Python 3.12 (py -3.12), anthropic 0.103.1 (claude-sonnet-4-5), pandas 2.2.3, openpyxl 3.1.5, python-docx 1.1.2, jinja2 3.1.6, pytest 8.3.5, respx 0.23.1, freezegun 1.5.5, PyYAML 6.0.3
 **Entry point:** `python main.py`
 **Module contracts:**
 
