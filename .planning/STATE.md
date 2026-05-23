@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T10:31:00.272Z"
+last_updated: "2026-05-23T10:55:00.000Z"
 progress:
   total_phases: 8
   completed_phases: 2
-  total_plans: 5
+  total_plans: 8
   completed_plans: 5
   percent: 25
 ---
@@ -16,8 +16,8 @@ progress:
 
 ## Current Status
 
-- **Phase:** 3 — Claude API Integration (next)
-- **Active plan:** None — Phase 2 complete, Phase 3 not yet planned
+- **Phase:** 3 — Claude API Integration (ready to execute)
+- **Active plan:** None — Phase 3 planned (3 plans), ready for /gsd:execute-phase 3
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine
 - **Last updated:** 2026-05-23
 
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 2 complete (score_risk() implemented, 53 tests green). Next: Phase 3 — Claude API Integration.
+**Current focus:** Phase 3 planned (enrich_with_llm() — campus-batched Claude calls, three-layer fallback, respx tests). Ready to execute.
 
 ## Phase Progress
 
@@ -34,7 +34,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 |-------|------|------------|--------|
 | 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
-| 3 | Claude API Integration | 0 / ? | Pending |
+| 3 | Claude API Integration | 0 / 3 | Planned |
 | 4 | Excel + CSV Output Generation | 0 / ? | Pending |
 | 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
 | 6 | Documentation Suite | 0 / ? | Pending |
@@ -78,6 +78,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - inject_edge_cases() appends 9 dupe rows to metadata, blanks ~210 numeric cells in metrics (5% of 4200), sets ~84 type-mismatch strings
 - Numeric columns loaded as "string" dtype in DTYPE_METRICS (not "Float64") — pd.read_csv crashes on type mismatch strings with Float64; string load + pd.to_numeric(errors='coerce') in _fill_numeric_with_zero is the safe pattern
 - Post-merge fill (0) added for session_total_min/practice_total_q/attendance_days — students with no metrics get 0 activity, consistent with D-09
+- enrich_with_llm() returns tuple (df, counts_dict) — df.attrs is fragile in pandas 2.2.x; main.py unpacks tuple to update run_log
+- http_client=None optional parameter on enrich_with_llm() — injected in tests (respx transport), None in production; eliminates monkeypatching
+- CRITICAL-first sort uses {"CRITICAL": 0, "HIGH": 1} map key — raw string sort produces HIGH-first (alphabetical order inverted)
+- PyYAML==6.0.3 and respx==0.23.1 confirmed missing from requirements.txt; added in Phase 3 Wave 0
+- Templates loaded once at module import (not per-call) via yaml.safe_load(); path = Path(__file__).parent / "llm_templates.yaml"
+- Three-layer fallback: Layer 1 = SDK max_retries=3 (automatic); Layer 2 = one re-prompt on APIConnectionError/RateLimitError/APIStatusError/APITimeoutError; Layer 3 = YAML template on re-prompt failure OR KeyError/StopIteration from malformed tool parse
 
 ### Known Pitfalls (from research)
 
@@ -88,6 +94,9 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - openpyxl test assertions need 8-char hex (e.g., `"00FFCCCC"` not `"FFCCCC"`)
 - Phone numbers drop leading zeros without `dtype={"parent_phone": "str"}`
 - `os.environ["KEY"]` not `os.getenv("KEY")` — fail loudly at startup if key missing
+- respx mocking for Anthropic SDK: `httpx.Client(transport=respx_mock)` injected via `Anthropic(http_client=..., max_retries=0)` — `responses` library silently misses httpx calls; `max_retries=0` required to prevent SDK-internal retry loops masking test assertions
+- `tool_choice={"type": "tool", "name": "..."}` forces tool call; parse with `isinstance(b, anthropic.types.ToolUseBlock)` then `b.input` (plain dict)
+- yaml.safe_load() not yaml.load() — security requirement for YAML template loading
 
 ### Open Questions
 
@@ -112,10 +121,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 - `ingestion.ingest(data_paths) -> DataFrame` — clean, merged, deduped
 - `risk_engine.score_risk(df) -> DataFrame` — pure function, no I/O
-- `llm_engine.enrich_with_llm(df, api_key) -> DataFrame` — never raises
+- `llm_engine.enrich_with_llm(df, api_key, http_client=None) -> tuple[pd.DataFrame, dict]` — never raises; dict = {api_calls_made, tokens_used: {input, output}, fallbacks_triggered}
 - `output_generator.write_outputs(df, output_dir) -> dict[str, Path]` — idempotent
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after Plan 02-02 execution (3 files modified, 53 tests GREEN, Phase 2 complete)*
-*Phase 2 complete. Next: /gsd:discuss-phase 3 → /gsd:plan-phase 3 → /gsd:execute-phase 3 (Claude API Integration)*
+*Last updated: 2026-05-23 after Phase 3 planning (3 plans: Wave 1 prerequisites, Wave 2 llm_engine.py impl, Wave 3 main.py wiring + tests)*
+*Phase 3 planned. Next: /gsd:execute-phase 3*
