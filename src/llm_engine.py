@@ -142,8 +142,11 @@ def _apply_templates(chunk: pd.DataFrame, error_reason: str) -> list[dict]:
     results: list[dict] = []
     for _, row in chunk.iterrows():
         risk_level = row[cfg.COL_RISK_LEVEL]
-        row_dict = row.to_dict()
-        tmpl = _TEMPLATES[risk_level]
+        # Coerce numpy scalars to native Python types so format specifiers like :.0% work
+        row_dict = {k: (v.item() if hasattr(v, "item") else v) for k, v in row.to_dict().items()}
+        tmpl = _TEMPLATES.get(risk_level, {})
+        if not tmpl:
+            continue
         facilitator_summary = tmpl[cfg.COL_FACILITATOR_SUMMARY].format_map(row_dict)
         whatsapp_message = tmpl[cfg.COL_WHATSAPP_MESSAGE].format_map(row_dict)
         results.append(

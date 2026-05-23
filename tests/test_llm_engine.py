@@ -277,8 +277,8 @@ def test_fallback_to_template(respx_mock) -> None:
     assert row[cfg.COL_GENERATED_BY] == "template", (
         "LLM-05: timeout must produce generated_by='template'"
     )
-    assert row[cfg.COL_LLM_ERROR_REASON] is not None and str(row[cfg.COL_LLM_ERROR_REASON]) != "", (
-        "LLM-05: llm_error_reason must be set (non-None, non-empty) on fallback"
+    assert row[cfg.COL_LLM_ERROR_REASON] == "timeout", (
+        "LLM-05: httpx.TimeoutException must classify to llm_error_reason='timeout'"
     )
     assert counts["fallbacks_triggered"] >= 1, (
         "LLM-05: fallbacks_triggered counter must be incremented on template fallback"
@@ -569,6 +569,8 @@ def test_no_bare_column_strings_in_llm_engine() -> None:
         "fallbacks_triggered",
         # Encoding string fragment
         "utf",
+        # numpy scalar method name used in CR-01 fix (hasattr(v, "item"))
+        "item",
     }
 
     # The actual column name values from config.py that must NOT appear as bare strings
