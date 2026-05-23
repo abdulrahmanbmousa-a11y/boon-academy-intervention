@@ -92,7 +92,7 @@
 
 **Wave 1** *(parallel)*
 - [x] 05-01-PLAN.md — DISPLAY_COLS_DASHBOARD config constant + src/templates/dashboard.html.j2 Jinja2 template + _write_html_dashboard() helper + HTML unit tests (OUT-05) — COMPLETE 2026-05-23
-- [ ] 05-02-PLAN.md — _write_report() helper: all 7 docx sections programmatically via python-docx + report unit tests (OUT-04)
+- [x] 05-02-PLAN.md — _write_report() helper: all 7 docx sections programmatically via python-docx + report unit tests (OUT-04) — COMPLETE 2026-05-23
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 05-03-PLAN.md — Extend write_outputs() to call both new helpers + integration test asserting "dashboard" and "report" keys (OUT-04, OUT-05)
@@ -149,7 +149,7 @@
 | 2. Risk Scoring Engine | 2/2 | Complete | 2026-05-23 |
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
-| 5. HTML Dashboard + Word Report | 0/3 | Planned | - |
+| 5. HTML Dashboard + Word Report | 2/3 | In Progress | - |
 | 6. Documentation Suite | 0/? | Not started | - |
 | 7. Test Suite | 0/? | Not started | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |

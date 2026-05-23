@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T17:50:00.000Z"
+last_updated: "2026-05-23T21:10:00.000Z"
 progress:
   total_phases: 8
   completed_phases: 4
   total_plans: 14
-  completed_plans: 11
-  percent: 50
+  completed_plans: 12
+  percent: 57
 ---
 
 # Project State: boon-academy-intervention
@@ -17,7 +17,7 @@ progress:
 ## Current Status
 
 - **Phase:** 5 — HTML Dashboard + Word Report (in progress)
-- **Active plan:** 05-02 (next to execute)
+- **Active plan:** 05-03 (next to execute)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation
 - **Last updated:** 2026-05-23
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
 | 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
-| 5 | HTML Dashboard + Word Report | 1 / 3 | In Progress |
+| 5 | HTML Dashboard + Word Report | 2 / 3 | In Progress |
 | 6 | Documentation Suite | 0 / ? | Pending |
 | 7 | Test Suite | 0 / ? | Pending |
 | 8 | End-to-End Integration + Polish | 0 / ? | Pending |
@@ -57,11 +57,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 04 | 04-02 | ~12 min | 2/2 | 2 |
 | 04 | 04-03 | ~8 min | 2/2 | 3 |
 | 05 | 05-01 | ~12 min | 2/2 | 4 |
+| 05 | 05-02 | ~10 min | 2/2 | 2 |
 
 - **Phases completed:** 4 / 8
-- **Plans completed:** 12 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 1/3 plans)
-- **Requirements delivered:** 53 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-05, OUT-06 complete)
-- **Test coverage:** 104 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 5 Phase 5-01, all GREEN)
+- **Plans completed:** 13 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 2/3 plans)
+- **Requirements delivered:** 54 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05, OUT-06 complete)
+- **Test coverage:** 110 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 11 Phase 5, all GREEN)
 
 ## Accumulated Context
 
@@ -115,6 +116,8 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - Jinja2 loaded lazily inside _write_html_dashboard() (not at module import); autoescape=False because students_json is pre-serialised JSON in a script tag
 - dashboard.html.j2: zero external URLs; all CSS/JS inline; campus_ids template variable populates filter <select>; risk buttons use data-level attribute; one detail row open at a time
 - json.dumps(records).replace("</","<\\/") in _write_html_dashboard — T-05-01 script-tag injection guard; covered by test_html_dashboard_escape_script_tag
+- python-docx add_heading(level=0) uses "Title" paragraph style (not "Heading 1") — test assertions must check style.name == "Title" OR style.name.startswith("Heading")
+- _write_report deep-dives use COL_ATTENDANCE_RATE/COL_AVG_PRACTICE/COL_TREND_DIR/COL_DAYS_SINCE_NOTE (always present) not COL_*_COMPONENT (optional); missing columns guarded via col in df_copy.columns
 
 ### Known Pitfalls (from research)
 
@@ -157,4 +160,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after 05-01 execution (OUT-05 HTML dashboard — DISPLAY_COLS_DASHBOARD, dashboard.html.j2 template, _write_html_dashboard() helper, 5 new tests, 104 total tests GREEN)*
+*Last updated: 2026-05-23 after 05-02 execution (OUT-04 Word report — _write_report() 7-section docx builder, 6 new tests, 110 total tests GREEN)*
