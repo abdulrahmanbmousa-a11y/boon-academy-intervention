@@ -17,6 +17,7 @@ from src.output_generator import (
     _write_priority_list,
     _write_run_log,
     _write_whatsapp_csv,
+    write_outputs,
 )
 
 
@@ -458,3 +459,146 @@ def test_campus_dashboard_excludes_nan_campus(
     assert "campus_nan" not in campus_dashboard_paths, (
         "Key 'campus_nan' must not appear in results dict"
     )
+
+
+# ---------------------------------------------------------------------------
+# write_outputs integration tests (OUT-01, OUT-02, OUT-03, OUT-06)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def full_sample_df() -> pd.DataFrame:
+    """Full enriched DataFrame with 2 campuses (ALPHA, BETA), covering all risk levels.
+
+    Matches the real pipeline schema: student_id and parent_phone as str dtype.
+    Includes at least 1 CRITICAL and 1 HIGH student per requirement.
+    All 15 OUTPUT_COLS_CAMPUS columns are present.
+    """
+    return pd.DataFrame(
+        {
+            cfg.COL_STUDENT_ID: pd.array(
+                ["S001", "S002", "S003", "S004", "S005", "S006"], dtype="string"
+            ),
+            cfg.COL_STUDENT_NAME: ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank"],
+            cfg.COL_PARENT_PHONE: pd.array(
+                [
+                    "0501111111",
+                    "0502222222",
+                    "0503333333",
+                    "0504444444",
+                    "0505555555",
+                    "0506666666",
+                ],
+                dtype="string",
+            ),
+            cfg.COL_FACILITATOR_EMAIL: [
+                "fac@alpha.sa",
+                "fac@alpha.sa",
+                "fac@alpha.sa",
+                "fac@beta.sa",
+                "fac@beta.sa",
+                "fac@beta.sa",
+            ],
+            cfg.COL_CAMPUS_ID: ["ALPHA", "ALPHA", "ALPHA", "BETA", "BETA", "BETA"],
+            cfg.COL_RISK_SCORE: [92.0, 68.0, 38.0, 85.0, 55.0, 12.0],
+            cfg.COL_RISK_LEVEL: ["CRITICAL", "HIGH", "MEDIUM", "CRITICAL", "HIGH", "LOW"],
+            cfg.COL_ATTENDANCE_RATE: [0.1, 0.45, 0.7, 0.15, 0.55, 0.95],
+            cfg.COL_AVG_PRACTICE: [0.5, 2.5, 5.0, 1.0, 4.0, 9.0],
+            cfg.COL_TREND_DIR: [
+                "declining",
+                "stable",
+                "stable",
+                "declining",
+                "stable",
+                "improving",
+            ],
+            cfg.COL_DAYS_SINCE_NOTE: [30, 12, 4, 28, 8, 1],
+            cfg.COL_RECOMMENDED_ACTION: [
+                "Contact parent immediately",
+                "Schedule check-in",
+                "Monitor progress",
+                "Contact parent immediately",
+                "Schedule check-in",
+                "Acknowledge progress",
+            ],
+            cfg.COL_FACILITATOR_SUMMARY: [
+                "Alice is at critical risk",
+                "Bob needs attention",
+                None,
+                "Dave is at critical risk",
+                "Eve needs attention",
+                None,
+            ],
+            cfg.COL_WHATSAPP_MESSAGE: [
+                "Message for Alice",
+                "Message for Bob",
+                None,
+                "Message for Dave",
+                "Message for Eve",
+                None,
+            ],
+            cfg.COL_GENERATED_BY: ["llm", "template", None, "llm", "template", None],
+        }
+    )
+
+
+@pytest.fixture
+def sample_run_log_full() -> dict:
+    """Full run_log dict matching the 7-key D-06 schema from main.py."""
+    return {
+        "run_timestamp": "2026-05-23T16:00:00+00:00",
+        "students_processed": 6,
+        "api_calls_made": 2,
+        "tokens_used": {"input": 500, "output": 200},
+        "errors_encountered": [],
+        "fallbacks_triggered": 0,
+        "data_quality_warnings": [],
+    }
+
+
+def test_write_outputs_returns_all_keys(
+    full_sample_df: pd.DataFrame,
+    sample_run_log_full: dict,
+    tmp_path: Path,
+) -> None:
+    """write_outputs returns dict with 'priority_list', campus_* keys, 'whatsapp', 'run_log'."""
+    result = write_outputs(full_sample_df, tmp_path, sample_run_log_full)
+    assert "priority_list" in result, (
+        f"Missing key 'priority_list' in result: {list(result.keys())}"
+    )
+    campus_keys = [k for k in result if k.startswith("campus_")]
+    assert len(campus_keys) >= 1, (
+        f"Expected at least one 'campus_*' key, got: {list(result.keys())}"
+    )
+    assert "whatsapp" in result, (
+        f"Missing key 'whatsapp' in result: {list(result.keys())}"
+    )
+    assert "run_log" in result, (
+        f"Missing key 'run_log' in result: {list(result.keys())}"
+    )
+
+
+def test_write_outputs_all_paths_exist(
+    full_sample_df: pd.DataFrame,
+    sample_run_log_full: dict,
+    tmp_path: Path,
+) -> None:
+    """Every Path value in the write_outputs return dict points to a file that exists."""
+    result = write_outputs(full_sample_df, tmp_path, sample_run_log_full)
+    for key, path in result.items():
+        assert isinstance(path, Path), f"Expected Path for key {key!r}, got {type(path)}"
+        assert path.exists(), f"File does not exist for key {key!r}: {path}"
+
+
+def test_write_outputs_creates_output_dir(
+    full_sample_df: pd.DataFrame,
+    sample_run_log_full: dict,
+    tmp_path: Path,
+) -> None:
+    """write_outputs creates a non-existent output directory without raising an error."""
+    nested_dir = tmp_path / "deep" / "nested" / "outputs"
+    assert not nested_dir.exists(), "Pre-condition: directory must not exist before call"
+    # Must not raise — output_dir.mkdir(parents=True, exist_ok=True) handles it
+    result = write_outputs(full_sample_df, nested_dir, sample_run_log_full)
+    assert nested_dir.exists(), f"Expected output_dir to be created: {nested_dir}"
+    assert len(result) > 0, "Expected non-empty result dict after write_outputs call"
