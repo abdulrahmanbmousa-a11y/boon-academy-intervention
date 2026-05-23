@@ -1,0 +1,29 @@
+CRITICAL:
+  facilitator_summary: >-
+    [CRITICAL RISK] Student {student_id} requires immediate intervention.
+    Risk score: {risk_score}/100. Attendance rate: {attendance_rate:.0%}.
+    Average practice questions completed: {avg_practice_questions:.1f}/session.
+    Trend: {trend_direction}. Days since last facilitator note: {days_since_last_note:.0f}.
+    Recommended action: {recommended_action}.
+    Please contact this student today without delay.
+  whatsapp_message: >-
+    Dear parent, we wanted to reach out about your child's recent progress.
+    We have noticed they may benefit from some additional support right now.
+    Our team is here to help and would love to connect with you.
+    Could we arrange a brief call this week? Please reply to confirm a convenient time.
+    Thank you for your partnership in your child's learning journey.
+
+HIGH:
+  facilitator_summary: >-
+    [HIGH RISK] Student {student_id} needs follow-up this week.
+    Risk score: {risk_score}/100. Attendance rate: {attendance_rate:.0%}.
+    Average practice questions completed: {avg_practice_questions:.1f}/session.
+    Trend: {trend_direction}. Days since last facilitator note: {days_since_last_note:.0f}.
+    Recommended action: {recommended_action}.
+    Schedule a check-in call within 48 hours.
+  whatsapp_message: >-
+    Dear parent, we hope your child is doing well.
+    We wanted to share that we have been keeping a close eye on their learning progress
+    and would love to connect briefly to support them further.
+    If you have a few minutes this week, please let us know a good time to chat.
+    We are committed to helping your child succeed.

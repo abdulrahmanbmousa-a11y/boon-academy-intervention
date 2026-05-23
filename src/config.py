@@ -35,6 +35,13 @@ DOCS_DIR: Path = Path(os.getenv("DOCS_DIR", "docs"))
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 MAX_STUDENTS_PER_LLM_CALL: int = int(os.getenv("MAX_STUDENTS_PER_LLM_CALL", "10"))
 
+# LLM tunables — all env-overridable, safe defaults (D-09)
+ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+LLM_ENABLED: bool = os.getenv("LLM_ENABLED", "true").lower() == "true"
+MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "1024"))
+TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.3"))
+TIMEOUT_SECONDS: int = int(os.getenv("TIMEOUT_SECONDS", "30"))
+
 # ---------------------------------------------------------------------------
 # Risk thresholds (D-07) — CRITICAL and HIGH are env-overridable; MEDIUM is fixed
 # ---------------------------------------------------------------------------
@@ -84,3 +91,9 @@ COL_ATTENDANCE_COMPONENT: str = "attendance_component"
 COL_PRACTICE_COMPONENT: str = "practice_component"
 COL_TREND_COMPONENT: str = "trend_component"
 COL_NOTES_COMPONENT: str = "notes_component"
+
+# LLM output columns (Phase 3 — D-06)
+COL_FACILITATOR_SUMMARY: str = "facilitator_summary"
+COL_WHATSAPP_MESSAGE: str = "whatsapp_message"
+COL_GENERATED_BY: str = "generated_by"
+COL_LLM_ERROR_REASON: str = "llm_error_reason"
