@@ -61,32 +61,48 @@ def main() -> int:
         "metadata": cfg.DATA_DIR / "student_metadata.csv",
     }
 
-    # Phase 1: Ingestion
-    df = ingest(data_paths)
-    run_log["students_processed"] = len(df)
+    try:
+        # Phase 1: Ingestion
+        df = ingest(data_paths)
+        run_log["students_processed"] = len(df)
 
-    # Capture data quality warnings from ingestion (D-06: accumulate into run_log)
-    run_log["data_quality_warnings"] = df.attrs.get("data_quality_warnings", [])
-    logger.info(f"Ingested {len(df)} students")
+        # Capture data quality warnings from ingestion (D-06: accumulate into run_log)
+        run_log["data_quality_warnings"] = df.attrs.get("data_quality_warnings", [])
+        logger.info("Ingested %d students", len(df))
 
-    # Phase 2: Risk scoring
-    df = score_risk(df)
-    logger.info(f"Scored {len(df)} students")
+        if df.empty:
+            logger.error("Ingestion returned zero students — aborting pipeline")
+            return 1
 
-    # Phase 3: LLM enrichment
-    df, llm_counts = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY)
-    run_log["api_calls_made"] = llm_counts["api_calls_made"]
-    run_log["tokens_used"] = llm_counts["tokens_used"]
-    run_log["fallbacks_triggered"] = llm_counts["fallbacks_triggered"]
-    logger.info(
-        f"LLM enrichment complete — "
-        f"api_calls={llm_counts['api_calls_made']}, "
-        f"fallbacks={llm_counts['fallbacks_triggered']}"
-    )
+        # Phase 2: Risk scoring
+        df = score_risk(df)
+        logger.info("Scored %d students", len(df))
 
-    # Phase 4: Output generation — D-06: single write-at-end point
-    paths = output_generator.write_outputs(df, cfg.OUTPUT_DIR, run_log)
-    logger.info("Outputs written: %s", list(paths.keys()))
+        # Phase 3: LLM enrichment
+        df, llm_counts = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY)
+        run_log["api_calls_made"] = llm_counts["api_calls_made"]
+        run_log["tokens_used"] = llm_counts["tokens_used"]
+        run_log["fallbacks_triggered"] = llm_counts["fallbacks_triggered"]
+        logger.info(
+            "LLM enrichment complete — api_calls=%d, fallbacks=%d",
+            llm_counts["api_calls_made"],
+            llm_counts["fallbacks_triggered"],
+        )
+
+        # Phase 4: Output generation — D-06: single write-at-end point
+        paths = output_generator.write_outputs(df, cfg.OUTPUT_DIR, run_log)
+        logger.info("Outputs written: %s", list(paths.keys()))
+
+    except Exception:
+        logger.exception("Unrecoverable pipeline error")
+        run_log["errors_encountered"].append("unrecoverable_error")
+        # Best-effort write of partial run_log
+        try:
+            cfg.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+            output_generator._write_run_log(run_log, cfg.OUTPUT_DIR)
+        except Exception:
+            pass
+        return 1
 
     logger.info("Pipeline complete")
     return 0

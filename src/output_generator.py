@@ -52,7 +52,7 @@ def _write_whatsapp_csv(df: pd.DataFrame, output_dir: Path) -> Path:
         cfg.COL_GENERATED_BY,
     ]
     path = output_dir / "whatsapp_messages.csv"
-    df_copy[mask][cols].to_csv(path, index=False, encoding="utf-8-sig")
+    df_copy.loc[mask, cols].to_csv(path, index=False, encoding="utf-8-sig")
     logger.info("Wrote whatsapp CSV: %s (%d rows)", path, mask.sum())
     return path
 
@@ -104,7 +104,7 @@ def _write_priority_list(df: pd.DataFrame, output_dir: Path) -> Path:
     df_sorted[cfg.COL_RANK] = df_sorted.index + 1
 
     # Select the 12 output columns in the correct order
-    df_out = df_sorted[cfg.OUTPUT_COLS_PRIORITY]
+    df_out = df_sorted[list(cfg.OUTPUT_COLS_PRIORITY)]
 
     # Create workbook and write header row (row 1)
     wb = Workbook()
@@ -206,7 +206,7 @@ def _write_campus_dashboards(
         )
 
         # Select 15 output columns
-        df_out = campus_df[cfg.OUTPUT_COLS_CAMPUS]
+        df_out = campus_df[list(cfg.OUTPUT_COLS_CAMPUS)]
 
         # Create workbook and write header row (row 1)
         wb = Workbook()
@@ -255,10 +255,14 @@ def _write_campus_dashboards(
                 else:
                     value = row[col_name]
                     # Normalise pandas NA to Python None for openpyxl
-                    if value is pd.NA or (
-                        not isinstance(value, str) and pd.isna(value) if hasattr(pd, "isna") else False
-                    ):
+                    if value is pd.NA:
                         value = None
+                    elif not isinstance(value, (str, int, float, bool)) and value is not None:
+                        try:
+                            if pd.isna(value):
+                                value = None
+                        except (TypeError, ValueError):
+                            pass
                 cell = ws.cell(row=row_idx, column=col_idx, value=value)
                 if row_fill:
                     cell.fill = row_fill
@@ -309,6 +313,11 @@ def write_outputs(
         Keys: "priority_list", "campus_{campus_id}" per campus, "whatsapp", "run_log".
     """
     output_dir.mkdir(parents=True, exist_ok=True)   # D-03
+
+    if df.empty:
+        logger.warning(
+            "write_outputs called with empty DataFrame — no student data to write"
+        )
 
     paths: dict[str, Path] = {}
 

@@ -37,7 +37,12 @@ MAX_STUDENTS_PER_LLM_CALL: int = int(os.getenv("MAX_STUDENTS_PER_LLM_CALL", "10"
 
 # LLM tunables — all env-overridable, safe defaults (D-09)
 ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
-LLM_ENABLED: bool = os.getenv("LLM_ENABLED", "true").lower() == "true"
+_llm_enabled_raw = os.getenv("LLM_ENABLED", "true").lower()
+if _llm_enabled_raw not in ("true", "false"):
+    raise ValueError(
+        f"LLM_ENABLED must be 'true' or 'false', got {_llm_enabled_raw!r}"
+    )
+LLM_ENABLED: bool = _llm_enabled_raw == "true"
 MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "1024"))
 TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.3"))
 TIMEOUT_SECONDS: int = int(os.getenv("TIMEOUT_SECONDS", "30"))
@@ -112,14 +117,14 @@ FONT_WHITE: str = "FFFFFFFF"       # white (header row text color)
 COL_RANK: str = "rank"
 
 # OUT-01 column order — 12 columns, exact sequence for intervention_priority_list.xlsx
-OUTPUT_COLS_PRIORITY: list[str] = [
+OUTPUT_COLS_PRIORITY: tuple[str, ...] = (
     COL_RANK, COL_STUDENT_ID, COL_STUDENT_NAME, COL_CAMPUS_ID,
     COL_FACILITATOR_EMAIL, COL_RISK_SCORE, COL_RISK_LEVEL,
     COL_ATTENDANCE_RATE, COL_AVG_PRACTICE, COL_TREND_DIR,
     COL_DAYS_SINCE_NOTE, COL_RECOMMENDED_ACTION,
-]
+)
 
 # OUT-02 campus dashboard columns — standard 12 + 3 LLM columns = 15 total (D-05)
-OUTPUT_COLS_CAMPUS: list[str] = OUTPUT_COLS_PRIORITY + [
+OUTPUT_COLS_CAMPUS: tuple[str, ...] = OUTPUT_COLS_PRIORITY + (
     COL_FACILITATOR_SUMMARY, COL_WHATSAPP_MESSAGE, COL_GENERATED_BY,
-]
+)

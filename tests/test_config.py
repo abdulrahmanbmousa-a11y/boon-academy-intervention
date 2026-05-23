@@ -12,20 +12,31 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def clean_config_module():
-    """Remove src.config from sys.modules before and after each test to force reimport."""
+    """Remove src.config and src.output_generator from sys.modules before and after each test.
+
+    Evicting src.output_generator prevents order-dependent interactions: if
+    test_output_generator.py runs first, its import causes src.config to execute with a
+    valid key.  Without evicting src.output_generator here, that cached reference can
+    influence reload behaviour in this test class.
+    """
     sys.modules.pop("src.config", None)
+    sys.modules.pop("src.output_generator", None)
     yield
     sys.modules.pop("src.config", None)
+    sys.modules.pop("src.output_generator", None)
 
 
 class TestFailLoudBehavior:
     """D-08: ANTHROPIC_API_KEY must raise KeyError at import time if absent."""
 
     def test_missing_api_key_raises(self, monkeypatch):
-        """With ANTHROPIC_API_KEY removed from environment, importing src.config raises KeyError."""
+        """With ANTHROPIC_API_KEY absent, reloading src.config raises KeyError."""
+        # First: load the module with a valid key so it exists in sys.modules.
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-for-preload")
+        import src.config  # noqa: F401 — populates sys.modules
+        # Now remove the key and reload: module-level os.environ["ANTHROPIC_API_KEY"] must raise.
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         with pytest.raises(KeyError):
-            import src.config  # noqa: F401
             importlib.reload(src.config)
 
     def test_api_key_loads_when_present(self, monkeypatch):
