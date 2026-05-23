@@ -16,6 +16,7 @@ from src.output_generator import (
     _write_campus_dashboards,
     _write_html_dashboard,
     _write_priority_list,
+    _write_report,
     _write_run_log,
     _write_whatsapp_csv,
     write_outputs,
@@ -696,4 +697,83 @@ def test_html_dashboard_escape_script_tag(
     assert "</script>" not in json_block, (
         "Unescaped </script> found in studentsData JSON block — "
         "json.dumps().replace('</','<\\/') injection guard is broken"
+    )
+
+
+# ---------------------------------------------------------------------------
+# _write_report tests (OUT-04)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def report_path(sample_df: pd.DataFrame, sample_run_log: dict, tmp_path: Path) -> Path:
+    """Write Word intervention report to tmp_path and return the path for assertions."""
+    return _write_report(sample_df, sample_run_log, tmp_path)
+
+
+def test_report_returns_path(report_path: Path) -> None:
+    """_write_report returns a Path pointing to intervention_report.docx."""
+    assert isinstance(report_path, Path), f"Expected Path, got {type(report_path)}"
+    assert report_path.exists(), f"Returned path does not exist: {report_path}"
+    assert report_path.name == "intervention_report.docx"
+
+
+def test_report_is_valid_docx(report_path: Path) -> None:
+    """intervention_report.docx is a valid Word document with at least one paragraph."""
+    from docx import Document
+
+    doc = Document(str(report_path))
+    assert len(doc.paragraphs) > 0, "Expected non-empty Word document"
+
+
+def test_report_contains_cover_heading(report_path: Path) -> None:
+    """Cover page heading contains 'Intervention Report'.
+
+    python-docx maps level=0 to the 'Title' style (not 'Heading 1'), so we
+    check both 'Heading' and 'Title' style paragraphs.
+    """
+    from docx import Document
+
+    doc = Document(str(report_path))
+    # level=0 -> "Title" style; level=1/2 -> "Heading N" style
+    heading_texts = [
+        p.text
+        for p in doc.paragraphs
+        if p.style.name.startswith("Heading") or p.style.name == "Title"
+    ]
+    assert any("Intervention Report" in h for h in heading_texts), (
+        f"Cover heading not found. Heading/Title paragraphs: {heading_texts}"
+    )
+
+
+def test_report_contains_executive_summary(report_path: Path) -> None:
+    """Document contains an 'Executive Summary' section heading."""
+    from docx import Document
+
+    doc = Document(str(report_path))
+    headings = [p.text for p in doc.paragraphs if p.style.name.startswith("Heading")]
+    assert any("Executive Summary" in h for h in headings), (
+        f"'Executive Summary' heading not found. Headings: {headings}"
+    )
+
+
+def test_report_contains_tables(report_path: Path) -> None:
+    """Document contains at least 3 tables (risk breakdown, top-10, campus summary)."""
+    from docx import Document
+
+    doc = Document(str(report_path))
+    assert len(doc.tables) >= 3, (
+        f"Expected at least 3 tables (risk breakdown, top-10, campus summary), "
+        f"got {len(doc.tables)}"
+    )
+
+
+def test_report_data_quality_no_warnings(report_path: Path) -> None:
+    """When data_quality_warnings is empty, document contains 'No data quality issues'."""
+    from docx import Document
+
+    doc = Document(str(report_path))
+    all_text = " ".join(p.text for p in doc.paragraphs)
+    assert "No data quality issues" in all_text, (
+        "Expected 'No data quality issues' paragraph when warnings list is empty"
     )
