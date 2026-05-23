@@ -13,7 +13,7 @@
 - [x] **Phase 2: Risk Scoring Engine** - Deterministic weighted risk formula producing risk_score and risk_level for every student — COMPLETE 2026-05-23
 - [x] **Phase 3: Claude API Integration** - Campus-batched LLM calls with three-layer error handling and PII-safe logging — COMPLETE 2026-05-23
 - [x] **Phase 4: Excel + CSV Output Generation** - intervention_priority_list.xlsx, per-campus dashboards, whatsapp_messages.csv, run_log.json — COMPLETE 2026-05-23
-- [ ] **Phase 5: HTML Dashboard + Word Report** - Self-contained HTML dashboard and intervention_report.docx
+- [x] **Phase 5: HTML Dashboard + Word Report** - Self-contained HTML dashboard and intervention_report.docx — COMPLETE 2026-05-23
 - [ ] **Phase 6: Documentation Suite** - All 8 .docx documentation files and analysis.md
 - [ ] **Phase 7: Test Suite** - Full pytest suite covering risk engine, ingestion edge cases, LLM fallback, and output assertions
 - [ ] **Phase 8: End-to-End Integration + Polish** - Full pipeline verified on synthetic data with all quality gates passing
@@ -95,7 +95,7 @@
 - [x] 05-02-PLAN.md — _write_report() helper: all 7 docx sections programmatically via python-docx + report unit tests (OUT-04) — COMPLETE 2026-05-23
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 05-03-PLAN.md — Extend write_outputs() to call both new helpers + integration test asserting "dashboard" and "report" keys (OUT-04, OUT-05)
+- [x] 05-03-PLAN.md — Extend write_outputs() to call both new helpers + integration test asserting "dashboard" and "report" keys (OUT-04, OUT-05) — COMPLETE 2026-05-23
 
 **Cross-cutting constraints:**
 - All column names via cfg.COL_* — no bare string literals in output logic
@@ -149,7 +149,7 @@
 | 2. Risk Scoring Engine | 2/2 | Complete | 2026-05-23 |
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
-| 5. HTML Dashboard + Word Report | 2/3 | In Progress | - |
+| 5. HTML Dashboard + Word Report | 3/3 | Complete | 2026-05-23 |
 | 6. Documentation Suite | 0/? | Not started | - |
 | 7. Test Suite | 0/? | Not started | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
@@ -176,4 +176,4 @@
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-23 after Phase 5 planning (3 plans created — 05-01 HTML dashboard, 05-02 Word report, 05-03 write_outputs wiring)*
+*Last updated: 2026-05-23 after Phase 5 completion (05-03 executed — write_outputs() wired to all 6 helpers, 111 tests GREEN, Phase 5 COMPLETE)*

@@ -3,22 +3,22 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T21:10:00.000Z"
+last_updated: "2026-05-23T21:15:00.000Z"
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 12
-  percent: 57
+  completed_plans: 13
+  percent: 63
 ---
 
 # Project State: boon-academy-intervention
 
 ## Current Status
 
-- **Phase:** 5 — HTML Dashboard + Word Report (in progress)
-- **Active plan:** 05-03 (next to execute)
-- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation
+- **Phase:** 6 — Documentation Suite (next up)
+- **Active plan:** 06-01 (next to execute)
+- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation; Phase 5 — HTML Dashboard + Word Report
 - **Last updated:** 2026-05-23
 
 ## Project Reference
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 5 — HTML Dashboard + Word Report (next up).
+**Current focus:** Phase 6 — Documentation Suite (next up).
 
 ## Phase Progress
 
@@ -36,7 +36,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
 | 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
-| 5 | HTML Dashboard + Word Report | 2 / 3 | In Progress |
+| 5 | HTML Dashboard + Word Report | 3 / 3 | Complete |
 | 6 | Documentation Suite | 0 / ? | Pending |
 | 7 | Test Suite | 0 / ? | Pending |
 | 8 | End-to-End Integration + Polish | 0 / ? | Pending |
@@ -58,11 +58,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 04 | 04-03 | ~8 min | 2/2 | 3 |
 | 05 | 05-01 | ~12 min | 2/2 | 4 |
 | 05 | 05-02 | ~10 min | 2/2 | 2 |
+| 05 | 05-03 | ~5 min | 2/2 | 2 |
 
-- **Phases completed:** 4 / 8
-- **Plans completed:** 13 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 2/3 plans)
+- **Phases completed:** 5 / 8
+- **Plans completed:** 14 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans)
 - **Requirements delivered:** 54 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05, OUT-06 complete)
-- **Test coverage:** 110 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 11 Phase 5, all GREEN)
+- **Test coverage:** 111 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 12 Phase 5, all GREEN)
 
 ## Accumulated Context
 
@@ -109,7 +110,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - httpx.MockTransport(respx_mock.handler) is the correct respx 0.23.1 injection pattern — respx_mock fixture is a MockRouter (not a transport); httpx.Client(transport=respx_mock) silently bypasses the mock
 - test_no_bare_column_strings_in_llm_engine uses expanded allowed set (23 entries) covering JSON Schema vocab, Anthropic API structure keys, return dict keys, and tool name — all 24 known column name values asserted absent
 - main.py Phase 3 wiring: df, llm_counts = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY); run_log updated from llm_counts; logger.info with aggregate counts only (no PII)
-- write_outputs(df, output_dir, run_log) 3-arg orchestrator: output_dir.mkdir first, calls all 4 private helpers in order, returns unified dict (D-01..D-04)
+- write_outputs(df, output_dir, run_log) 3-arg orchestrator: output_dir.mkdir first, calls all 6 private helpers in order, returns unified dict with keys: priority_list, campus_*, whatsapp, run_log, dashboard, report (D-01..D-04)
 - T-04-05 confirmed: ANTHROPIC_API_KEY passed to enrich_with_llm() only, never stored in run_log dict; run_log has exactly 7 safe keys
 - main.py Phase 4 wiring: from src import output_generator at top; paths = output_generator.write_outputs(df, cfg.OUTPUT_DIR, run_log) uses 3 positional args (not keyword); logger.info logs list(paths.keys())
 - DISPLAY_COLS_DASHBOARD (12 cols): no COL_RANK (JS sorts client-side), no COL_RECOMMENDED_ACTION (COL_FACILITATOR_SUMMARY used instead per D-02)
@@ -160,4 +161,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after 05-02 execution (OUT-04 Word report — _write_report() 7-section docx builder, 6 new tests, 110 total tests GREEN)*
+*Last updated: 2026-05-23 after 05-03 execution (Phase 5 complete — write_outputs() wired to all 6 helpers, "dashboard" and "report" keys in return dict, 111 total tests GREEN)*
