@@ -16,9 +16,9 @@ progress:
 
 ## Current Status
 
-- **Phase:** 4 — Excel + CSV Output Generation (in progress)
-- **Active plan:** 04-03 (next to execute)
-- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration
+- **Phase:** 4 — Excel + CSV Output Generation (complete)
+- **Active plan:** 05-01 (next to execute)
+- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation
 - **Last updated:** 2026-05-23
 
 ## Project Reference
@@ -26,7 +26,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 4 in progress — 04-01 and 04-02 complete, executing 04-03 → 04-03.
+**Current focus:** Phase 5 — HTML Dashboard + Word Report (next up).
 
 ## Phase Progress
 
@@ -35,7 +35,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
 | 2 | Risk Scoring Engine | 2 / 2 | Complete |
 | 3 | Claude API Integration | 3 / 3 | Complete |
-| 4 | Excel + CSV Output Generation | 2 / 3 | In Progress |
+| 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
 | 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
 | 6 | Documentation Suite | 0 / ? | Pending |
 | 7 | Test Suite | 0 / ? | Pending |
@@ -55,11 +55,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 03 | 03-03 | ~20 min | 2/2 | 2 |
 | 04 | 04-01 | ~3 min | 2/2 | 4 |
 | 04 | 04-02 | ~12 min | 2/2 | 2 |
+| 04 | 04-03 | ~8 min | 2/2 | 3 |
 
-- **Phases completed:** 3 / 8
-- **Plans completed:** 10 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 2/3 plans)
-- **Requirements delivered:** 49 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-06 complete)
-- **Test coverage:** 96 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 31 Phase 4, all GREEN)
+- **Phases completed:** 4 / 8
+- **Plans completed:** 11 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans)
+- **Requirements delivered:** 52 / 52 (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-06 complete)
+- **Test coverage:** 99 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4, all GREEN)
 
 ## Accumulated Context
 
@@ -106,6 +107,9 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - httpx.MockTransport(respx_mock.handler) is the correct respx 0.23.1 injection pattern — respx_mock fixture is a MockRouter (not a transport); httpx.Client(transport=respx_mock) silently bypasses the mock
 - test_no_bare_column_strings_in_llm_engine uses expanded allowed set (23 entries) covering JSON Schema vocab, Anthropic API structure keys, return dict keys, and tool name — all 24 known column name values asserted absent
 - main.py Phase 3 wiring: df, llm_counts = llm_engine.enrich_with_llm(df, cfg.ANTHROPIC_API_KEY); run_log updated from llm_counts; logger.info with aggregate counts only (no PII)
+- write_outputs(df, output_dir, run_log) 3-arg orchestrator: output_dir.mkdir first, calls all 4 private helpers in order, returns unified dict (D-01..D-04)
+- T-04-05 confirmed: ANTHROPIC_API_KEY passed to enrich_with_llm() only, never stored in run_log dict; run_log has exactly 7 safe keys
+- main.py Phase 4 wiring: from src import output_generator at top; paths = output_generator.write_outputs(df, cfg.OUTPUT_DIR, run_log) uses 3 positional args (not keyword); logger.info logs list(paths.keys())
 
 ### Known Pitfalls (from research)
 
@@ -148,4 +152,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-23 after 04-02 execution (Phase 4 plan 2 complete — _write_priority_list, _write_campus_dashboards, 17 new Excel round-trip tests, 96 total tests GREEN)*
+*Last updated: 2026-05-23 after 04-03 execution (Phase 4 complete — write_outputs orchestrator, main.py wiring, 3 new integration tests, 99 total tests GREEN)*

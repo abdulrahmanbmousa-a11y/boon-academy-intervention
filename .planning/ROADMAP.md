@@ -12,7 +12,7 @@
 - [x] **Phase 1: Foundation + Data Ingestion** - Project scaffold, config, synthetic data, and a clean unified DataFrame — COMPLETE 2026-05-22
 - [x] **Phase 2: Risk Scoring Engine** - Deterministic weighted risk formula producing risk_score and risk_level for every student — COMPLETE 2026-05-23
 - [x] **Phase 3: Claude API Integration** - Campus-batched LLM calls with three-layer error handling and PII-safe logging — COMPLETE 2026-05-23
-- [ ] **Phase 4: Excel + CSV Output Generation** - intervention_priority_list.xlsx, per-campus dashboards, whatsapp_messages.csv, run_log.json
+- [x] **Phase 4: Excel + CSV Output Generation** - intervention_priority_list.xlsx, per-campus dashboards, whatsapp_messages.csv, run_log.json — COMPLETE 2026-05-23
 - [ ] **Phase 5: HTML Dashboard + Word Report** - Self-contained HTML dashboard and intervention_report.docx
 - [ ] **Phase 6: Documentation Suite** - All 8 .docx documentation files and analysis.md
 - [ ] **Phase 7: Test Suite** - Full pytest suite covering risk engine, ingestion edge cases, LLM fallback, and output assertions
@@ -77,7 +77,7 @@
 **Plans:** 3 plans
 - [x] 04-01-PLAN.md � Config constants + _write_whatsapp_csv + _write_run_log + unit tests (OUT-03, OUT-06) � COMPLETE 2026-05-23
 - [x] 04-02-PLAN.md � _write_priority_list + _write_campus_dashboards + Excel format tests (OUT-01, OUT-02) - COMPLETE 2026-05-23
-- [ ] 04-03-PLAN.md � write_outputs orchestrator + main.py wiring + integration test (OUT-01, OUT-02, OUT-03, OUT-06)
+- [x] 04-03-PLAN.md � write_outputs orchestrator + main.py wiring + integration test (OUT-01, OUT-02, OUT-03, OUT-06)
 **UI hint**: yes
 
 ### Phase 5: HTML Dashboard + Word Report
