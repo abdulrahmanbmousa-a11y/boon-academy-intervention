@@ -47,7 +47,7 @@
   3. A student with perfect attendance, high practice volume, improving trend, and a recent note receives risk_score < 25 and risk_level == "LOW"
   4. All column name strings used in the scoring logic are imported from constants defined in `src/config.py` — no bare string literals appear in `risk_engine.py`
 **Plans:** 2 plans
-- [ ] 02-01-PLAN.md - Wave 0: src/config.py +4 D-09 component constants + tests/test_config.py extension + tests/test_risk_engine.py failing-test scaffold (RISK-08 scaffolding)
+- [x] 02-01-PLAN.md - Wave 0: src/config.py +4 D-09 component constants + tests/test_config.py extension + tests/test_risk_engine.py failing-test scaffold (RISK-08 scaffolding) — COMPLETE 2026-05-23
 - [ ] 02-02-PLAN.md - Wave 1: src/risk_engine.py pure function (D-01..D-09) + main.py wiring (RISK-01..RISK-08)
 
 ### Phase 3: Claude API Integration

@@ -3,37 +3,37 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-23T09:37:13.771Z"
+last_updated: "2026-05-23T09:46:00Z"
 progress:
   total_phases: 8
   completed_phases: 1
-  total_plans: 5
-  completed_plans: 3
-  percent: 13
+  total_plans: 6
+  completed_plans: 4
+  percent: 15
 ---
 
 # Project State: boon-academy-intervention
 
 ## Current Status
 
-- **Phase:** 1 (Complete)
-- **Active phase:** Phase 2 — Risk Scoring Engine (next)
+- **Phase:** 2 — Risk Scoring Engine (in progress)
+- **Active plan:** Phase 2, Plan 02 (02-02) — implement score_risk()
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion
-- **Last updated:** 2026-05-22
+- **Last updated:** 2026-05-23
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-05-21)
 
 **Core value:** A facilitator opens their campus Excel file and immediately knows exactly which students to contact today, with the message already written.
-**Current focus:** Phase 1 complete — all 3 plans executed. Phase 2 risk scoring engine is next.
+**Current focus:** Phase 2 Plan 01 complete (Wave 0 scaffolding). Next: Plan 02-02 — implement score_risk() to turn RED tests GREEN.
 
 ## Phase Progress
 
 | Phase | Name | Plans Done | Status |
 |-------|------|------------|--------|
 | 1 | Foundation + Data Ingestion | 3 / 3 | Complete |
-| 2 | Risk Scoring Engine | 0 / ? | Pending |
+| 2 | Risk Scoring Engine | 1 / ? | In Progress |
 | 3 | Claude API Integration | 0 / ? | Pending |
 | 4 | Excel + CSV Output Generation | 0 / ? | Pending |
 | 5 | HTML Dashboard + Word Report | 0 / ? | Pending |
@@ -48,11 +48,12 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 01 | 01-01 | ~20 min | 3/3 | 17 |
 | 01 | 01-02 | ~15 min | 2/2 | 11 |
 | 01 | 01-03 | ~25 min | 3/3 | 2 |
+| 02 | 02-01 | ~5 min | 2/2 | 3 |
 
 - **Phases completed:** 1 / 8
-- **Plans completed:** 3 / 3 (Phase 1 complete)
-- **Requirements delivered:** 18 / 52 (INFRA-01 through INFRA-09, DATA-01 through DATA-08, INFRA-08)
-- **Test coverage:** 25 tests passing (test_config x6, test_no_hardcoded_paths x1, test_package_structure x1, test_generate_data x7, test_ingestion x10)
+- **Plans completed:** 4 (Phase 1: 3 plans, Phase 2: 1 plan)
+- **Requirements delivered:** 18 / 52 (INFRA-01 through INFRA-09, DATA-01 through DATA-08, INFRA-08) — RISK-08 scaffold added (test exists, impl pending 02-02)
+- **Test coverage:** 25 Phase 1 tests passing + 28 Phase 2 scaffold tests collected (9 GREEN, 19 RED pending 02-02 implementation)
 
 ## Accumulated Context
 
@@ -65,7 +66,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - respx (not responses) for mocking — Anthropic SDK uses httpx, not requests
 - pandas 2.2.3 (not 3.x) — avoid mandatory Copy-on-Write breaking chained assignment patterns
 - python-docx 1.1.2 (not 1.2.0) — 1.2.0 has open OxmlElement + table-border issues
-- D-07: All 17 column constants + risk thresholds + weights in src/config.py from day 1
+- D-07: All 21 column constants + risk thresholds + weights in src/config.py (17 from Phase 1 + 4 D-09 component columns added in 02-01)
 - D-08: Only ANTHROPIC_API_KEY uses os.environ (fail-loud); paths use os.getenv with safe defaults
 - D-05/D-06: run_log dict built in-memory throughout run, written once at end via output_generator
 - Python 3.12 required for test execution — pandas==2.2.3 has no wheel for Python 3.14 (system default)
@@ -113,5 +114,5 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-22 after Plan 01-03 execution (2 files, 10 new tests passing, DATA-02 through DATA-08 + INFRA-08 satisfied)*
-*Phase 1 complete. Next: /gsd:discuss-phase 2 → /gsd:plan-phase 2 → /gsd:execute-phase 2*
+*Last updated: 2026-05-23 after Plan 02-01 execution (3 files modified/created, 28 tests collected, 9 GREEN, 19 RED pending 02-02)*
+*Phase 2 in progress. Next: /gsd:execute-phase 2 (Plan 02-02 — implement score_risk to turn RED tests GREEN)*
