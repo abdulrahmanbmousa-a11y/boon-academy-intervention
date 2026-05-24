@@ -126,6 +126,9 @@ def test_medium_low_students_skipped(respx_mock) -> None:
     assert result_df[cfg.COL_WHATSAPP_MESSAGE].isna().all(), (
         "LLM-01: MEDIUM/LOW rows must have None/NaN in whatsapp_message (D-07)"
     )
+    assert result_df[cfg.COL_LLM_ERROR_REASON].isna().all(), (
+        "LLM-01: MEDIUM/LOW rows must have None/NaN in llm_error_reason (D-07)"
+    )
     assert len(respx_mock.calls) == 0, (
         "LLM-01: no HTTP calls should be made for a MEDIUM/LOW-only cohort"
     )
@@ -296,6 +299,12 @@ def test_fallback_to_template(respx_mock) -> None:
     assert row[cfg.COL_WHATSAPP_MESSAGE] and len(str(row[cfg.COL_WHATSAPP_MESSAGE])) > 0, (
         "D-08: template fallback must produce a non-empty whatsapp_message for CRITICAL row"
     )
+    assert counts["api_calls_made"] == 0, (
+        "LLM-05: fallback path must not count the failed call as a successful api_call"
+    )
+    assert len(respx_mock.calls) >= 1, (
+        "LLM-05: at least one API attempt must have been made before falling back to template"
+    )
 
 
 def test_token_logging(respx_mock, caplog) -> None:
@@ -334,9 +343,11 @@ def test_token_logging(respx_mock, caplog) -> None:
         f"LLM-06: output tokens must be 80, got {counts['tokens_used']['output']}"
     )
     # TEST-03: token counts must appear in log output after a successful API call
-    assert "150" in caplog.text or "token" in caplog.text.lower(), (
-        "TEST-03: token counts must be logged after successful API call — "
-        "expected '150' or 'token' in caplog.text but got: " + repr(caplog.text[:200])
+    assert "150" in caplog.text, (
+        "TEST-03: input token count '150' must appear in log output after successful API call"
+    )
+    assert "80" in caplog.text, (
+        "TEST-03: output token count '80' must appear in log output after successful API call"
     )
 
 
@@ -439,7 +450,7 @@ def test_chunk_size_limit(respx_mock) -> None:
     respx_mock.post(ANTHROPIC_API_URL).mock(side_effect=_make_response_for_call)
 
     http_client = httpx.Client(transport=httpx.MockTransport(respx_mock.handler))
-    _, counts = enrich_with_llm(df, "test-key", http_client=http_client)
+    result_df, counts = enrich_with_llm(df, "test-key", http_client=http_client)
 
     assert len(respx_mock.calls) == 2, (
         f"LLM-09: 15 students with chunk_size=10 must produce 2 API calls, "
@@ -447,6 +458,9 @@ def test_chunk_size_limit(respx_mock) -> None:
     )
     assert counts["api_calls_made"] == 2, (
         "LLM-09: api_calls_made must be 2 for 15-student single-campus cohort"
+    )
+    assert result_df[cfg.COL_GENERATED_BY].notna().sum() == 15, (
+        "LLM-09: all 15 students must have generated_by populated after 2 chunks"
     )
 
 
@@ -542,8 +556,9 @@ def test_no_bare_column_strings_in_llm_engine() -> None:
     source_path = Path(__file__).parent.parent / "src" / "llm_engine.py"
     source = source_path.read_text(encoding="utf-8")
 
-    # Strip triple-quoted docstrings (covers both """ styles)
+    # Strip triple-quoted docstrings (covers both """ and ''' styles)
     no_docstrings = re.sub(r'""".*?"""', "", source, flags=re.DOTALL)
+    no_docstrings = re.sub(r"'''.*?'''", "", no_docstrings, flags=re.DOTALL)
     # Strip inline and full-line comments
     no_comments = re.sub(r"#.*", "", no_docstrings)
 
@@ -595,14 +610,11 @@ def test_no_bare_column_strings_in_llm_engine() -> None:
         "item",
     }
 
-    # The actual column name values from config.py that must NOT appear as bare strings
+    # Derive column name values from config.py at runtime so the set stays in sync
+    # automatically when new COL_* constants are added (CR-03 fix).
     known_column_values: set[str] = {
-        "student_id", "student_name", "campus_id", "parent_phone", "facilitator_email",
-        "metric_date", "session_attended_min", "practice_questions", "note_date", "note_text",
-        "attendance_rate", "avg_practice_questions", "trend_direction", "days_since_last_note",
-        "risk_score", "risk_level", "recommended_action",
-        "attendance_component", "practice_component", "trend_component", "notes_component",
-        "facilitator_summary", "whatsapp_message", "generated_by", "llm_error_reason",
+        v for k, v in vars(cfg).items()
+        if k.startswith("COL_") and isinstance(v, str)
     }
 
     # Any found string that is a known column value is an offender

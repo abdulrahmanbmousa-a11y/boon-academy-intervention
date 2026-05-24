@@ -191,16 +191,18 @@ def test_risk_score_weighted_formula() -> None:
     """RISK-05: weighted formula correctness — all-100, all-0, and attendance-only-100."""
     # Case 1: all components = 100 → score = 100.0
     # worst student: 0 attendance, 0 practice, declining series, no note
-    worst_row = _build_student_row(
-        student_id="S_worst",
-        attendance_days=0,
-        practice_total_q=0,
-        session_series=[10.0] * 11 + [0.0] * 3,
-        latest_note_date=pd.NaT,
-    )
-    # Case 2: all components = 0 → score = 0.0
-    # perfect student: 14 days, 210 practice, improving series, note today
+    # All three rows constructed inside freeze_time for consistency — if worst_row
+    # ever changes from NaT to a specific date, the frozen context must be in effect.
     with freeze_time("2026-05-23"):
+        worst_row = _build_student_row(
+            student_id="S_worst",
+            attendance_days=0,
+            practice_total_q=0,
+            session_series=[10.0] * 11 + [0.0] * 3,
+            latest_note_date=pd.NaT,
+        )
+        # Case 2: all components = 0 → score = 0.0
+        # perfect student: 14 days, 210 practice, improving series, note today
         perfect_row = _build_student_row(
             student_id="S_perfect",
             attendance_days=14,

@@ -124,6 +124,10 @@ def minimal_enriched_df() -> pd.DataFrame:
     All 20 cfg.COL_* columns are present. Used by test_output_generator.py and
     test_llm_engine.py. Function scope (default) so each test receives a fresh copy
     and mutations do not bleed between tests.
+
+    WARNING: risk_score/risk_level values are NOT recomputable from the component
+    columns — S002 stores risk_score=75.0 but components sum to 65.0. This fixture
+    is ONLY valid for output_generator and llm_engine tests. Do NOT pass to score_risk().
     """
     return pd.DataFrame({
         cfg.COL_STUDENT_ID: ["S001", "S002", "S003", "S004", "S005"],

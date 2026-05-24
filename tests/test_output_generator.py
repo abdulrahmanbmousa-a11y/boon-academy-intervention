@@ -430,10 +430,22 @@ def test_campus_dashboard_critical_row_color(
 
 
 def test_campus_dashboard_medium_llm_cells_empty(
-    campus_dashboard_paths: dict[str, Path],
+    multi_campus_df: pd.DataFrame, tmp_path: Path
 ) -> None:
-    """MEDIUM student rows have None (empty) in LLM columns 13, 14, 15 (D-06)."""
-    wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
+    """MEDIUM student rows have None (empty) in LLM columns 13, 14, 15 (D-06).
+
+    Uses a df variant where the MEDIUM row has non-None LLM values on input to
+    verify _write_campus_dashboards actively suppresses them — not just passes
+    through an already-None fixture value (CR-01 fix).
+    """
+    df_with_llm_on_medium = multi_campus_df.copy()
+    medium_mask = df_with_llm_on_medium[cfg.COL_RISK_LEVEL] == "MEDIUM"
+    df_with_llm_on_medium.loc[medium_mask, cfg.COL_FACILITATOR_SUMMARY] = "Should be suppressed"
+    df_with_llm_on_medium.loc[medium_mask, cfg.COL_WHATSAPP_MESSAGE] = "Should be suppressed"
+    df_with_llm_on_medium.loc[medium_mask, cfg.COL_GENERATED_BY] = "llm"
+    paths = _write_campus_dashboards(df_with_llm_on_medium, tmp_path)
+
+    wb = load_workbook(paths["campus_ALPHA"])
     ws = wb.active
     risk_col_idx = cfg.OUTPUT_COLS_CAMPUS.index(cfg.COL_RISK_LEVEL) + 1
     # Find the MEDIUM row (row 3 onward — skip header row 1 and summary row 2)
