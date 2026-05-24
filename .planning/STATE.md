@@ -17,7 +17,7 @@ progress:
 ## Current Status
 
 - **Phase:** 6 — Documentation Suite (in progress)
-- **Active plan:** 06-04 (next to execute)
+- **Active plan:** 06-05 (next to execute)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation; Phase 5 — HTML Dashboard + Word Report
 - **Last updated:** 2026-05-24
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
 | 5 | HTML Dashboard + Word Report | 3 / 3 | Complete |
-| 6 | Documentation Suite | 3 / 6 | In Progress |
+| 6 | Documentation Suite | 4 / 6 | In Progress |
 | 7 | Test Suite | 0 / ? | Pending |
 | 8 | End-to-End Integration + Polish | 0 / ? | Pending |
 
@@ -62,9 +62,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 06 | 06-01 | ~8 min | 2/2 | 1 |
 | 06 | 06-02 | ~3 min | 1/1 | 1 |
 | 06 | 06-03 | ~8 min | 2/2 | 1 |
+| 06 | 06-04 | ~6 min | 2/2 | 1 |
 
 - **Phases completed:** 5 / 8
-- **Plans completed:** 17 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 3/6 plans)
+- **Plans completed:** 18 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 4/6 plans)
 - **Requirements delivered:** 63 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05, OUT-06, DOCS-01..02 fully implemented, DOCS-03..09 complete)
 - **Test coverage:** 111 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 12 Phase 5, all GREEN)
 
@@ -129,6 +130,9 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - _write_analysis_docx(run_log, docs_dir, content): Word version with same 5 sections; content param unused (run_log-driven); doc.save(str(path)) required on Windows for python-docx 1.1.2; no per-level risk counts (df not available — full distribution in xlsx)
 - analysis.docx omits per-level risk counts — no df param in _write_analysis_docx signature; run_log.get("students_processed") used for total; full distribution always in priority list xlsx
 - scalability cost projection: 31,771 tokens / 300 students = 106 tokens/student; 100 campuses × 15 × 40% = 600 at-risk; 63,600 tokens/run ≈ $11.45/month vs $200/month budget (17x headroom)
+- _write_architecture + _write_data_handling delegate entirely to _render_doc_from_content() — DRY, no duplicated YAML rendering loop (06-04)
+- _write_scalability renders YAML sections inline then appends two programmatic tables: scale comparison (3×3) and cost projection (3×3), both style="Table Grid" per D-10 (06-04)
+- type:bullet in scalability uses style="List Bullet" (consistent with _render_doc_from_content) not "• " prefix — same rendered output in Word
 - security doc pattern: os.environ["ANTHROPIC_API_KEY"] fail-loud + never logged + 7 safe run_log keys; PII masked in logs (names/phones absent from all log statements); outputs/ delete-same-day recommendation
 
 ### Known Pitfalls (from research)
@@ -172,4 +176,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-24 after 06-03 execution (Phase 6 plan 3 complete — _write_analysis_md + _write_analysis_docx fully implemented, commit abcfc42; Wave 2 plans 06-04/06-05 next)*
+*Last updated: 2026-05-24 after 06-04 execution (Phase 6 plan 4 complete — _write_architecture, _write_data_handling, _write_scalability fully implemented, commits e5dc909 e29d4ee; 06-05 next)*

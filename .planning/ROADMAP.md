@@ -120,7 +120,7 @@
 
 **Wave 2** *(parallel, blocked on Wave 1)*
 - [x] 06-03-PLAN.md — _write_analysis_md + _write_analysis_docx: run_log-driven, 5-section structure (DOCS-01, DOCS-02) ✓ commit abcfc42
-- [ ] 06-04-PLAN.md — _write_architecture + _write_data_handling + _write_scalability: hybrid YAML renderer + cost table (DOCS-03, DOCS-06, DOCS-07)
+- [x] 06-04-PLAN.md — _write_architecture + _write_data_handling + _write_scalability: hybrid YAML renderer + cost table (DOCS-03, DOCS-06, DOCS-07) ✓ commits e5dc909 e29d4ee
 - [ ] 06-05-PLAN.md — _write_security + _write_engineering_decisions + _write_system_design + _write_alternatives: narrative YAML renderer (DOCS-04, DOCS-05, DOCS-08, DOCS-09)
 
 **Wave 3** *(blocked on Wave 2)*
@@ -162,7 +162,7 @@
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
 | 5. HTML Dashboard + Word Report | 3/3 | Complete | 2026-05-23 |
-| 6. Documentation Suite | 3/6 | In Progress | DOCS-03..09 content library + doc_generator.py skeleton + analysis helpers done |
+| 6. Documentation Suite | 4/6 | In Progress | DOCS-03..09 content library + skeleton + analysis + hybrid doc helpers done |
 | 7. Test Suite | 0/? | Not started | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
 
@@ -210,4 +210,4 @@ These features were requested after v1 scope was locked. Implement after Phase 8
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-24 — Phase 6 plan 03 complete (_write_analysis_md + _write_analysis_docx, commit abcfc42); Wave 2 plans 06-04 and 06-05 ready*
+*Last updated: 2026-05-24 — Phase 6 plan 04 complete (_write_architecture, _write_data_handling, _write_scalability, commits e5dc909 e29d4ee); 06-05 next*
