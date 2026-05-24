@@ -17,7 +17,7 @@ progress:
 ## Current Status
 
 - **Phase:** 6 — Documentation Suite (in progress)
-- **Active plan:** 06-03 (next to execute)
+- **Active plan:** 06-04 (next to execute)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation; Phase 5 — HTML Dashboard + Word Report
 - **Last updated:** 2026-05-24
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
 | 5 | HTML Dashboard + Word Report | 3 / 3 | Complete |
-| 6 | Documentation Suite | 2 / 6 | In Progress |
+| 6 | Documentation Suite | 3 / 6 | In Progress |
 | 7 | Test Suite | 0 / ? | Pending |
 | 8 | End-to-End Integration + Polish | 0 / ? | Pending |
 
@@ -61,10 +61,11 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 05 | 05-03 | ~5 min | 2/2 | 2 |
 | 06 | 06-01 | ~8 min | 2/2 | 1 |
 | 06 | 06-02 | ~3 min | 1/1 | 1 |
+| 06 | 06-03 | ~8 min | 2/2 | 1 |
 
 - **Phases completed:** 5 / 8
-- **Plans completed:** 16 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 2/6 plans)
-- **Requirements delivered:** 61 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05, OUT-06, DOCS-03..09 complete; DOCS-01..02 skeleton delivered via 06-02)
+- **Plans completed:** 17 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 3/6 plans)
+- **Requirements delivered:** 63 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05, OUT-06, DOCS-01..02 fully implemented, DOCS-03..09 complete)
 - **Test coverage:** 111 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 12 Phase 5, all GREEN)
 
 ## Accumulated Context
@@ -124,6 +125,9 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - docs_content.yaml: single YAML file for all 7 static doc blocks; hybrid pattern (architecture/data_handling/scalability) = paragraph opener + bullets; narrative pattern (security/engineering_decisions/system_design/alternatives) = 2-4 paragraphs per section (D-14)
 - doc_generator.py module skeleton: write_docs(df, run_log, docs_dir) -> dict[str, Path]; _DOCS_CONTENT loaded at import via yaml.safe_load(); 9 private stubs return Path without raising; _render_doc_from_content() shared helper added for DRY YAML-to-docx rendering in Wave 2
 - analysis.md placed at docs_dir.parent / "analysis.md" (project root) — no cfg.PROJECT_ROOT constant; docs_dir defaults to Path("docs") so parent is always project root
+- _write_analysis_md(df, run_log, docs_dir): 5-section Markdown memo (423 words, under 600); embeds live run_log numbers + df[COL_RISK_LEVEL].value_counts() risk distribution; written with path.write_text(encoding="utf-8")
+- _write_analysis_docx(run_log, docs_dir, content): Word version with same 5 sections; content param unused (run_log-driven); doc.save(str(path)) required on Windows for python-docx 1.1.2; no per-level risk counts (df not available — full distribution in xlsx)
+- analysis.docx omits per-level risk counts — no df param in _write_analysis_docx signature; run_log.get("students_processed") used for total; full distribution always in priority list xlsx
 - scalability cost projection: 31,771 tokens / 300 students = 106 tokens/student; 100 campuses × 15 × 40% = 600 at-risk; 63,600 tokens/run ≈ $11.45/month vs $200/month budget (17x headroom)
 - security doc pattern: os.environ["ANTHROPIC_API_KEY"] fail-loud + never logged + 7 safe run_log keys; PII masked in logs (names/phones absent from all log statements); outputs/ delete-same-day recommendation
 
@@ -168,4 +172,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-24 after 06-02 execution (Phase 6 plan 2 complete — doc_generator.py skeleton with write_docs() orchestrator and 9 private stubs, commit f2d2286; Wave 1 complete, Wave 2 plans 06-03/06-04/06-05 ready)*
+*Last updated: 2026-05-24 after 06-03 execution (Phase 6 plan 3 complete — _write_analysis_md + _write_analysis_docx fully implemented, commit abcfc42; Wave 2 plans 06-04/06-05 next)*
