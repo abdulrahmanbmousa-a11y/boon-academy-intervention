@@ -582,6 +582,7 @@ def test_no_bare_column_strings_in_llm_engine() -> None:
         "content",
         "input",
         "output",
+        "max_tokens",
         # Tool name (not a column name)
         "generate_interventions",
         # Return dict keys (not column names — they are counts dict keys)
