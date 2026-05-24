@@ -3,7 +3,7 @@
 **Project:** boon-academy-intervention
 **Granularity:** Fine (8 phases)
 **Coverage:** 52/52 requirements mapped
-**Last updated:** 2026-05-23
+**Last updated:** 2026-05-24
 
 ---
 
@@ -112,7 +112,19 @@
   2. `analysis.md` exists at the repo root, contains all 5 required sections (Diagnosis, What you found, What you built, What you cut, What next), stays under 600 words, and includes real numbers from the pipeline run
   3. `docs/security.docx` describes env-var-only API key handling, PII masking in logs, and data retention recommendation without exposing any real API key or student data
   4. `docs/scalability.docx` includes a cost projection at $200/month and a migration path from CSV to SQLite to PostgreSQL
-**Plans:** TBD
+**Plans:** 6 plans
+
+**Wave 1** *(parallel)*
+- [ ] 06-01-PLAN.md — src/templates/docs_content.yaml: full content for all 7 static docs (DOCS-03..09)
+- [ ] 06-02-PLAN.md — src/doc_generator.py skeleton: write_docs() orchestrator + 9 private helper stubs (DOCS-01..09)
+
+**Wave 2** *(parallel, blocked on Wave 1)*
+- [ ] 06-03-PLAN.md — _write_analysis_md + _write_analysis_docx: run_log-driven, 5-section structure (DOCS-01, DOCS-02)
+- [ ] 06-04-PLAN.md — _write_architecture + _write_data_handling + _write_scalability: hybrid YAML renderer + cost table (DOCS-03, DOCS-06, DOCS-07)
+- [ ] 06-05-PLAN.md — _write_security + _write_engineering_decisions + _write_system_design + _write_alternatives: narrative YAML renderer (DOCS-04, DOCS-05, DOCS-08, DOCS-09)
+
+**Wave 3** *(blocked on Wave 2)*
+- [ ] 06-06-PLAN.md — main.py wiring (D-02) + end-to-end smoke test asserting all 9 keys and all 9 files on disk (DOCS-01..09)
 
 ### Phase 7: Test Suite
 **Goal:** A pytest suite passes with zero failures, covering risk formula components, ingestion edge cases, LLM fallback behavior, and output file assertions.
@@ -150,7 +162,7 @@
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
 | 5. HTML Dashboard + Word Report | 3/3 | Complete | 2026-05-23 |
-| 6. Documentation Suite | 0/? | Not started | - |
+| 6. Documentation Suite | 0/6 | Not started | - |
 | 7. Test Suite | 0/? | Not started | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
 
@@ -175,5 +187,27 @@
 
 ---
 
+## Post-v1 Backlog (Future Phases)
+
+These features were requested after v1 scope was locked. Implement after Phase 8 completes.
+
+### Phase 9: Web Application
+**Goal:** Replace the file-based workflow with a hosted web app that facilitators can access via browser without running the pipeline locally.
+**Key decisions to make in discuss-phase:**
+- Framework (Flask / FastAPI / Django)
+- Hosting (local network vs. cloud)
+- Authentication (single password vs. per-facilitator login)
+- Data refresh trigger (manual run button vs. scheduled)
+
+### Phase 10: In-App Report Downloads
+**Goal:** Facilitators can download their campus Excel dashboard and the Word intervention report directly from the web app — no shared drive or email needed.
+**Depends on:** Phase 9 (Web Application)
+**Key decisions to make in discuss-phase:**
+- Download scope (own campus only, or admin can download all)
+- File freshness indicator (show when last pipeline run completed)
+- Whether downloads are pre-generated or generated on-demand
+
+---
+
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-23 after Phase 5 completion (05-03 executed — write_outputs() wired to all 6 helpers, 111 tests GREEN, Phase 5 COMPLETE)*
+*Last updated: 2026-05-24 — Phase 6 planned (6 plans, 3 waves); Phase 9 (Web App) and Phase 10 (In-App Downloads) added to post-v1 backlog per user request*
