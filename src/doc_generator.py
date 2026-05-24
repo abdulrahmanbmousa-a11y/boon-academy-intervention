@@ -462,10 +462,19 @@ def _write_data_handling(docs_dir: Path, content: dict) -> Path:
 
 
 def _write_scalability(docs_dir: Path, content: dict) -> Path:
-    """Write docs/scalability.docx — scalability analysis document.
+    """Write docs/scalability.docx — scalability analysis with cost projection tables.
 
-    TODO (Wave 2): Implement using _render_doc_from_content(content, docs_dir,
-    'scalability.docx'). Content loaded from docs_content.yaml 'scalability' key.
+    Hybrid structure (D-14): each YAML section opens with a paragraph, then uses
+    bullet points. After all YAML sections are rendered, a programmatic scale
+    comparison table and cost projection table are appended (DOCS-07).
+
+    Cost projection numbers are hardcoded from the demo run (D-13):
+      - 31,771 tokens / 300 students = 106 tokens/student
+      - 100 campuses × 15 × 40% at-risk = 600 at-risk students/run
+      - 600 × 106 = 63,600 tokens/run
+    Both scenarios are well within the $200/month budget target.
+
+    No OxmlElement. No custom styles. Table Grid only. per D-10.
 
     Args:
         docs_dir: Directory to write scalability.docx into.
@@ -475,6 +484,63 @@ def _write_scalability(docs_dir: Path, content: dict) -> Path:
         Path to docs/scalability.docx.
     """
     path = docs_dir / "scalability.docx"
+    doc = Document()
+
+    # Render title
+    title = content.get("title", "Scalability Analysis")
+    doc.add_heading(title, level=0)
+
+    # Render all YAML sections using hybrid pattern (paragraph opener + bullets)
+    for section in content.get("sections", []):
+        heading = section.get("heading", "")
+        if heading:
+            doc.add_heading(heading, level=1)
+        for item in section.get("body", []):
+            item_type = item.get("type", "paragraph")
+            text = item.get("text", "")
+            if item_type == "bullet":
+                doc.add_paragraph(text, style="List Bullet")
+            else:
+                doc.add_paragraph(text)
+
+    # Scale comparison table (DOCS-07) — programmatic, not in YAML
+    doc.add_heading("Scale Comparison", level=1)
+    doc.add_paragraph(
+        "The table below projects at-risk student count and token usage as campus count grows. "
+        "Calculation basis: 106 tokens/student (31,771 tokens ÷ 300 students from demo run); "
+        "40% CRITICAL/HIGH rate assumed."
+    )
+    scale_table = doc.add_table(rows=3, cols=3, style="Table Grid")
+    scale_table.cell(0, 0).text = "Scale"
+    scale_table.cell(0, 1).text = "At-Risk Students/Run"
+    scale_table.cell(0, 2).text = "Est. Tokens/Run"
+    scale_table.cell(1, 0).text = "20 campuses (current)"
+    scale_table.cell(1, 1).text = "~120"
+    scale_table.cell(1, 2).text = "~12,720"
+    scale_table.cell(2, 0).text = "100 campuses"
+    scale_table.cell(2, 1).text = "~600"
+    scale_table.cell(2, 2).text = "~63,600"
+
+    # Cost projection table
+    doc.add_heading("Monthly Cost Estimate", level=1)
+    doc.add_paragraph(
+        "Estimated monthly cost at claude-sonnet-4-5 pricing (~$6/million tokens blended). "
+        "Both scenarios are well within the $200/month budget target — 17x headroom at 100 campuses."
+    )
+    cost_table = doc.add_table(rows=3, cols=3, style="Table Grid")
+    cost_table.cell(0, 0).text = "Runs/Month"
+    cost_table.cell(0, 1).text = "Tokens/Run"
+    cost_table.cell(0, 2).text = "Est. Monthly Cost"
+    cost_table.cell(1, 0).text = "30"
+    cost_table.cell(1, 1).text = "~12,720"
+    cost_table.cell(1, 2).text = "<$1/month"
+    cost_table.cell(2, 0).text = "30"
+    cost_table.cell(2, 1).text = "~63,600"
+    cost_table.cell(2, 2).text = "~$5-10/month"
+
+    # str() required for python-docx 1.1.2 on Windows (CLAUDE.md critical pitfall)
+    doc.save(str(path))
+    logger.info("Wrote scalability.docx: %s", path)
     return path
 
 
