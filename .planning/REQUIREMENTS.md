@@ -50,15 +50,15 @@
 
 ### DOCS — Documentation Files
 
-- [ ] **DOCS-01**: `analysis.md` — 5-section memo (Diagnosis, What you found in data with real numbers, What you built and why, What you cut and why, What you'd build next); max ~600 words; generated AFTER pipeline runs so it contains real numbers
-- [ ] **DOCS-02**: `docs/analysis.docx` — same content as analysis.md, formatted as Word document
-- [ ] **DOCS-03**: `docs/architecture.docx` — ASCII pipeline diagram, component descriptions (when each runs, why it exists), where LLM is called and why, technology choices with rationale, why NOT n8n/Zapier, why NOT Airtable
-- [ ] **DOCS-04**: `docs/security.docx` — API key management (env vars only, never logged), PII handling (student names and parent phones masked in all logs), data retention recommendation, access control recommendation, what must NOT appear in outputs
-- [ ] **DOCS-05**: `docs/engineering_decisions.docx` — risk scoring formula rationale, LLM batching rationale, fallback logic rationale, output format choices, why Claude API, what was left intentionally simple
-- [ ] **DOCS-06**: `docs/data_handling.docx` — schema per input file, cleaning steps, missing data imputation strategy, quality issues (warnings vs errors), merge logic, edge cases
-- [ ] **DOCS-07**: `docs/scalability.docx` — 20 vs 100 campuses architecture comparison, bottlenecks (LLM rate limits, file I/O), migration path (CSV → SQLite → PostgreSQL), cost projection at $200/month budget
-- [ ] **DOCS-08**: `docs/system_design.docx` — AI choices and why, what is NOT done by AI and why, LLM accuracy vs cost vs latency tradeoffs, human review loop recommendation, failure modes and system boundaries
-- [ ] **DOCS-09**: `docs/alternatives.docx` — what was NOT built with rationale, alternative risk scoring approaches, alternative delivery methods, what's worth building next
+- [x] **DOCS-01**: `analysis.md` — 5-section memo (Diagnosis, What you found in data with real numbers, What you built and why, What you cut and why, What you'd build next); max ~600 words; generated AFTER pipeline runs so it contains real numbers
+- [x] **DOCS-02**: `docs/analysis.docx` — same content as analysis.md, formatted as Word document
+- [x] **DOCS-03**: `docs/architecture.docx` — ASCII pipeline diagram, component descriptions (when each runs, why it exists), where LLM is called and why, technology choices with rationale, why NOT n8n/Zapier, why NOT Airtable
+- [x] **DOCS-04**: `docs/security.docx` — API key management (env vars only, never logged), PII handling (student names and parent phones masked in all logs), data retention recommendation, access control recommendation, what must NOT appear in outputs
+- [x] **DOCS-05**: `docs/engineering_decisions.docx` — risk scoring formula rationale, LLM batching rationale, fallback logic rationale, output format choices, why Claude API, what was left intentionally simple
+- [x] **DOCS-06**: `docs/data_handling.docx` — schema per input file, cleaning steps, missing data imputation strategy, quality issues (warnings vs errors), merge logic, edge cases
+- [x] **DOCS-07**: `docs/scalability.docx` — 20 vs 100 campuses architecture comparison, bottlenecks (LLM rate limits, file I/O), migration path (CSV → SQLite → PostgreSQL), cost projection at $200/month budget
+- [x] **DOCS-08**: `docs/system_design.docx` — AI choices and why, what is NOT done by AI and why, LLM accuracy vs cost vs latency tradeoffs, human review loop recommendation, failure modes and system boundaries
+- [x] **DOCS-09**: `docs/alternatives.docx` — what was NOT built with rationale, alternative risk scoring approaches, alternative delivery methods, what's worth building next
 
 ### TEST — Test Suite
 
@@ -139,15 +139,15 @@
 | OUT-04 | Phase 5 | Pending |
 | OUT-05 | Phase 5 | Pending |
 | OUT-06 | Phase 4 | Pending |
-| DOCS-01 | Phase 6 | Pending |
-| DOCS-02 | Phase 6 | Pending |
-| DOCS-03 | Phase 6 | Pending |
-| DOCS-04 | Phase 6 | Pending |
-| DOCS-05 | Phase 6 | Pending |
-| DOCS-06 | Phase 6 | Pending |
-| DOCS-07 | Phase 6 | Pending |
-| DOCS-08 | Phase 6 | Pending |
-| DOCS-09 | Phase 6 | Pending |
+| DOCS-01 | Phase 6 | Complete |
+| DOCS-02 | Phase 6 | Complete |
+| DOCS-03 | Phase 6 | Complete |
+| DOCS-04 | Phase 6 | Complete |
+| DOCS-05 | Phase 6 | Complete |
+| DOCS-06 | Phase 6 | Complete |
+| DOCS-07 | Phase 6 | Complete |
+| DOCS-08 | Phase 6 | Complete |
+| DOCS-09 | Phase 6 | Complete |
 | TEST-01 | Phase 7 | Pending |
 | TEST-02 | Phase 7 | Pending |
 | TEST-03 | Phase 7 | Pending |

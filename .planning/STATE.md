@@ -16,9 +16,9 @@ progress:
 
 ## Current Status
 
-- **Phase:** 6 — Documentation Suite (in progress)
-- **Active plan:** 06-06 (next to execute)
-- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation; Phase 5 — HTML Dashboard + Word Report
+- **Phase:** 7 — Test Suite (next)
+- **Active plan:** 07-01 (next to execute)
+- **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation; Phase 5 — HTML Dashboard + Word Report; Phase 6 — Documentation Suite
 - **Last updated:** 2026-05-24
 
 ## Project Reference
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
 | 5 | HTML Dashboard + Word Report | 3 / 3 | Complete |
-| 6 | Documentation Suite | 5 / 6 | In Progress |
+| 6 | Documentation Suite | 6 / 6 | Complete |
 | 7 | Test Suite | 0 / ? | Pending |
 | 8 | End-to-End Integration + Polish | 0 / ? | Pending |
 
@@ -64,10 +64,11 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 06 | 06-03 | ~8 min | 2/2 | 1 |
 | 06 | 06-04 | ~6 min | 2/2 | 1 |
 | 06 | 06-05 | ~5 min | 2/2 | 1 |
+| 06 | 06-06 | ~10 min | 2/2 | 1 |
 
-- **Phases completed:** 5 / 8
-- **Plans completed:** 19 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 5/6 plans)
-- **Requirements delivered:** 63 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05, OUT-06, DOCS-01..02 fully implemented, DOCS-03..09 complete)
+- **Phases completed:** 6 / 8
+- **Plans completed:** 20 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 6/6 plans)
+- **Requirements delivered:** 72 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01..06, DOCS-01..09 all complete)
 - **Test coverage:** 111 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 12 Phase 5, all GREEN)
 
 ## Accumulated Context
@@ -125,7 +126,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - python-docx add_heading(level=0) uses "Title" paragraph style (not "Heading 1") — test assertions must check style.name == "Title" OR style.name.startswith("Heading")
 - _write_report deep-dives use COL_ATTENDANCE_RATE/COL_AVG_PRACTICE/COL_TREND_DIR/COL_DAYS_SINCE_NOTE (always present) not COL_*_COMPONENT (optional); missing columns guarded via col in df_copy.columns
 - docs_content.yaml: single YAML file for all 7 static doc blocks; hybrid pattern (architecture/data_handling/scalability) = paragraph opener + bullets; narrative pattern (security/engineering_decisions/system_design/alternatives) = 2-4 paragraphs per section (D-14)
-- doc_generator.py module skeleton: write_docs(df, run_log, docs_dir) -> dict[str, Path]; _DOCS_CONTENT loaded at import via yaml.safe_load(); 9 private stubs return Path without raising; _render_doc_from_content() shared helper added for DRY YAML-to-docx rendering in Wave 2
+- doc_generator.py fully implemented: write_docs(df, run_log, docs_dir) -> dict[str, Path] with 9 helpers; wired into main.py after write_outputs(); produces 8 .docx files in docs/ + analysis.md at project root
 - analysis.md placed at docs_dir.parent / "analysis.md" (project root) — no cfg.PROJECT_ROOT constant; docs_dir defaults to Path("docs") so parent is always project root
 - _write_analysis_md(df, run_log, docs_dir): 5-section Markdown memo (423 words, under 600); embeds live run_log numbers + df[COL_RISK_LEVEL].value_counts() risk distribution; written with path.write_text(encoding="utf-8")
 - _write_analysis_docx(run_log, docs_dir, content): Word version with same 5 sections; content param unused (run_log-driven); doc.save(str(path)) required on Windows for python-docx 1.1.2; no per-level risk counts (df not available — full distribution in xlsx)
@@ -179,4 +180,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-24 after 06-05 execution (Phase 6 plan 5 complete — _write_security, _write_engineering_decisions, _write_system_design, _write_alternatives fully implemented, commit b26f204; 06-06 next)*
+*Last updated: 2026-05-24 after 06-06 execution (Phase 6 complete — doc_generator wired into main.py, all 9 docs generated, commit b562eed; Phase 7 Test Suite next)*

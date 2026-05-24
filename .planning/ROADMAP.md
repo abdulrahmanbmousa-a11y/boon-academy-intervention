@@ -14,7 +14,7 @@
 - [x] **Phase 3: Claude API Integration** - Campus-batched LLM calls with three-layer error handling and PII-safe logging — COMPLETE 2026-05-23
 - [x] **Phase 4: Excel + CSV Output Generation** - intervention_priority_list.xlsx, per-campus dashboards, whatsapp_messages.csv, run_log.json — COMPLETE 2026-05-23
 - [x] **Phase 5: HTML Dashboard + Word Report** - Self-contained HTML dashboard and intervention_report.docx — COMPLETE 2026-05-23
-- [ ] **Phase 6: Documentation Suite** - All 8 .docx documentation files and analysis.md
+- [x] **Phase 6: Documentation Suite** - All 8 .docx documentation files and analysis.md — COMPLETE 2026-05-24
 - [ ] **Phase 7: Test Suite** - Full pytest suite covering risk engine, ingestion edge cases, LLM fallback, and output assertions
 - [ ] **Phase 8: End-to-End Integration + Polish** - Full pipeline verified on synthetic data with all quality gates passing
 
@@ -124,7 +124,7 @@
 - [x] 06-05-PLAN.md — _write_security + _write_engineering_decisions + _write_system_design + _write_alternatives: narrative YAML renderer (DOCS-04, DOCS-05, DOCS-08, DOCS-09) ✓ commit b26f204
 
 **Wave 3** *(blocked on Wave 2)*
-- [ ] 06-06-PLAN.md — main.py wiring (D-02) + end-to-end smoke test asserting all 9 keys and all 9 files on disk (DOCS-01..09)
+- [x] 06-06-PLAN.md — main.py wiring (D-02) + end-to-end smoke test asserting all 9 keys and all 9 files on disk (DOCS-01..09) ✓ commit b562eed
 
 ### Phase 7: Test Suite
 **Goal:** A pytest suite passes with zero failures, covering risk formula components, ingestion edge cases, LLM fallback behavior, and output file assertions.
@@ -162,7 +162,7 @@
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
 | 5. HTML Dashboard + Word Report | 3/3 | Complete | 2026-05-23 |
-| 6. Documentation Suite | 5/6 | In Progress | DOCS-03..09 content library + skeleton + analysis + hybrid doc helpers + narrative doc helpers done |
+| 6. Documentation Suite | 6/6 | Complete | 2026-05-24 |
 | 7. Test Suite | 0/? | Not started | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
 
@@ -210,4 +210,4 @@ These features were requested after v1 scope was locked. Implement after Phase 8
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-24 — Phase 6 plan 05 complete (_write_security, _write_engineering_decisions, _write_system_design, _write_alternatives, commit b26f204); 06-06 next*
+*Last updated: 2026-05-24 — Phase 6 complete (06-06: main.py wiring + smoke test, commit b562eed); Phase 7 Test Suite next*
