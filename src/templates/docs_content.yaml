@@ -1,0 +1,988 @@
+# docs_content.yaml — Static content for all 7 documentation files.
+# Loaded once at module import by src/doc_generator.py via yaml.safe_load().
+# Schema per D-06: each top-level key has title (str) and sections (list).
+# Each section has heading (str) and body (list of {type, text} dicts).
+# type is either "paragraph" or "bullet" — no other values.
+# D-14: hybrid docs (architecture, data_handling, scalability) use one paragraph opener
+#        then bullets per section. Narrative docs use 2-4 paragraphs per section.
+
+# ---------------------------------------------------------------------------
+# HYBRID DOCS — architecture, data_handling, scalability
+# ---------------------------------------------------------------------------
+
+architecture:
+  title: "System Architecture"
+  sections:
+    - heading: "Pipeline Overview"
+      body:
+        - type: paragraph
+          text: >-
+            The boon-academy-intervention pipeline processes student engagement data in five
+            sequential stages, transforming raw CSV exports into a prioritised facilitator
+            action list with AI-drafted WhatsApp messages. Each stage is a discrete Python
+            module with a single public function; modules communicate only through the shared
+            DataFrame and a run_log dictionary — no shared mutable state, no database, no
+            inter-process messaging.
+        - type: bullet
+          text: >-
+            ingestion.py — Merges three source CSVs (student metadata, daily metrics,
+            facilitator notes) into one clean, deduplicated DataFrame. Runs first, before
+            any scoring or AI work.
+        - type: bullet
+          text: >-
+            risk_engine.py — Applies a deterministic weighted formula to produce a numeric
+            risk_score (0–100) and a categorical risk_level (CRITICAL / HIGH / MEDIUM / LOW)
+            for every student. Pure function, no I/O, no randomness.
+        - type: bullet
+          text: >-
+            llm_engine.py — Calls the Anthropic Claude API once per campus (not once per
+            student) for all CRITICAL and HIGH students on that campus. Writes
+            facilitator_summary and whatsapp_message columns back into the DataFrame.
+        - type: bullet
+          text: >-
+            output_generator.py — Writes all six output artefacts: intervention_priority_list.xlsx,
+            one campus dashboard per campus, whatsapp_messages.csv, run_log.json,
+            dashboard.html, and intervention_report.docx.
+        - type: bullet
+          text: >-
+            doc_generator.py — Writes nine documentation files: analysis.md, analysis.docx,
+            and seven technical .docx files. Called after write_outputs() completes; uses
+            the same df and run_log already in scope.
+        - type: bullet
+          text: >-
+            ASCII pipeline diagram:
+            [student_metadata.csv]  [daily_metrics.csv]  [facilitator_notes.csv]
+                        \                    |                    /
+                         \                   |                   /
+                          +---------> ingestion.py <-----------+
+                                            |
+                                            v  (clean merged DataFrame)
+                                      risk_engine.py
+                                            |
+                                            v  (+ risk_score, risk_level)
+                                       llm_engine.py
+                                            |
+                                            v  (+ facilitator_summary, whatsapp_message)
+                                    output_generator.py
+                                            |
+                                            v  (6 output files in outputs/)
+                                      doc_generator.py
+                                            |
+                                            v  (9 documentation files)
+
+    - heading: "Component Descriptions"
+      body:
+        - type: paragraph
+          text: >-
+            Each module encapsulates a single responsibility and exposes exactly one public
+            function. This makes unit testing straightforward: each module can be tested in
+            isolation by supplying a synthetic DataFrame and asserting on the returned
+            DataFrame or file artefact, without spinning up the full pipeline.
+        - type: bullet
+          text: >-
+            ingestion.ingest(data_paths) -> DataFrame — Reads CSVs with explicit dtypes to
+            prevent ID and phone number coercion, merges on student_id, deduplicates by
+            keeping the first occurrence of each duplicate, fills missing numeric activity
+            columns with zero, and logs data quality warnings for every anomaly found.
+        - type: bullet
+          text: >-
+            risk_engine.score_risk(df) -> DataFrame — Calculates four component scores
+            (attendance, practice, trend, notes) using configurable weights from config.py,
+            sums them into risk_score, assigns risk_level via threshold comparisons, and
+            appends a recommended_action string. Accepts an optional today parameter for
+            deterministic testing with freezegun.
+        - type: bullet
+          text: >-
+            llm_engine.enrich_with_llm(df, api_key, http_client=None) -> tuple[DataFrame, dict] —
+            Groups CRITICAL/HIGH students by campus_id, constructs a cohort prompt per
+            campus, calls the Claude API with tool-use forcing, parses the structured response,
+            and writes results back. Never raises an exception; uses a three-layer fallback.
+            Returns a counts dict (api_calls_made, tokens_used, fallbacks_triggered).
+        - type: bullet
+          text: >-
+            output_generator.write_outputs(df, output_dir, run_log) -> dict[str, Path] —
+            Creates the output directory, then calls six private helpers in order. Returns
+            a dict mapping named keys to their file paths for main.py logging.
+        - type: bullet
+          text: >-
+            doc_generator.write_docs(df, run_log, docs_dir) -> dict[str, Path] —
+            Creates the docs directory, loads docs_content.yaml once, then calls nine
+            private helpers. Returns a dict mapping named keys to file paths.
+
+    - heading: "Technology Choices"
+      body:
+        - type: paragraph
+          text: >-
+            Technology choices were made to minimise operational complexity for a team
+            running daily batch jobs on a single facilitator machine, while keeping the
+            dependency footprint auditable and the test suite reliable. Every version is
+            pinned in requirements.txt.
+        - type: bullet
+          text: >-
+            pandas 2.2.3 (not 3.x) — Copy-on-Write is opt-in in 2.x and mandatory in 3.x.
+            Upgrading to 3.x would break chained assignment patterns used in ingestion and
+            risk_engine without any functional benefit at current scale.
+        - type: bullet
+          text: >-
+            openpyxl 3.1.5 (not xlsxwriter) — xlsxwriter is write-only; openpyxl supports
+            read, write, and append. Test assertions open the generated .xlsx files and
+            inspect cell values directly, which requires read support.
+        - type: bullet
+          text: >-
+            python-docx 1.1.2 (not 1.2.0) — Version 1.2.0 has an open issue with
+            OxmlElement and table border rendering. Pinned at 1.1.2 until upstream fixes
+            are released and verified.
+        - type: bullet
+          text: >-
+            PyYAML 6.0.3 — Used for loading llm_templates.yaml and docs_content.yaml via
+            yaml.safe_load(). The safe_load() call prevents arbitrary code execution from
+            a tampered YAML file; yaml.load() is never used.
+        - type: bullet
+          text: >-
+            anthropic 0.103.1 — The official Anthropic Python SDK. Tool-use (structured
+            JSON output) is used instead of text parsing, eliminating prompt-injection and
+            markdown-stripping edge cases.
+        - type: bullet
+          text: >-
+            respx 0.23.1 — HTTP mocking library for tests. The Anthropic SDK uses httpx
+            internally; the responses library intercepts only requests-based calls and
+            silently misses SDK calls. respx mocks at the httpx transport layer, which is
+            exactly where the SDK sends requests.
+        - type: bullet
+          text: >-
+            Jinja2 3.1.6 — Used only for dashboard.html.j2. Loaded lazily inside
+            _write_html_dashboard() rather than at module import so the dependency is not
+            paid unless the HTML output is requested.
+
+    - heading: "Why Not n8n/Zapier or Airtable"
+      body:
+        - type: paragraph
+          text: >-
+            Several no-code and low-code platforms were evaluated against the specific
+            requirements of the intervention pipeline. All were rejected on the same
+            fundamental grounds: they trade debuggability, version-control, and offline
+            reliability for ease of initial setup — a tradeoff that is wrong for a daily
+            batch job that must be auditable by a part-time technical team at 20 campuses.
+        - type: bullet
+          text: >-
+            n8n / Zapier — Workflow logic is stored as visual node graphs, not text. The
+            pipeline cannot be code-reviewed, diffed in git, or unit-tested. Debugging a
+            failed run requires navigating a web UI rather than reading a log file. Breaks
+            under API rate limits with no programmatic fallback mechanism.
+        - type: bullet
+          text: >-
+            Airtable — Paid tier required for API access and automation. Vendor lock-in
+            means student PII is stored on a third-party server, raising data retention
+            concerns. No offline operation — if the Airtable service is unavailable, the
+            entire workflow stops.
+        - type: bullet
+          text: >-
+            Google Sheets + Apps Script — Viable for very small scale (< 50 students)
+            but becomes slow and unreliable at 300+ rows with formula dependencies.
+            No meaningful test infrastructure; debugging requires manual inspection.
+        - type: bullet
+          text: >-
+            The Python batch approach chosen here: fully version-controlled, runs offline,
+            has 111 automated tests, produces structured logs, and costs nothing beyond
+            the Anthropic API calls ($200/month budget covers the projected load at 100
+            campuses).
+
+data_handling:
+  title: "Data Handling"
+  sections:
+    - heading: "Input Schema"
+      body:
+        - type: paragraph
+          text: >-
+            The pipeline ingests three CSV files exported from the academy's student
+            information system. Each file is read with explicit dtype overrides to
+            prevent pandas from inferring types that would corrupt IDs and phone numbers.
+            All column names are defined as constants in src/config.py and never
+            hardcoded in logic modules.
+        - type: bullet
+          text: >-
+            student_metadata.csv — Five columns: student_id (str), student_name (str),
+            campus_id (str), parent_phone (str), facilitator_email (str). dtype overrides
+            applied to student_id and parent_phone to prevent leading-zero loss and
+            float64 coercion.
+        - type: bullet
+          text: >-
+            daily_metrics.csv — Four columns: student_id (str), metric_date (str),
+            session_attended_min (numeric), practice_questions (numeric). Metric date is
+            aggregated by student; session and practice columns are summed and averaged.
+        - type: bullet
+          text: >-
+            facilitator_notes.csv — Three columns: student_id (str), note_date (str),
+            note_text (str). The most recent note date per student is extracted and used
+            to compute days_since_last_note.
+        - type: bullet
+          text: >-
+            Explicit dtype loading pattern: pd.read_csv(path, dtype={"student_id": "str",
+            "parent_phone": "str"}) applied to every read_csv call — never let pandas
+            infer dtypes for ID or phone columns.
+
+    - heading: "Data Cleaning Pipeline"
+      body:
+        - type: paragraph
+          text: >-
+            After loading each CSV, ingestion.py applies a four-step cleaning pipeline
+            before merging. The goal is to produce a single clean DataFrame where every
+            student appears exactly once, every numeric column has a finite value, and
+            no sentinel strings like "N/A" or "none" appear in numeric positions.
+        - type: bullet
+          text: >-
+            Step 1 — Type coercion: all numeric metric columns (session_attended_min,
+            practice_questions) are loaded as str dtype, then converted to numeric via
+            pd.to_numeric(errors='coerce'). This safely converts type-mismatch strings
+            (e.g., "none", "abc") to NaN without crashing the pipeline.
+        - type: bullet
+          text: >-
+            Step 2 — Deduplication: the merged DataFrame is deduplicated on student_id
+            by keeping the first occurrence. The number of rows removed is logged as a
+            data quality warning. The demo run found and removed 9 duplicate IDs.
+        - type: bullet
+          text: >-
+            Step 3 — Missing numeric fill: session_attended_min, practice_questions,
+            and attendance_days columns are filled with 0 for students who had no
+            matching metrics rows (left join artefact). Students with zero activity
+            receive the worst possible component scores, which is the conservative
+            safe default.
+        - type: bullet
+          text: >-
+            Step 4 — Derived column computation: attendance_rate (fraction of expected
+            sessions attended), avg_practice_questions (mean practice Q per day),
+            trend_direction (improving / stable / declining based on recent vs earlier
+            session data), and days_since_last_note are computed and appended as new
+            columns before the DataFrame is returned.
+
+    - heading: "Missing Data Strategy"
+      body:
+        - type: paragraph
+          text: >-
+            Missing data is handled conservatively: any gap in engagement data is treated
+            as a risk signal rather than ignored. The strategy is deliberately simple —
+            fill with zero or worst-case value — to avoid false negatives where a student
+            appears low-risk only because their data was not recorded.
+        - type: bullet
+          text: >-
+            Missing session_attended_min — filled with 0, contributing maximum attendance
+            component score (highest risk) rather than being excluded from scoring.
+        - type: bullet
+          text: >-
+            Missing practice_questions — filled with 0, same logic as session fill.
+        - type: bullet
+          text: >-
+            Missing facilitator notes (no note rows) — days_since_last_note is set to a
+            large sentinel value (e.g., 999) so the notes component scores at maximum
+            risk. A student with no notes is assumed to have had no facilitator contact.
+        - type: bullet
+          text: >-
+            Missing student_name or facilitator_email — row is retained; the empty string
+            propagates to outputs and is visible to the facilitator as a data quality
+            signal.
+
+    - heading: "Edge Cases and Quality Issues"
+      body:
+        - type: paragraph
+          text: >-
+            The synthetic dataset used for development and testing injects a representative
+            set of data quality issues to verify that the pipeline handles them without
+            crashing. All injected anomalies are logged at WARNING level; the pipeline
+            continues in all cases.
+        - type: bullet
+          text: >-
+            Duplicate student IDs — 9 rows injected in the demo dataset; all deduplicated
+            on student_id, keeping first occurrence. Logged as: "Removed N duplicate
+            student IDs".
+        - type: bullet
+          text: >-
+            Type-mismatch strings in numeric columns — approximately 84 cells set to
+            strings like "none" or "abc" in session_attended_min and practice_questions.
+            Converted to NaN via pd.to_numeric(errors='coerce'), then filled with 0.
+        - type: bullet
+          text: >-
+            Blank numeric cells — approximately 210 cells blanked across metric columns
+            (5% of 4,200 cells). Treated identically to type-mismatch strings after
+            coercion.
+        - type: bullet
+          text: >-
+            Students with no metrics rows — valid student_id in metadata but no
+            matching rows in daily_metrics.csv. Produced by the left join; session and
+            practice columns filled with 0 post-merge.
+        - type: bullet
+          text: >-
+            Students with no notes rows — valid student_id in metadata but no rows in
+            facilitator_notes.csv. days_since_last_note set to sentinel value for
+            maximum risk contribution.
+
+    - heading: "Merge Logic"
+      body:
+        - type: paragraph
+          text: >-
+            The three CSVs are merged in two steps using student_id as the join key.
+            The metadata CSV is the left table in both joins, ensuring every student
+            appears in the output even if they have no metrics or notes data.
+        - type: bullet
+          text: >-
+            Merge 1: student_metadata LEFT JOIN aggregated daily_metrics on student_id.
+            daily_metrics rows are aggregated by student_id before the join (sum for
+            totals, mean for averages) so the join is always 1:1.
+        - type: bullet
+          text: >-
+            Merge 2: result of Merge 1 LEFT JOIN aggregated facilitator_notes on
+            student_id. Notes are aggregated to a single most-recent note date per
+            student before joining.
+        - type: bullet
+          text: >-
+            Post-merge validation: assert no student_id duplicates exist in the final
+            DataFrame; log total row count; log count of students missing metrics data;
+            log count of students missing notes data.
+
+scalability:
+  title: "Scalability Analysis"
+  sections:
+    - heading: "Current Scale"
+      body:
+        - type: paragraph
+          text: >-
+            The pipeline is validated on a synthetic dataset of 300 students across 20
+            campuses (C01–C20, 15 students each). At this scale, a full pipeline run
+            completes in under 60 seconds including all 14 Anthropic API calls, and
+            produces six output files plus nine documentation files. The entire run uses
+            31,771 tokens (19,693 input, 12,078 output), which at current claude-sonnet-4-5
+            pricing represents a negligible cost well within any reasonable operating budget.
+        - type: bullet
+          text: >-
+            Students: 300 total (15 per campus × 20 campuses)
+        - type: bullet
+          text: >-
+            Campuses: 20 (C01–C20)
+        - type: bullet
+          text: >-
+            LLM API calls: 14 (one per campus that has CRITICAL/HIGH students)
+        - type: bullet
+          text: >-
+            Tokens consumed: 31,771 total (19,693 input + 12,078 output)
+        - type: bullet
+          text: >-
+            Fallbacks triggered: 0
+        - type: bullet
+          text: >-
+            Duplicate IDs removed: 9
+        - type: bullet
+          text: >-
+            Pipeline runtime: under 60 seconds end-to-end
+
+    - heading: "Bottlenecks at 100 Campuses"
+      body:
+        - type: paragraph
+          text: >-
+            Scaling from 20 to 100 campuses (approximately 1,500 students at 15 per campus)
+            does not change the pipeline architecture, but it does surface two bottlenecks
+            that need to be understood before deployment at that scale: API call count and
+            sequential I/O for the per-campus Excel dashboards.
+        - type: bullet
+          text: >-
+            API calls increase linearly with active campuses. At 100 campuses with all
+            campuses having at least one CRITICAL/HIGH student, API calls increase from
+            14 to approximately 70 (assuming not all campuses have at-risk students on
+            every run). This is within Claude API rate limits for standard tiers.
+        - type: bullet
+          text: >-
+            Per-campus Excel file writes are sequential. At 100 campuses, writing 100
+            .xlsx files adds wall-clock time. Parallelising with concurrent.futures
+            ThreadPoolExecutor is the recommended optimisation at this scale.
+        - type: bullet
+          text: >-
+            Memory footprint: the merged DataFrame at 1,500 students is approximately
+            2–3 MB in memory. pandas can handle 100,000+ rows comfortably on any
+            modern machine; memory is not a bottleneck at 100 campuses.
+        - type: bullet
+          text: >-
+            Single-file CSV input: at 100 campuses, the CSV files grow to ~22,500 rows
+            (1,500 students × 15 days of metrics). pd.read_csv() handles this in under
+            1 second; no chunking needed below 1 million rows.
+
+    - heading: "Migration Path"
+      body:
+        - type: paragraph
+          text: >-
+            The pipeline is designed for progressive infrastructure upgrade as campus
+            count grows. The migration path is CSV → SQLite → PostgreSQL; each step
+            adds durability and query capability without requiring a rewrite of the
+            pipeline logic, because all data access is isolated to ingestion.py.
+        - type: bullet
+          text: >-
+            Phase 1 — CSV (current, 1–50 campuses): daily CSV exports from the student
+            information system, ingested by ingestion.py. No server required. Single-file
+            operation. Suitable for one part-time engineer managing up to 50 campuses.
+        - type: bullet
+          text: >-
+            Phase 2 — SQLite (50–200 campuses): replace CSV ingestion with
+            pd.read_sql_query() against a local SQLite database. SQLite handles 200
+            concurrent campus records comfortably. No server process required; the .db
+            file travels with the project. ingestion.py is the only module that changes.
+        - type: bullet
+          text: >-
+            Phase 3 — PostgreSQL (200+ campuses): replace SQLite with a managed
+            PostgreSQL instance (e.g., Supabase free tier or Railway). Enables concurrent
+            writes from multiple campus coordinators, row-level security for PII columns,
+            and query-based filtering to run the pipeline for one campus subset at a time.
+        - type: bullet
+          text: >-
+            No other module (risk_engine, llm_engine, output_generator, doc_generator)
+            needs to change for any phase of this migration — they operate on the
+            DataFrame returned by ingestion.py regardless of its source.
+
+    - heading: "Cost Projection"
+      body:
+        - type: paragraph
+          text: >-
+            At the current scale of 300 students and 20 campuses, the pipeline used 31,771
+            tokens in a single run (19,693 input + 12,078 output), giving an average of
+            approximately 106 tokens per student (31,771 ÷ 300). Projecting to 100 campuses
+            at 15 students each with a 40% CRITICAL/HIGH rate: 100 × 15 × 0.40 = 600
+            at-risk students per run. At 106 tokens per student, that is 63,600 tokens per
+            run. Running daily for 30 days gives 1,908,000 tokens per month. At
+            claude-sonnet-4-5 pricing (approximately $3 per million input tokens and $15 per
+            million output tokens, blended ~$6/million for a 60/40 input/output mix),
+            1,908,000 tokens costs approximately $11.45 per month — well within the
+            $200/month budget target. Even at 3x that volume (300 campuses, twice-daily
+            runs), the cost remains under $70/month. The $200/month budget provides a 17x
+            headroom over the projected 100-campus cost, leaving ample room for model
+            upgrades or increased at-risk student rates.
+
+# ---------------------------------------------------------------------------
+# NARRATIVE DOCS — security, engineering_decisions, system_design, alternatives
+# ---------------------------------------------------------------------------
+
+security:
+  title: "Security Design"
+  sections:
+    - heading: "API Key Management"
+      body:
+        - type: paragraph
+          text: >-
+            The Anthropic API key is the only secret the pipeline requires. It is loaded
+            exclusively from the ANTHROPIC_API_KEY environment variable using
+            os.environ["ANTHROPIC_API_KEY"] — not os.getenv(), which returns None silently.
+            The os.environ access occurs at module import time in src/config.py, causing the
+            process to exit immediately with a KeyError if the key is absent. This fail-loud
+            pattern prevents the pipeline from running in a degraded state where LLM calls
+            would silently fail after expensive data processing has completed.
+        - type: paragraph
+          text: >-
+            The API key is passed as a parameter to llm_engine.enrich_with_llm() and
+            is never stored beyond that function's stack frame. It is never written to any
+            output file, never included in any log statement, never embedded in prompt text
+            sent to the API, and never stored in the run_log dictionary. The run_log is
+            explicitly audited to contain exactly seven safe keys: run_timestamp,
+            students_processed, api_calls_made, tokens_used, errors_encountered,
+            fallbacks_triggered, and data_quality_warnings.
+        - type: paragraph
+          text: >-
+            The .env file that holds the key in development is listed in .gitignore and is
+            never committed to version control. The .env.example file in the repository
+            contains a placeholder value ("your-anthropic-api-key-here") and no real key.
+            Developers are instructed to copy .env.example to .env and populate it locally.
+            In production deployment, the environment variable should be injected by the
+            host operating system or a secrets manager rather than stored in any file.
+
+    - heading: "PII Handling"
+      body:
+        - type: paragraph
+          text: >-
+            Student personally identifiable information includes student names, campus IDs,
+            and parent phone numbers. These fields are present in the source CSVs and the
+            merged DataFrame, and they flow into the output Excel files and WhatsApp CSV
+            that are the pipeline's primary deliverables. The pipeline cannot mask this
+            data in outputs because the facilitator needs it to contact families — the PII
+            is the point of the output.
+        - type: paragraph
+          text: >-
+            However, PII is masked in log statements. The llm_engine.py module logs only
+            aggregate counts (number of students per campus, total tokens) at INFO level.
+            Individual student names and phone numbers never appear in log output at any
+            level. This means that even if log files are shipped to a centralised logging
+            service, they contain no student-identifiable data. The run_log.json file
+            similarly contains only aggregate statistics, not per-student records.
+        - type: paragraph
+          text: >-
+            Student data is sent to the Anthropic API in the cohort prompt, but only in
+            the form of anonymised engagement metrics (attendance rate, practice question
+            count, trend direction, days since last note). Student names and phone numbers
+            are not included in the API prompt. The API receives performance data attributed
+            to a campus cohort label (e.g., "Campus C01"), not to named individuals.
+
+    - heading: "Data Retention"
+      body:
+        - type: paragraph
+          text: >-
+            The outputs/ directory produced by a pipeline run contains PII: student names,
+            campus IDs, parent phone numbers, and AI-drafted WhatsApp messages addressed
+            to specific families. This directory should be treated as a sensitive document
+            and should not be retained beyond the facilitator's review session. The
+            recommended practice is to delete the outputs/ directory at the end of each
+            working day after the facilitator has acted on the intervention list.
+        - type: paragraph
+          text: >-
+            Student data should not be persisted in any intermediate format between runs.
+            The pipeline is designed as a stateless daily batch: it reads from source CSVs,
+            produces output files, and terminates. There is no database, no session state,
+            and no cache. Each run is independent. If a run fails midway, the partial
+            outputs/ directory should be deleted and the run restarted from scratch rather
+            than attempting to resume from intermediate files.
+        - type: paragraph
+          text: >-
+            If outputs need to be retained for audit or reporting purposes, they should be
+            stored in an access-controlled location (e.g., a SharePoint folder with
+            facilitator-role access only, or a server directory with Unix file permissions
+            set to 640 or stricter). The default outputs/ directory in the project folder
+            has no access control and should not be used for long-term retention.
+
+    - heading: "Access Control"
+      body:
+        - type: paragraph
+          text: >-
+            The pipeline is designed for single-machine execution by one authorised operator
+            per campus. There is no authentication server, no user login, and no role-based
+            access control layer in the software itself. Access control is delegated to the
+            operating system: the project directory, the .env file, and the outputs/
+            directory should have their read permissions restricted to the facilitator user
+            account on the machine where the pipeline runs.
+        - type: paragraph
+          text: >-
+            On Windows, this means setting folder permissions via Properties > Security to
+            allow only the facilitator account (and Administrators). On Linux/macOS, chmod
+            700 on the project directory and chmod 600 on the .env file are the appropriate
+            settings. The outputs/ directory should be set to chmod 700 or equivalent.
+        - type: paragraph
+          text: >-
+            If the pipeline is deployed on a shared machine (e.g., a school server accessed
+            by multiple staff), a dedicated service account should be created for the
+            pipeline process, and the .env file and outputs/ directory should be owned by
+            that account with no world-read permissions. In a multi-campus deployment, each
+            campus should run its own isolated pipeline instance rather than sharing a single
+            instance with a combined student dataset.
+
+engineering_decisions:
+  title: "Engineering Decisions"
+  sections:
+    - heading: "Risk Scoring Formula"
+      body:
+        - type: paragraph
+          text: >-
+            The risk scoring formula is deterministic and weighted, not machine learning.
+            Four component scores are computed — attendance (35%), practice questions (30%),
+            trend direction (20%), and days since last facilitator note (15%) — and summed
+            to produce a risk_score between 0 and 100. The score is then bucketed into four
+            risk levels using configurable thresholds: CRITICAL (75+), HIGH (50–74),
+            MEDIUM (25–49), LOW (below 25). All weights and thresholds are defined as
+            constants in src/config.py and are env-var overridable.
+        - type: paragraph
+          text: >-
+            The choice of a deterministic formula over a machine learning model was
+            deliberate. ML models require labelled outcome data (which students who were
+            intervened on actually re-engaged?) that Boon Academy does not yet have.
+            Without outcome labels, a trained model would merely learn to replicate the
+            same pattern-matching that an experienced facilitator already does intuitively —
+            without any guarantee of being better calibrated. After six months of real
+            intervention data with outcome tracking, revisiting an ML approach would be
+            warranted.
+        - type: paragraph
+          text: >-
+            The weights in the current formula (0.35 / 0.30 / 0.20 / 0.15) are starting
+            assumptions, not empirically validated parameters. They represent the team's
+            best current belief about which engagement signals most predict disengagement.
+            These weights should be reviewed with the academic director before the pipeline
+            is used on real students, and recalibrated annually as outcome data accumulates.
+            The formula is deliberately transparent so that a facilitator who questions a
+            student's risk score can trace exactly which component drove it.
+
+    - heading: "LLM Batching Strategy"
+      body:
+        - type: paragraph
+          text: >-
+            The pipeline makes one API call per campus, not one API call per student. In
+            the demo run of 300 students across 20 campuses, this produced 14 API calls
+            rather than the approximately 120 that a per-student approach would have
+            required (300 students × 40% at-risk rate). Campus batching reduces API cost
+            and latency by roughly an order of magnitude while also providing the model with
+            cohort context — the model sees all CRITICAL and HIGH students on a campus
+            together, which allows it to write messages that are appropriately calibrated
+            relative to the cohort rather than in isolation.
+        - type: paragraph
+          text: >-
+            The batching is bounded by MAX_STUDENTS_PER_LLM_CALL (default: 10). If a campus
+            has more than 10 at-risk students, it is split into multiple calls. This prevents
+            prompts from exceeding the model's context window and keeps response latency
+            predictable. In practice, campuses have 15 students total and a 40% at-risk
+            rate gives approximately 6 students per campus, well within the batch limit.
+        - type: paragraph
+          text: >-
+            Tool use (structured JSON output via the Anthropic tools API) is used instead
+            of free-form text generation. This eliminates the need to parse markdown-wrapped
+            JSON from model responses and ensures that the facilitator_summary and
+            whatsapp_message fields always have a predictable structure. If the tool-use
+            call fails (API error, malformed response), the three-layer fallback activates
+            transparently.
+
+    - heading: "Fallback Logic"
+      body:
+        - type: paragraph
+          text: >-
+            The LLM integration uses a three-layer fallback to ensure the pipeline never
+            halts on an API failure. Layer 1 is the Anthropic SDK's built-in retry
+            mechanism (max_retries=3), which handles transient network errors and rate
+            limit responses automatically with exponential backoff. Layer 2 is a single
+            re-prompt attempt on API errors that survive Layer 1 (APIConnectionError,
+            RateLimitError, APIStatusError, APITimeoutError). Layer 3 is a rule-based
+            template applied if Layer 2 also fails, or if the API response is malformed
+            (KeyError, StopIteration during parse).
+        - type: paragraph
+          text: >-
+            Template-generated messages are written to the same facilitator_summary and
+            whatsapp_message columns as LLM-generated messages but are tagged with
+            generated_by: template rather than generated_by: llm. This tagging allows
+            facilitators and downstream analytics to distinguish AI-generated content
+            from rule-based content without inspecting the message text itself. The
+            templates produce grammatically correct, actionable messages — they are
+            not placeholders or error strings.
+        - type: paragraph
+          text: >-
+            The fallback design reflects a core product requirement: the facilitator's
+            daily workflow must not be blocked by a cloud API outage. A facilitator who
+            arrives in the morning expecting their intervention list must receive it even
+            if the Anthropic API experienced a disruption overnight. Template messages
+            are conservative (they do not attempt personalisation) but they are useful —
+            they correctly identify the at-risk students and suggest the appropriate
+            intervention action based on risk level.
+
+    - heading: "Output Format Choices"
+      body:
+        - type: paragraph
+          text: >-
+            The pipeline produces six output formats, each chosen for the specific workflow
+            of the person who will consume it. The primary artefact is an Excel workbook
+            (intervention_priority_list.xlsx) because facilitators at Boon Academy already
+            use Excel daily and need to sort, filter, and annotate the list. openpyxl is
+            used rather than xlsxwriter because openpyxl supports both writing and reading
+            the generated files — the test suite opens every output file and asserts on
+            cell values, which requires read capability.
+        - type: paragraph
+          text: >-
+            The WhatsApp CSV (whatsapp_messages.csv) is encoded in UTF-8 with BOM
+            (utf-8-sig) so that Excel opens it correctly without character corruption on
+            Windows, where Arabic script in WhatsApp messages would otherwise display as
+            mojibake. The HTML dashboard (dashboard.html) is fully self-contained — all
+            CSS and JavaScript are inlined, and the student data is embedded as a JSON
+            constant so the file works when opened directly from the filesystem via
+            file:// without requiring a web server.
+        - type: paragraph
+          text: >-
+            The Word report (intervention_report.docx) uses only built-in python-docx
+            styles (Heading 1, Normal, Table Grid) and no OxmlElement manipulation, which
+            is a known instability in python-docx 1.1.2. The run_log.json file uses
+            json.dumps(default=str) to handle datetime and Path objects without TypeError
+            — a pattern established in output_generator.py and carried forward to any
+            future module that writes JSON.
+
+    - heading: "Intentional Simplicity"
+      body:
+        - type: paragraph
+          text: >-
+            Several infrastructure components that are standard in production software were
+            deliberately excluded from this pipeline: Docker, an authentication server, a
+            real-time dashboard, a message queue, and a scheduler. These exclusions are not
+            oversights — they are reasoned decisions based on the actual operational
+            context: one part-time engineer, 20 campuses, a daily batch frequency, and a
+            single-machine deployment model.
+        - type: paragraph
+          text: >-
+            Docker would add container orchestration complexity without providing meaningful
+            isolation benefits on a single facilitator machine. A real-time dashboard would
+            require a persistent server process, which adds operational overhead (keeping
+            it running, monitoring for crashes, updating) that the team cannot currently
+            absorb. A message queue (Celery, Redis) would be appropriate if the pipeline
+            needed to process campuses in parallel at sub-minute latency — it does not.
+            Daily batch at 60 seconds total runtime makes message queues over-engineered.
+        - type: paragraph
+          text: >-
+            The design philosophy is: add infrastructure when scale demands it, not in
+            anticipation of demands that may never arrive. The migration path from CSV to
+            SQLite to PostgreSQL provides a clear upgrade trajectory. When the pipeline is
+            running at 50+ campuses and the sequential API calls are visibly slow, adding
+            concurrent.futures parallelism is the right next step. Until then, keeping the
+            system simple enough for one engineer to fully understand and debug in under an
+            hour is a feature, not a limitation.
+
+system_design:
+  title: "System Design and AI Integration"
+  sections:
+    - heading: "AI Role and Boundaries"
+      body:
+        - type: paragraph
+          text: >-
+            The AI (Claude claude-sonnet-4-5) has a precisely scoped role in the pipeline:
+            it generates two pieces of text per at-risk student — a two-sentence facilitator
+            summary that contextualises the student's engagement pattern, and a WhatsApp
+            message draft addressed to the parent. It does nothing else. Risk scoring is
+            performed by a deterministic weighted formula, not the AI. The decision about
+            which students are at-risk is made by that formula before the AI is ever called.
+            The AI receives only students who have already been identified as CRITICAL or
+            HIGH risk.
+        - type: paragraph
+          text: >-
+            This boundary is intentional. AI-generated risk scores would be opaque and
+            unjustifiable to a facilitator who asks "why is this student flagged?" A
+            deterministic formula produces an auditable answer: "attendance_rate is 0.42,
+            contributing 35 points to a risk score of 78." That level of explainability
+            is essential for facilitator trust and for regulatory compliance if the
+            pipeline is ever audited. The AI's strength is natural language generation —
+            writing warm, contextually appropriate messages — not numerical scoring.
+        - type: paragraph
+          text: >-
+            The claude-sonnet-4-5 model was selected for this role based on its balance of
+            output quality and API cost. It produces grammatically correct Arabic-compatible
+            messages and coherent facilitator summaries without requiring the latency or
+            cost of a larger frontier model. Tool use (structured JSON output) is used
+            rather than free-form generation, which eliminates the need for brittle response
+            parsing and makes the AI's output directly machine-readable.
+
+    - heading: "What AI Does Not Do"
+      body:
+        - type: paragraph
+          text: >-
+            The AI does not decide which students to contact. That decision is made by the
+            risk formula and the CRITICAL/HIGH threshold, both of which are set by human-
+            defined constants that can be tuned by the academic director. The AI is not in
+            the decision loop; it is in the communication drafting loop. A student's
+            inclusion in the intervention list is deterministic and auditable without any
+            AI involvement.
+        - type: paragraph
+          text: >-
+            The AI does not send messages. The whatsapp_messages.csv is a draft document
+            reviewed by the facilitator before any message is sent. The pipeline has no
+            integration with WhatsApp Business API, no email server, and no notification
+            system. Every message leaves the pipeline as a text string in a CSV cell;
+            it becomes a sent message only after a human facilitator copies it into WhatsApp
+            and presses send. This human-in-the-loop requirement is a design choice, not
+            a limitation to be removed in future iterations.
+        - type: paragraph
+          text: >-
+            The AI does not access real student systems, school databases, or any external
+            data source other than what is provided in the cohort prompt. Its context is
+            limited to the engagement metrics included in the API call. It does not know
+            a student's grades, attendance history beyond what the CSV contains, or any
+            information from other systems. This containment is both a privacy protection
+            and a scope boundary: the AI can only say things that are grounded in the
+            data the pipeline has ingested.
+
+    - heading: "Accuracy vs Cost vs Latency Tradeoffs"
+      body:
+        - type: paragraph
+          text: >-
+            The three primary AI integration tradeoffs — accuracy, cost, and latency —
+            were resolved in favour of cost and latency for this use case. The pipeline
+            runs once daily; a 60-second total runtime including 14 API calls is entirely
+            acceptable. There is no real-time requirement that would justify paying for a
+            faster but more expensive model tier or a dedicated API capacity reservation.
+        - type: paragraph
+          text: >-
+            Campus batching (one API call per campus rather than per student) is the
+            primary cost optimisation. In the 20-campus demo run, it reduced API calls
+            from approximately 120 to 14 — a 9x reduction. The cost difference at
+            claude-sonnet-4-5 pricing is material: per-student calls would have used
+            roughly 9x more tokens (approximately 285,939 tokens vs 31,771 actual). At
+            scale, campus batching is what makes the $200/month budget feasible.
+        - type: paragraph
+          text: >-
+            Message accuracy is acceptable rather than optimal. The AI is given only
+            aggregate metrics (attendance rate, practice question count, trend direction,
+            days since last note) per student, not the full note text or historical detail.
+            This keeps prompts short and costs low, but it means the AI cannot reference
+            specific events or conversations. The facilitator summary and WhatsApp message
+            are therefore general rather than highly personalised. For the target use case
+            — a facilitator who may be managing 15 students and needs a starting point for
+            each conversation — this level of accuracy is fit for purpose.
+
+    - heading: "Human Review Loop"
+      body:
+        - type: paragraph
+          text: >-
+            The pipeline is designed around a mandatory human review step. The facilitator
+            reviews intervention_priority_list.xlsx before contacting any family. The Excel
+            file presents students in CRITICAL-first order with all supporting metrics
+            visible, enabling the facilitator to make informed judgements about which
+            students to prioritise and whether the risk assessment aligns with their direct
+            knowledge of the student.
+        - type: paragraph
+          text: >-
+            WhatsApp message drafts in the per-campus dashboard files are explicitly
+            labelled as drafts. The pipeline does not prevent a facilitator from sending
+            a template message verbatim, but the expectation is that the facilitator will
+            read the message, adjust the tone for the specific family relationship, and
+            send it through their personal WhatsApp application. The two-step process
+            (AI drafts, human reviews, human sends) is the core of the intervention
+            workflow and is not intended to be automated away.
+        - type: paragraph
+          text: >-
+            The generated_by column in every campus dashboard file makes the distinction
+            between AI-generated and template-generated messages explicit. A facilitator
+            who sees generated_by: template knows that the API was not available for that
+            student's message and should apply extra judgement when reviewing it. This
+            transparency about the message provenance is part of the human review loop
+            design — facilitators should never be uncertain about whether they are reading
+            AI output or rule-based output.
+
+    - heading: "Failure Modes"
+      body:
+        - type: paragraph
+          text: >-
+            Three primary failure modes were identified during design and addressed
+            explicitly. The first is API unavailability: if the Anthropic API is down or
+            rate-limiting, the three-layer fallback (SDK retry → re-prompt → template)
+            ensures the pipeline completes with template-generated messages rather than
+            crashing. The output is degraded but complete; the facilitator still receives
+            a usable intervention list.
+        - type: paragraph
+          text: >-
+            The second failure mode is malformed or missing input CSV data. ingestion.py
+            handles this through type coercion with pd.to_numeric(errors='coerce'),
+            deduplication, and conservative missing-value fill. No input anomaly — missing
+            rows, type mismatch strings, duplicate IDs — causes the pipeline to crash.
+            All anomalies are logged at WARNING level and the pipeline continues. A student
+            with completely missing metrics data receives a maximum risk score (conservative
+            default), ensuring they are not invisibly excluded from the intervention list.
+        - type: paragraph
+          text: >-
+            The third failure mode is an empty campus (a campus_id present in the metadata
+            with no CRITICAL or HIGH students). The LLM batching loop skips campuses with
+            no at-risk students without error; the per-campus dashboard is still written
+            (with all students at MEDIUM or LOW) but no API call is made. This is the
+            expected happy-path outcome for a campus that is performing well, and it should
+            not produce any log warnings — only an INFO-level note that the campus was
+            processed with zero at-risk students.
+
+alternatives:
+  title: "Alternatives Considered"
+  sections:
+    - heading: "Risk Scoring Alternatives"
+      body:
+        - type: paragraph
+          text: >-
+            Three alternatives to the deterministic weighted formula were considered for
+            risk scoring: a supervised machine learning model, a pure rule-based threshold
+            system without LLM involvement, and third-party student engagement analytics
+            platforms. The deterministic formula was chosen over all three on the basis of
+            explainability, data availability, and operational simplicity.
+        - type: paragraph
+          text: >-
+            A supervised ML model (logistic regression, gradient boosting, or a neural
+            network) would produce more accurate predictions if trained on historical
+            outcome data linking student engagement patterns to actual re-engagement
+            outcomes after facilitator intervention. That outcome data does not exist yet.
+            Boon Academy has not systematically tracked which interventions worked and
+            which did not. Building an ML model without outcome labels would produce a
+            model that predicts current engagement patterns rather than future outcomes —
+            which is exactly what the deterministic formula already does, without the
+            opacity of a trained model. An ML approach should be revisited after six months
+            of structured outcome tracking.
+        - type: paragraph
+          text: >-
+            A rule-based system without LLM (e.g., "attendance below 60% → HIGH risk,
+            send this template message") would be faster and cheaper than the current
+            approach but would produce identical messages for all students in the same
+            risk tier. The LLM's ability to write contextually differentiated messages —
+            even given the same metrics — is the primary value driver for facilitator
+            adoption. Facilitators who receive personalised message drafts are more likely
+            to send them without modification, which is what drives the intervention rate
+            from 30% to 80%+. Removing the LLM removes this personalisation benefit.
+
+    - heading: "Delivery Method Alternatives"
+      body:
+        - type: paragraph
+          text: >-
+            Four delivery method alternatives were evaluated: n8n and Zapier (visual
+            workflow automation), Airtable with automation features, the WhatsApp Business
+            API for direct message sending, and the current approach of generating CSV
+            drafts for manual sending. The current approach was retained because it is the
+            only option that is fully offline-capable, version-controlled, and testable.
+        - type: paragraph
+          text: >-
+            n8n and Zapier store workflow logic as visual node graphs that cannot be
+            version-controlled in git, cannot be unit-tested, and cannot be debugged with
+            standard developer tools. When a node fails, diagnosis requires navigating a
+            web UI rather than reading a Python traceback. At the scale of 20 campuses with
+            daily runs, the probability of a workflow failure in any given month is high
+            enough that debuggability is a critical requirement — not a nice-to-have.
+        - type: paragraph
+          text: >-
+            The WhatsApp Business API requires carrier approval (a process that takes weeks
+            and has approval uncertainty), charges per message sent (typically $0.005–$0.08
+            per message depending on country and template type), and requires a persistent
+            server to handle delivery webhooks. For a pilot at 20 campuses sending
+            approximately 120 messages per day, the approval process, ongoing cost, and
+            server maintenance outweigh the benefit of automated sending, especially given
+            that facilitator review before sending is a non-negotiable product requirement.
+
+    - heading: "Infrastructure Alternatives"
+      body:
+        - type: paragraph
+          text: >-
+            Docker containerisation, a scheduled cloud job, and SQLite persistence were
+            all evaluated and deferred rather than excluded permanently. Docker would
+            provide environment reproducibility across facilitator machines but adds
+            container orchestration knowledge requirements that are unrealistic for a
+            one-person technical team at 20 campuses. The requirements.txt with pinned
+            versions provides adequate reproducibility for the current deployment model.
+        - type: paragraph
+          text: >-
+            A scheduled cloud job (GitHub Actions cron, AWS Lambda, or a Railway cron
+            job) would eliminate the need for a facilitator to manually trigger the
+            pipeline each morning. This is a worthwhile investment when the pipeline is
+            running reliably on real data and the team has validated the output quality.
+            It was deferred from the initial build because debugging a cloud job failure
+            is significantly harder than debugging a local script failure — starting with
+            a local script lowers the initial debugging burden and speeds up iteration
+            during the validation period.
+        - type: paragraph
+          text: >-
+            SQLite persistence would allow incremental runs (only process new data since
+            the last run) rather than full re-ingestion of all CSVs daily. This is not
+            needed at the current scale of 300 students where full ingestion takes under
+            one second. The CSV → SQLite migration path is documented in the scalability
+            section and is the recommended next infrastructure step when campus count
+            exceeds 50. No code change outside ingestion.py is required to execute that
+            migration.
+
+    - heading: "What Is Worth Building Next"
+      body:
+        - type: paragraph
+          text: >-
+            Four improvements are worth building in the near term, in priority order: real
+            student data hookup, risk weight calibration with the academic director, dialect
+            selection per campus, and a scheduled daily trigger. These are not Phase 7-8
+            internal roadmap items — they are production readiness requirements that
+            determine whether the pipeline produces genuinely useful output on real data.
+        - type: paragraph
+          text: >-
+            Connecting the pipeline to real student data (replacing the synthetic CSVs) is
+            the highest-priority next step. The synthetic data validates pipeline mechanics
+            but cannot validate output quality or facilitator utility. Risk weight
+            calibration should happen in parallel: the academic director should review the
+            current weights (0.35 attendance, 0.30 practice, 0.20 trend, 0.15 notes) and
+            adjust them based on their knowledge of which engagement signals actually
+            predict student disengagement at Boon Academy. Until the weights are reviewed,
+            the risk scores are informed guesses rather than validated predictions.
+        - type: paragraph
+          text: >-
+            Dialect selection (Modern Standard Arabic vs. Gulf dialect per campus) would
+            make the WhatsApp messages significantly more natural for recipients.
+            Currently the model writes in whatever Arabic dialect it infers from the prompt
+            context. Adding a campus-level dialect configuration and including it in the
+            cohort prompt would improve message quality without any change to the pipeline
+            architecture — it is a data configuration change. A scheduled daily trigger
+            (operating-system task scheduler or a simple cron job) would remove the manual
+            step of running the pipeline each morning, which is likely to be forgotten
+            during busy periods, reducing the consistency of intervention coverage.
