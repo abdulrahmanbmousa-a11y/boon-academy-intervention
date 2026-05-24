@@ -3,9 +3,9 @@
 > **Audit trail only.** Do not use as input to planning, research, or execution agents.
 > Decisions are captured in CONTEXT.md — this log preserves the alternatives considered.
 
-**Date:** 2026-05-24
+**Date:** 2026-05-24 (updated 2026-05-24)
 **Phase:** 06-documentation-suite
-**Areas discussed:** Generation trigger, Content authoring, Module structure
+**Areas discussed:** Generation trigger, Content authoring, Module structure, Real numbers in context, Docs content depth, analysis.md 'What Next' framing
 
 ---
 
@@ -116,3 +116,54 @@
 - Per-campus breakdown in analysis.md — deferred (aggregate numbers satisfy DOCS-01)
 - Doc content accuracy tests (assert correct phase count, etc.) — Phase 7 scope
 - PDF export of docs — requires headless Chrome; out of Phase 6 scope
+
+---
+
+## Update Session — 2026-05-24
+
+### Real Numbers in Context
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Embed key numbers in CONTEXT.md | 300 students, 20 campuses, 14 API calls, 31,771 tokens, 0 fallbacks, 9 dupes, ~290 warnings | ✓ |
+| Leave it to runtime | `_write_analysis_md()` reads run_log at execution; no change to CONTEXT.md | |
+| Both — embed + confirm D-07 runtime access | Key numbers in CONTEXT.md; runtime access for live version | |
+
+**User's choice:** Embed key numbers in CONTEXT.md
+**Notes:** Risk distribution stays runtime-derived per D-07 (df[COL_RISK_LEVEL].value_counts()).
+
+---
+
+### Docs Content Depth
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Full narrative | 2–4 paragraphs per section, all 7 docs | |
+| Structured bullets | Heading + 4–6 bullets per section | |
+| Hybrid — 1 intro paragraph + bullets | Opening paragraph gives context, bullets list specifics | ✓ (baseline) |
+
+**User's choice:** Hybrid as baseline, with exceptions for 4 docs.
+
+**Full narrative exceptions:**
+
+| Doc | Reason | Selected |
+|-----|--------|----------|
+| security.docx | Explaining API key handling and retention policy needs prose | ✓ |
+| engineering_decisions.docx | Decision rationale needs justification paragraphs | ✓ |
+| alternatives.docx | "What was NOT built" is inherently narrative | ✓ |
+| system_design.docx | AI tradeoff analysis is argumentative | ✓ |
+
+**Hybrid docs:** architecture.docx, data_handling.docx, scalability.docx
+
+---
+
+### analysis.md "What Next" Framing
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Production recommendations | Real data hookup, weight calibration, Arabic dialect, LibreOffice testing | ✓ |
+| Phase 7–8 roadmap items | Test suite, E2E integration | |
+| Both — near-term + production path | Two paragraphs | |
+
+**User's choice:** Production recommendations only
+**Notes:** Phase 7-8 items read as an internal todo list; production path is more compelling for portfolio reviewers.

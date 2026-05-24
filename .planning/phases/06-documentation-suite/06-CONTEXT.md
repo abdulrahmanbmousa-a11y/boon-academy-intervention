@@ -1,6 +1,6 @@
 # Phase 6: Documentation Suite - Context
 
-**Gathered:** 2026-05-24
+**Gathered:** 2026-05-24 (updated 2026-05-24)
 **Status:** Ready for planning
 
 <domain>
@@ -93,13 +93,53 @@ Content for the 7 static docs (architecture through alternatives) is loaded from
 
 - **D-12 (docs/ directory creation):** `docs_dir.mkdir(parents=True, exist_ok=True)` at the start of `write_docs()` — same pattern as `output_dir.mkdir()` in `write_outputs()`.
 
+### Real Pipeline Numbers (D-13)
+
+Embed directly in CONTEXT.md so the planner agent can reference them without parsing run_log.json:
+
+- **Students processed:** 300 (across 20 campuses, C01–C20, 15 students each)
+- **API calls made:** 14
+- **Tokens used:** 19,693 input + 12,078 output = 31,771 total
+- **Fallbacks triggered:** 0
+- **Errors encountered:** 0
+- **Duplicate IDs removed:** 9
+- **Data quality warnings:** ~290 auto-resolved (missing session_attended_min filled 0, type mismatches coerced, duplicate IDs deduplicated)
+
+**Risk distribution:** NOT embedded — derived at runtime via `df[COL_RISK_LEVEL].value_counts()` inside `_write_analysis_md` (per D-07 unchanged).
+
+### Content Depth per Doc (D-14)
+
+**Full narrative (2–4 paragraphs per section)** — these docs explain reasoning and require argumentative prose:
+- `security.docx` — API key handling, PII masking, retention policy need prose to explain the "why"
+- `engineering_decisions.docx` — decision rationale (batching, deterministic scoring, python-docx) needs justification paragraphs
+- `alternatives.docx` — "what was NOT built and why" is inherently narrative; bullets make it feel like a checklist
+- `system_design.docx` — AI tradeoff analysis (accuracy vs cost vs latency) and human review loop recommendation are argumentative
+
+**Hybrid (1 intro paragraph + bullets per section)** — these docs are reference material that readers scan:
+- `architecture.docx` — pipeline diagram + component descriptions; bullets work well
+- `data_handling.docx` — schema and cleaning steps are naturally list-shaped
+- `scalability.docx` — bottlenecks and migration path are best as structured bullets + programmatic table
+
+The YAML `type: paragraph` vs `type: bullet` distinction maps directly to this: narrative docs have more `paragraph` entries; hybrid docs lead with one `paragraph` then switch to `bullet`.
+
+### analysis.md "What Next" Framing (D-15)
+
+Focus on **production recommendations** — not Phase 7-8 internal roadmap items:
+- Hook up real student data (replace synthetic CSVs)
+- Validate risk weights with academic director (current defaults are unvalidated assumptions)
+- Confirm Arabic dialect per campus (Modern Standard vs. Gulf dialect for WhatsApp messages)
+- Test on LibreOffice (facilitator PCs may not have Excel)
+- Consider scheduled daily run vs. on-demand trigger
+
+**Do NOT** frame "What Next" as "Phase 7 = test suite, Phase 8 = E2E" — that reads as an internal todo list, not a production readiness guide.
+
 ### Claude's Discretion
 
 - Exact narrative text content for the 7 static docs — Claude writes the content in `docs_content.yaml` based on the REQUIREMENTS.md section descriptions and the project's actual implementation (read `src/` files for accuracy)
 - ASCII pipeline diagram layout in architecture.docx — Claude designs it to fit the 5-module pipeline
-- Cost projection numbers in scalability.docx — derive from current token usage in STATE.md open questions (`$200/month` budget anchor from DOCS-07)
+- Cost projection numbers in scalability.docx — use D-13 token numbers: ~106 tokens/student (31,771 ÷ 300); project to 100 campuses
 - Exact analysis.md word count — stay under 600 words (DOCS-01 hard limit)
-- analysis.md risk distribution: if `run_log` does not contain a pre-computed breakdown, compute `df[COL_RISK_LEVEL].value_counts().to_dict()` once in `_write_analysis_md` — `df` is still passed to `write_docs()` for this purpose
+- analysis.md risk distribution: compute `df[COL_RISK_LEVEL].value_counts().to_dict()` once in `_write_analysis_md` — `df` is still passed to `write_docs()` for this purpose
 
 </decisions>
 
@@ -120,7 +160,7 @@ Content for the 7 static docs (architecture through alternatives) is loaded from
 ### Existing Code to Read Before Implementing
 - `src/output_generator.py` — reference implementation for module structure, helper discipline, docstring style
 - `src/llm_engine.py` — YAML loading pattern (`Path(__file__).parent / "templates" / "..."`, `yaml.safe_load()`)
-- `src/config.py` — all COL_* constants; `DOCS_DIR` env var path (if already defined); use constants not bare strings
+- `src/config.py` — all COL_* constants; `DOCS_DIR` already defined at line 30 (`Path(os.getenv("DOCS_DIR", "docs"))`)
 - `main.py` — wiring pattern for write_outputs(); doc_generator wiring follows same structure
 
 ### Critical Pitfalls (from prior phases)
@@ -140,7 +180,7 @@ Content for the 7 static docs (architecture through alternatives) is loaded from
 - `src/output_generator.py` — entire module is the structural analog; `_write_report()` is the closest helper (python-docx, YAML-driven, pure helper discipline)
 - `src/llm_engine.py:~30` — `Path(__file__).parent / "llm_templates.yaml"` + `yaml.safe_load()` — exact pattern for loading `docs_content.yaml`
 - `src/templates/` — directory already exists (contains `dashboard.html.j2`); `docs_content.yaml` goes here
-- `src/config.py` — `DOCS_DIR` path constant (may need to be added if not present); all COL_* constants for risk level column in analysis.md risk breakdown
+- `src/config.py` — `DOCS_DIR` already defined (line 30); all COL_* constants for risk level column in analysis.md risk breakdown
 
 ### Established Patterns
 - Public orchestrator + private `_write_*` helpers returning `Path` — `write_docs()` follows same pattern as `write_outputs()`
@@ -150,8 +190,9 @@ Content for the 7 static docs (architecture through alternatives) is loaded from
 
 ### Integration Points
 - `main.py` — add `from src import doc_generator`; add `doc_paths = doc_generator.write_docs(df, run_log, cfg.DOCS_DIR)` after `write_outputs()` call; log `list(doc_paths.keys())`
-- `src/config.py` — check if `DOCS_DIR` is defined; if not, add it with `os.getenv("DOCS_DIR", "docs")` pattern (consistent with D-08 from Phase 1)
+- `src/config.py` — `DOCS_DIR` already defined at line 30; no change needed
 - `run_log` dict — already has: `run_timestamp`, `students_processed`, `api_calls_made`, `tokens_used`, `errors_encountered`, `fallbacks_triggered`, `data_quality_warnings`
+- `outputs/run_log.json` — last pipeline run values captured in D-13 above; use for reference content in docs
 
 </code_context>
 
@@ -163,21 +204,21 @@ Content for the 7 static docs (architecture through alternatives) is loaded from
   # Analysis: boon-academy-intervention
 
   ## Diagnosis
-  [Problem statement — facilitator intervention rate 30% → 80%+ target]
+  [Problem statement — facilitator intervention rate 30% → 80%+ target; 20 campuses, 300 students]
 
   ## What You Found
-  [Real numbers: N students processed, X CRITICAL, Y HIGH, Z total at-risk]
+  [Real numbers: 300 students, X CRITICAL, Y HIGH — derive from df at runtime]
 
   ## What You Built
-  [5-phase pipeline summary: ingest → score → LLM → outputs → dashboards]
+  [5-phase pipeline summary: ingest → score → LLM → outputs → dashboards; 14 API calls, 31,771 tokens]
 
   ## What You Cut
   [Out-of-scope items with rationale: ML model, real-time server, OAuth, Docker]
 
   ## What Next
-  [Phase 7-8 work + open questions from STATE.md]
+  [Production path: real data hookup, weight calibration, dialect selection, LibreOffice testing]
   ```
-  Under 600 words. f-strings embed `run_log["students_processed"]`, risk counts, tokens used.
+  Under 600 words. f-strings embed `run_log["students_processed"]` (300), `run_log["api_calls_made"]` (14), `run_log["tokens_used"]["input"] + run_log["tokens_used"]["output"]` (31,771), risk counts from df.
 
 - **docs_content.yaml structure (example):**
   ```yaml
@@ -192,9 +233,13 @@ Content for the 7 static docs (architecture through alternatives) is loaded from
             text: "ingestion.py — Merges 3 CSV files into a unified DataFrame"
   ```
 
-- **scalability.docx cost projection (DOCS-07):** $200/month budget anchor; derive tokens-per-student from `run_log["tokens_used"]` / `run_log["students_processed"]`; project to 100 campuses × N students.
+- **scalability.docx cost projection (DOCS-07):** Use D-13 numbers: 31,771 tokens ÷ 300 students ≈ 106 tokens/student; project to 100 campuses × 15 students × 40% CRITICAL/HIGH rate = 600 at-risk students × 106 tokens/student × claude-sonnet-4-5 pricing. Anchor to $200/month budget.
 
-- **security.docx (DOCS-04) must explicitly state:** env-var-only API key (never logged, never in outputs), PII masking (names and phones masked at INFO/DEBUG), data retention recommendation ("do not persist student data beyond the run day"), what must NOT appear in any output file.
+- **security.docx (DOCS-04) must explicitly state:** env-var-only API key (never logged, never in outputs), PII masking (names and phones masked at INFO/DEBUG per `src/llm_engine.py`), data retention recommendation ("do not persist student data beyond the run day"), what must NOT appear in any output file.
+
+- **Content depth mapping (D-14 implementation):**
+  - security, engineering_decisions, alternatives, system_design → mostly `type: paragraph` entries in YAML
+  - architecture, data_handling, scalability → one `type: paragraph` opener per section, then `type: bullet` entries
 
 </specifics>
 
@@ -210,4 +255,4 @@ Content for the 7 static docs (architecture through alternatives) is loaded from
 ---
 
 *Phase: 6-documentation-suite*
-*Context gathered: 2026-05-24*
+*Context gathered: 2026-05-24 | Updated: 2026-05-24*
