@@ -9,6 +9,7 @@ import sys
 from datetime import datetime, timezone
 
 from src import config as cfg
+from src import doc_generator
 from src import llm_engine
 from src import output_generator
 from src.ingestion import ingest
@@ -92,6 +93,10 @@ def main() -> int:
         # Phase 4: Output generation — D-06: single write-at-end point
         paths = output_generator.write_outputs(df, cfg.OUTPUT_DIR, run_log)
         logger.info("Outputs written: %s", list(paths.keys()))
+
+        # Phase 5: Documentation generation — D-02: called after write_outputs()
+        doc_paths = doc_generator.write_docs(df, run_log, cfg.DOCS_DIR)
+        logger.info("docs written: %s", list(doc_paths.keys()))
 
     except Exception:
         logger.exception("Unrecoverable pipeline error")
