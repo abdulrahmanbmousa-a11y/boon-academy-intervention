@@ -155,7 +155,10 @@
   3. `make test` passes with 0 failures after the integration run
   4. Code review confirms: type hints on all functions, docstrings on all public classes and methods, no print statements, no hardcoded paths or API keys
   5. HTML dashboard quality check confirms: campus filter works, risk filter works, copy button works, no layout breaks at 1280px and 1920px viewport widths
-**Plans:** TBD
+**Plans:** 3 plans
+- [ ] 08-01-PLAN.md — Wave 1: Code polish (print() fix, .env.example sanitise, requirements-dev.txt, README)
+- [ ] 08-02-PLAN.md — Wave 2: Live pipeline run + output verification + demo commit
+- [ ] 08-03-PLAN.md — Wave 3: Quality gates + HTML UI check + VERIFICATION.md
 **UI hint**: yes
 
 ---
