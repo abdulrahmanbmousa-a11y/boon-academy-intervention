@@ -403,10 +403,14 @@ def _write_architecture(docs_dir: Path, content: dict) -> Path:
 
 
 def _write_security(docs_dir: Path, content: dict) -> Path:
-    """Write docs/security.docx — security design document.
+    """Write docs/security.docx from docs_content.yaml.
 
-    TODO (Wave 2): Implement using _render_doc_from_content(content, docs_dir,
-    'security.docx'). Content loaded from docs_content.yaml 'security' key.
+    Covers env-var API key management, PII masking, data retention,
+    access control. Narrative prose (D-14). No OxmlElement (D-10).
+
+    doc.save(str(path)) used for python-docx 1.1.2 Windows compatibility
+    (CLAUDE.md critical pitfall). Delegates entirely to
+    _render_doc_from_content() which handles paragraph/bullet dispatch.
 
     Args:
         docs_dir: Directory to write security.docx into.
@@ -415,15 +419,21 @@ def _write_security(docs_dir: Path, content: dict) -> Path:
     Returns:
         Path to docs/security.docx.
     """
-    path = docs_dir / "security.docx"
+    path = _render_doc_from_content(content, docs_dir, "security.docx")
+    logger.info("Wrote security.docx: %s", path)
     return path
 
 
 def _write_engineering_decisions(docs_dir: Path, content: dict) -> Path:
-    """Write docs/engineering_decisions.docx — engineering decisions rationale.
+    """Write docs/engineering_decisions.docx from docs_content.yaml.
 
-    TODO (Wave 2): Implement using _render_doc_from_content(content, docs_dir,
-    'engineering_decisions.docx'). Content from docs_content.yaml 'engineering_decisions' key.
+    Covers risk scoring formula rationale, LLM batching, fallback logic,
+    output format choices, intentional simplicity. Narrative prose (D-14).
+    No OxmlElement (D-10).
+
+    doc.save(str(path)) used for python-docx 1.1.2 Windows compatibility
+    (CLAUDE.md critical pitfall). Delegates entirely to
+    _render_doc_from_content() which handles paragraph/bullet dispatch.
 
     Args:
         docs_dir: Directory to write engineering_decisions.docx into.
@@ -432,7 +442,8 @@ def _write_engineering_decisions(docs_dir: Path, content: dict) -> Path:
     Returns:
         Path to docs/engineering_decisions.docx.
     """
-    path = docs_dir / "engineering_decisions.docx"
+    path = _render_doc_from_content(content, docs_dir, "engineering_decisions.docx")
+    logger.info("Wrote engineering_decisions.docx: %s", path)
     return path
 
 
@@ -545,10 +556,15 @@ def _write_scalability(docs_dir: Path, content: dict) -> Path:
 
 
 def _write_system_design(docs_dir: Path, content: dict) -> Path:
-    """Write docs/system_design.docx — system design and AI integration document.
+    """Write docs/system_design.docx from docs_content.yaml.
 
-    TODO (Wave 2): Implement using _render_doc_from_content(content, docs_dir,
-    'system_design.docx'). Content loaded from docs_content.yaml 'system_design' key.
+    Covers AI role boundaries, what AI does not do, accuracy/cost/latency
+    tradeoffs, human review loop recommendation, failure modes. Narrative
+    prose (D-14). No OxmlElement (D-10).
+
+    doc.save(str(path)) used for python-docx 1.1.2 Windows compatibility
+    (CLAUDE.md critical pitfall). Delegates entirely to
+    _render_doc_from_content() which handles paragraph/bullet dispatch.
 
     Args:
         docs_dir: Directory to write system_design.docx into.
@@ -557,15 +573,21 @@ def _write_system_design(docs_dir: Path, content: dict) -> Path:
     Returns:
         Path to docs/system_design.docx.
     """
-    path = docs_dir / "system_design.docx"
+    path = _render_doc_from_content(content, docs_dir, "system_design.docx")
+    logger.info("Wrote system_design.docx: %s", path)
     return path
 
 
 def _write_alternatives(docs_dir: Path, content: dict) -> Path:
-    """Write docs/alternatives.docx — alternatives considered document.
+    """Write docs/alternatives.docx from docs_content.yaml.
 
-    TODO (Wave 2): Implement using _render_doc_from_content(content, docs_dir,
-    'alternatives.docx'). Content loaded from docs_content.yaml 'alternatives' key.
+    Covers risk scoring alternatives, delivery method alternatives,
+    infrastructure alternatives, and what is worth building next.
+    Narrative prose (D-14). No OxmlElement (D-10).
+
+    doc.save(str(path)) used for python-docx 1.1.2 Windows compatibility
+    (CLAUDE.md critical pitfall). Delegates entirely to
+    _render_doc_from_content() which handles paragraph/bullet dispatch.
 
     Args:
         docs_dir: Directory to write alternatives.docx into.
@@ -574,5 +596,6 @@ def _write_alternatives(docs_dir: Path, content: dict) -> Path:
     Returns:
         Path to docs/alternatives.docx.
     """
-    path = docs_dir / "alternatives.docx"
+    path = _render_doc_from_content(content, docs_dir, "alternatives.docx")
+    logger.info("Wrote alternatives.docx: %s", path)
     return path
