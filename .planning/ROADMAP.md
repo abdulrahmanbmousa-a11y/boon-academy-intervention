@@ -115,7 +115,7 @@
 **Plans:** 6 plans
 
 **Wave 1** *(parallel)*
-- [ ] 06-01-PLAN.md — src/templates/docs_content.yaml: full content for all 7 static docs (DOCS-03..09)
+- [x] 06-01-PLAN.md — src/templates/docs_content.yaml: full content for all 7 static docs (DOCS-03..09) ✓ commit 2491b8b
 - [ ] 06-02-PLAN.md — src/doc_generator.py skeleton: write_docs() orchestrator + 9 private helper stubs (DOCS-01..09)
 
 **Wave 2** *(parallel, blocked on Wave 1)*
@@ -162,7 +162,7 @@
 | 3. Claude API Integration | 3/3 | Complete | 2026-05-23 |
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
 | 5. HTML Dashboard + Word Report | 3/3 | Complete | 2026-05-23 |
-| 6. Documentation Suite | 0/6 | Not started | - |
+| 6. Documentation Suite | 1/6 | In Progress | DOCS-03..09 content library done |
 | 7. Test Suite | 0/? | Not started | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
 
@@ -210,4 +210,4 @@ These features were requested after v1 scope was locked. Implement after Phase 8
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-24 — Phase 6 planned (6 plans, 3 waves); Phase 9 (Web App) and Phase 10 (In-App Downloads) added to post-v1 backlog per user request*
+*Last updated: 2026-05-24 — Phase 6 plan 01 complete (docs_content.yaml, commit 2491b8b); DOCS-03..09 requirements delivered*
