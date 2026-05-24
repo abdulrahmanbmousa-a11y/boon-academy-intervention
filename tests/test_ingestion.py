@@ -44,8 +44,8 @@ def test_student_id_is_string(sample_csv_paths: dict) -> None:
 # DATA-03: missing numeric imputation
 # ---------------------------------------------------------------------------
 
-def test_missing_numeric_filled_with_zero(sample_csv_paths: dict) -> None:
-    """DATA-03: Missing session_attended_min / practice_questions must be filled with 0."""
+def test_missing_values_filled_with_zero(sample_csv_paths: dict) -> None:
+    """DATA-03 / TEST-02: Missing session_attended_min / practice_questions must be filled with 0."""
     data_paths = {
         "metadata": FIXTURES_DIR / "student_metadata_happy.csv",
         "metrics": FIXTURES_DIR / "student_daily_metrics_missing_numeric.csv",
@@ -69,8 +69,8 @@ def test_missing_numeric_filled_with_zero(sample_csv_paths: dict) -> None:
 # DATA-04: duplicate student_id deduplication
 # ---------------------------------------------------------------------------
 
-def test_duplicate_ids_deduped(sample_csv_paths: dict) -> None:
-    """DATA-04: Duplicate student_id rows in metadata must be deduplicated (keep='last')."""
+def test_duplicate_student_ids_deduplicated(sample_csv_paths: dict) -> None:
+    """DATA-04 / TEST-02: Duplicate student_id rows in metadata must be deduplicated (keep='last')."""
     data_paths = {
         "metadata": FIXTURES_DIR / "student_metadata_with_dupes.csv",
         "metrics": FIXTURES_DIR / "student_daily_metrics_happy.csv",
@@ -165,8 +165,8 @@ def test_warnings_attached_to_df() -> None:
 # DATA-08: bad records do not crash
 # ---------------------------------------------------------------------------
 
-def test_bad_record_does_not_crash() -> None:
-    """DATA-08: Unparseable dates in metrics must not crash ingest; bad_date warning emitted."""
+def test_bad_date_format_safe_default() -> None:
+    """DATA-08 / TEST-02: Unparseable dates in metrics must not crash ingest; bad_date warning emitted."""
     data_paths = {
         "metadata": FIXTURES_DIR / "student_metadata_happy.csv",
         "metrics": FIXTURES_DIR / "student_daily_metrics_bad_dates.csv",
@@ -184,7 +184,7 @@ def test_bad_record_does_not_crash() -> None:
     )
 
 
-def test_empty_csv_handled() -> None:
+def test_empty_csv_does_not_crash() -> None:
     """DATA-08 / TEST-02: All-empty inputs (header only) must return 0-row DataFrame without raising."""
     data_paths = {
         "metadata": FIXTURES_DIR / "empty.csv",

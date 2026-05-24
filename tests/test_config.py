@@ -30,7 +30,16 @@ class TestFailLoudBehavior:
     """D-08: ANTHROPIC_API_KEY must raise KeyError at import time if absent."""
 
     def test_missing_api_key_raises(self, monkeypatch):
-        """With ANTHROPIC_API_KEY absent, reloading src.config raises KeyError."""
+        """With ANTHROPIC_API_KEY absent, reloading src.config raises KeyError.
+
+        load_dotenv() is patched to a no-op so that a parent-directory .env file
+        cannot silently repopulate the key before os.environ["ANTHROPIC_API_KEY"]
+        executes (D-08 fail-loud contract).
+        """
+        # Prevent load_dotenv() from loading any .env file during the reload:
+        # a real .env in the parent directory would otherwise repopulate the key
+        # before os.environ["ANTHROPIC_API_KEY"] runs, masking the KeyError.
+        monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **kw: None)
         # First: load the module with a valid key so it exists in sys.modules.
         monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-for-preload")
         import src.config  # noqa: F401 — populates sys.modules
