@@ -48,7 +48,7 @@ tests/                   # pytest suite
 
 - `dtype={"student_id": "str", "parent_phone": "str"}` in every read_csv — never let pandas infer
 - `PatternFill(fill_type="solid", fgColor="RRGGBB")` — omitting fill_type silently produces no color
-- openpyxl color in tests: assert `"00FFCCCC"` not `"FFCCCC"` (8-char hex with alpha prefix)
+- openpyxl color in tests: assert `"FFFFCCCC"` not `"FFCCCC"` (8-char hex with alpha prefix matching the FF**CCCC values in src/config.py)
 - HTML: `json.dumps(data).replace("</", "<\\/")` before embedding in `<script>` tag
 - Use `os.environ["KEY"]` not `os.getenv("KEY")` for required secrets — fail at startup
 
