@@ -16,8 +16,8 @@ progress:
 
 ## Current Status
 
-- **Phase:** 8 — End-to-End Integration + Polish (next up)
-- **Active plan:** none (Phase 7 complete, Phase 8 not yet planned)
+- **Phase:** 8 — End-to-End Integration + Polish (planned, ready to execute)
+- **Active plan:** none (Phase 8 planned — 3 plans in 3 waves, ready for /gsd:execute-phase 8)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation; Phase 5 — HTML Dashboard + Word Report; Phase 6 — Documentation Suite; Phase 7 — Test Suite
 - **Last updated:** 2026-05-25
 
@@ -39,7 +39,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 5 | HTML Dashboard + Word Report | 3 / 3 | Complete |
 | 6 | Documentation Suite | 6 / 6 | Complete |
 | 7 | Test Suite | 3 / 3 | Complete |
-| 8 | End-to-End Integration + Polish | 0 / ? | Pending |
+| 8 | End-to-End Integration + Polish | 0 / 3 | Planned |
 
 ## Performance Metrics
 
@@ -183,4 +183,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-25 — Phase 7 Test Suite complete (VERIFICATION PASSED 12/12); 114 tests passing; TEST-01..TEST-04 all covered; Phase 8 End-to-End Integration + Polish is next*
+*Last updated: 2026-05-25 — Phase 8 End-to-End Integration + Polish planned (3 plans, 3 waves); verification PASSED (0 blockers); ready to execute*

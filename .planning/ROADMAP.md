@@ -156,9 +156,20 @@
   4. Code review confirms: type hints on all functions, docstrings on all public classes and methods, no print statements, no hardcoded paths or API keys
   5. HTML dashboard quality check confirms: campus filter works, risk filter works, copy button works, no layout breaks at 1280px and 1920px viewport widths
 **Plans:** 3 plans
-- [ ] 08-01-PLAN.md — Wave 1: Code polish (print() fix, .env.example sanitise, requirements-dev.txt, README)
-- [ ] 08-02-PLAN.md — Wave 2: Live pipeline run + output verification + demo commit
-- [ ] 08-03-PLAN.md — Wave 3: Quality gates + HTML UI check + VERIFICATION.md
+
+**Wave 1**
+- [ ] 08-01-PLAN.md — Code polish: fix print() in generate_data.py, sanitise .env.example, create requirements-dev.txt, review README (D-03, D-05, D-06, D-07)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 08-02-PLAN.md — Live end-to-end run: `make demo`, verify 14 outputs, commit demo files (D-01, D-02, D-08, D-09)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 08-03-PLAN.md — Quality gates: make test, code scan, manual HTML UI check, VERIFICATION.md (D-10)
+
+**Cross-cutting constraints:**
+- Live run must use real ANTHROPIC_API_KEY; executor pauses at human-action checkpoint
+- All run/test commands use `py -3.12` — pandas==2.2.3 has no wheel for Python 3.14 (system default)
+- HTML UI check is a human-verify checkpoint (SC-5 cannot be automated)
 **UI hint**: yes
 
 ---
