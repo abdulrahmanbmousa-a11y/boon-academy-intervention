@@ -467,6 +467,79 @@ def test_pii_safe_logging_in_score_risk(caplog: pytest.LogCaptureFixture) -> Non
 # RISK-08: No bare column-name strings in risk_engine.py (source-scan)
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# TEST-01: End-to-end boundary tests via score_risk() (ROADMAP success criteria #2 and #3)
+# ---------------------------------------------------------------------------
+
+@freeze_time("2026-05-23")
+def test_score_75_is_critical() -> None:
+    """TEST-01 / ROADMAP SC-2: score_risk() returns risk_score==75.0 → risk_level=='CRITICAL'.
+
+    Input construction (analytically derived from weighted formula):
+      attendance_component = (1 - 0/14) * 100 = 100  →  100 * 0.35 = 35.0
+      practice_component   = (1 - (0/14)/15) * 100 = 100  →  100 * 0.30 = 30.0
+      trend_component      = 50 (series < 3 values)  →   50 * 0.20 = 10.0
+      notes_component      = 0  (note today)          →    0 * 0.15 =  0.0
+      total                = 35 + 30 + 10 + 0 = 75.0
+
+    This test calls score_risk() end-to-end (NOT pd.cut directly), confirming
+    the full pipeline honours the CRITICAL threshold at exactly 75.
+    """
+    df = pd.DataFrame([_build_student_row(
+        attendance_days=0,
+        practice_total_q=0.0,
+        session_series=[10.0, 20.0],                       # < 3 values → trend_component=50
+        latest_note_date=pd.Timestamp("2026-05-23"),       # today → notes_component=0
+    )])
+    result = score_risk(df)
+    actual_score = result[cfg.COL_RISK_SCORE].iloc[0]
+    actual_level = result[cfg.COL_RISK_LEVEL].iloc[0]
+    assert actual_score == pytest.approx(75.0, abs=0.01), (
+        f"TEST-01: expected risk_score≈75.0 (CRITICAL boundary), got {actual_score}"
+    )
+    assert actual_level == "CRITICAL", (
+        f"TEST-01: expected risk_level='CRITICAL' for score≈75.0, got '{actual_level}'"
+    )
+
+
+@freeze_time("2026-05-23")
+def test_score_74_is_high() -> None:
+    """TEST-01 / ROADMAP SC-2: score_risk() returns risk_score==74.0 → risk_level=='HIGH'.
+
+    Input construction (analytically derived from weighted formula):
+      attendance_component = (1 - 0/14) * 100 = 100       →  100 * 0.35 = 35.0
+      practice_component   = (1 - (7/14)/15) * 100 ≈ 96.667  →  96.667 * 0.30 ≈ 29.0
+      trend_component      = 50 (series < 3 values)        →   50 * 0.20 = 10.0
+      notes_component      = 0  (note today)               →    0 * 0.15 =  0.0
+      total                = 35 + 29 + 10 + 0 = 74.0
+
+    practice_total_q=7 → avg=0.5/day → practice_component=(1-0.5/15)*100=96.6̄%
+    0.30 * 96.6̄ = 29.0 exactly (0.30 * (1 - 1/30) * 100 = 30 - 1 = 29).
+
+    This test calls score_risk() end-to-end (NOT pd.cut directly), confirming
+    the full pipeline places score 74 just below the CRITICAL boundary at HIGH.
+    """
+    df = pd.DataFrame([_build_student_row(
+        attendance_days=0,
+        practice_total_q=7.0,                              # avg=0.5/day → practice_component≈96.667
+        session_series=[10.0, 20.0],                       # < 3 values → trend_component=50
+        latest_note_date=pd.Timestamp("2026-05-23"),       # today → notes_component=0
+    )])
+    result = score_risk(df)
+    actual_score = result[cfg.COL_RISK_SCORE].iloc[0]
+    actual_level = result[cfg.COL_RISK_LEVEL].iloc[0]
+    assert actual_score == pytest.approx(74.0, abs=0.01), (
+        f"TEST-01: expected risk_score≈74.0 (just below CRITICAL boundary), got {actual_score}"
+    )
+    assert actual_level == "HIGH", (
+        f"TEST-01: expected risk_level='HIGH' for score≈74.0, got '{actual_level}'"
+    )
+
+
+# ---------------------------------------------------------------------------
+# RISK-08: No bare column-name strings in risk_engine.py (source-scan)
+# ---------------------------------------------------------------------------
+
 def test_no_bare_column_strings_in_risk_engine() -> None:
     """RISK-08: Every column-name string in risk_engine.py must come from cfg.COL_* constants.
 
