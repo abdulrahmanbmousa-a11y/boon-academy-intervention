@@ -608,6 +608,42 @@ def test_write_outputs_all_paths_exist(
         assert path.exists(), f"File does not exist for key {key!r}: {path}"
 
 
+def test_all_6_output_files_exist(
+    minimal_enriched_df: pd.DataFrame,
+    tmp_path: Path,
+) -> None:
+    """TEST-04 / D-06: write_outputs() produces all 6 output files in tmp_path.
+
+    Uses the shared minimal_enriched_df fixture from conftest.py (5 rows, 2 campuses)
+    to call write_outputs() end-to-end. Every Path value in the returned dict must
+    exist on disk. All 5 non-campus fixed keys (priority_list, whatsapp, run_log,
+    dashboard, report) must be present in the result.
+    """
+    run_log = {
+        "run_timestamp": "2026-05-24T12:00:00+00:00",
+        "students_processed": 5,
+        "api_calls_made": 2,
+        "tokens_used": {"input": 150, "output": 80},
+        "errors_encountered": [],
+        "fallbacks_triggered": 0,
+        "data_quality_warnings": [],
+    }
+    result = write_outputs(minimal_enriched_df, tmp_path, run_log)
+    # Every value must be a Path that exists on disk
+    for key, path in result.items():
+        assert isinstance(path, Path), (
+            f"TEST-04: expected Path for key {key!r}, got {type(path)}"
+        )
+        assert path.exists(), (
+            f"TEST-04: file does not exist for key {key!r}: {path}"
+        )
+    # Assert the 5 mandatory non-campus keys are present
+    for required_key in ("priority_list", "whatsapp", "run_log", "dashboard", "report"):
+        assert required_key in result, (
+            f"TEST-04 / D-06: missing required key {required_key!r} in write_outputs result"
+        )
+
+
 def test_write_outputs_creates_output_dir(
     full_sample_df: pd.DataFrame,
     sample_run_log_full: dict,
