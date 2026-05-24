@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-last_updated: "2026-05-24T17:41:00.000Z"
+last_updated: "2026-05-24T18:05:00.000Z"
 progress:
   total_phases: 10
   completed_phases: 5
   total_plans: 15
-  completed_plans: 15
-  percent: 52
+  completed_plans: 16
+  percent: 54
 ---
 
 # Project State: boon-academy-intervention
@@ -17,7 +17,7 @@ progress:
 ## Current Status
 
 - **Phase:** 6 — Documentation Suite (in progress)
-- **Active plan:** 06-05 (next to execute)
+- **Active plan:** 06-06 (next to execute)
 - **Completed phases:** Phase 1 — Foundation + Data Ingestion; Phase 2 — Risk Scoring Engine; Phase 3 — Claude API Integration; Phase 4 — Excel + CSV Output Generation; Phase 5 — HTML Dashboard + Word Report
 - **Last updated:** 2026-05-24
 
@@ -37,7 +37,7 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 3 | Claude API Integration | 3 / 3 | Complete |
 | 4 | Excel + CSV Output Generation | 3 / 3 | Complete |
 | 5 | HTML Dashboard + Word Report | 3 / 3 | Complete |
-| 6 | Documentation Suite | 4 / 6 | In Progress |
+| 6 | Documentation Suite | 5 / 6 | In Progress |
 | 7 | Test Suite | 0 / ? | Pending |
 | 8 | End-to-End Integration + Polish | 0 / ? | Pending |
 
@@ -63,9 +63,10 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 | 06 | 06-02 | ~3 min | 1/1 | 1 |
 | 06 | 06-03 | ~8 min | 2/2 | 1 |
 | 06 | 06-04 | ~6 min | 2/2 | 1 |
+| 06 | 06-05 | ~5 min | 2/2 | 1 |
 
 - **Phases completed:** 5 / 8
-- **Plans completed:** 18 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 4/6 plans)
+- **Plans completed:** 19 (Phase 1: 3 plans, Phase 2: 2 plans, Phase 3: 3/3 plans, Phase 4: 3/3 plans, Phase 5: 3/3 plans, Phase 6: 5/6 plans)
 - **Requirements delivered:** 63 / 52+ (INFRA-01..09, DATA-01..08, RISK-01..08, LLM-01..09, OUT-01, OUT-02, OUT-03, OUT-04, OUT-05, OUT-06, DOCS-01..02 fully implemented, DOCS-03..09 complete)
 - **Test coverage:** 111 tests passing (25 Phase 1 + 28 Phase 2 + 12 Phase 3 + 34 Phase 4 + 12 Phase 5, all GREEN)
 
@@ -134,6 +135,8 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 - _write_scalability renders YAML sections inline then appends two programmatic tables: scale comparison (3×3) and cost projection (3×3), both style="Table Grid" per D-10 (06-04)
 - type:bullet in scalability uses style="List Bullet" (consistent with _render_doc_from_content) not "• " prefix — same rendered output in Word
 - security doc pattern: os.environ["ANTHROPIC_API_KEY"] fail-loud + never logged + 7 safe run_log keys; PII masked in logs (names/phones absent from all log statements); outputs/ delete-same-day recommendation
+- _write_security, _write_engineering_decisions, _write_system_design, _write_alternatives all delegate to _render_doc_from_content() — DRY, no duplicated rendering loop (06-05)
+- narrative YAML blocks (security/engineering_decisions/system_design/alternatives) contain only type:paragraph items per D-14; bullet branch in _render_doc_from_content is not exercised for these four docs
 
 ### Known Pitfalls (from research)
 
@@ -176,4 +179,4 @@ See: .planning/PROJECT.md (updated 2026-05-21)
 
 ---
 *State initialized: 2026-05-21*
-*Last updated: 2026-05-24 after 06-04 execution (Phase 6 plan 4 complete — _write_architecture, _write_data_handling, _write_scalability fully implemented, commits e5dc909 e29d4ee; 06-05 next)*
+*Last updated: 2026-05-24 after 06-05 execution (Phase 6 plan 5 complete — _write_security, _write_engineering_decisions, _write_system_design, _write_alternatives fully implemented, commit b26f204; 06-06 next)*
