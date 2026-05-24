@@ -131,12 +131,20 @@ def test_medium_low_students_skipped(respx_mock) -> None:
     )
 
 
-def test_campus_batching(respx_mock) -> None:
+def test_campus_batching(respx_mock, monkeypatch) -> None:
     """LLM-02: Two campuses produce exactly two API calls — one per campus.
 
     Campus C01 has one CRITICAL student; campus C02 has one HIGH student.
     Each campus must trigger a separate API call.
+
+    cfg.MAX_STUDENTS_PER_LLM_CALL is pinned to 10 via monkeypatch so the test
+    remains deterministic regardless of env-driven default (WARNING-5 / D-09).
+    With 1 student per campus this guarantees exactly one batch per campus.
     """
+    # Pin MAX_STUDENTS_PER_LLM_CALL before DataFrame construction so the campus
+    # loop is guaranteed to make exactly 1 call per campus (LLM-02 / D-09).
+    monkeypatch.setattr(cfg, "MAX_STUDENTS_PER_LLM_CALL", 10)
+
     df = pd.DataFrame([
         _build_student_row(student_id="S0001", campus_id="C01", risk_level="CRITICAL"),
         _build_student_row(student_id="S0002", campus_id="C02", risk_level="HIGH"),
@@ -171,7 +179,8 @@ def test_campus_batching(respx_mock) -> None:
     _, counts = enrich_with_llm(df, "test-key", http_client=http_client)
 
     assert len(respx_mock.calls) == 2, (
-        f"LLM-02: expected exactly 2 API calls (one per campus), got {len(respx_mock.calls)}"
+        f"LLM-02: expected exactly 2 API calls (one per campus, MAX_STUDENTS_PER_LLM_CALL=10), "
+        f"got {len(respx_mock.calls)}"
     )
     assert counts["api_calls_made"] == 2, (
         "LLM-02: api_calls_made counter must reflect both campus calls"
@@ -283,13 +292,19 @@ def test_fallback_to_template(respx_mock) -> None:
     assert counts["fallbacks_triggered"] >= 1, (
         "LLM-05: fallbacks_triggered counter must be incremented on template fallback"
     )
+    # D-08: template fallback must produce non-empty whatsapp_message for CRITICAL rows
+    assert row[cfg.COL_WHATSAPP_MESSAGE] and len(str(row[cfg.COL_WHATSAPP_MESSAGE])) > 0, (
+        "D-08: template fallback must produce a non-empty whatsapp_message for CRITICAL row"
+    )
 
 
-def test_token_logging(respx_mock) -> None:
-    """LLM-06: Successful API call accumulates token counts in the returned counts dict.
+def test_token_logging(respx_mock, caplog) -> None:
+    """LLM-06 / TEST-03: Token counts appear in the returned counts dict AND in log output.
 
-    Mock returns input_tokens=150, output_tokens=80.
-    The returned counts dict must reflect these values.
+    Mock returns input_tokens=150, output_tokens=80. The test asserts both:
+    1. counts dict has the correct values (existing assertion)
+    2. The token count "150" or the word "token" appears in caplog.text at INFO level
+       for logger "src.llm_engine" (TEST-03 caplog assertion per CONTEXT.md §TEST-03)
     """
     df = pd.DataFrame([
         _build_student_row(student_id="S0001", campus_id="C01", risk_level="CRITICAL"),
@@ -309,13 +324,19 @@ def test_token_logging(respx_mock) -> None:
     )
 
     http_client = httpx.Client(transport=httpx.MockTransport(respx_mock.handler))
-    _, counts = enrich_with_llm(df, "test-key", http_client=http_client)
+    with caplog.at_level(logging.INFO, logger="src.llm_engine"):
+        _, counts = enrich_with_llm(df, "test-key", http_client=http_client)
 
     assert counts["tokens_used"]["input"] == 150, (
         f"LLM-06: input tokens must be 150, got {counts['tokens_used']['input']}"
     )
     assert counts["tokens_used"]["output"] == 80, (
         f"LLM-06: output tokens must be 80, got {counts['tokens_used']['output']}"
+    )
+    # TEST-03: token counts must appear in log output after a successful API call
+    assert "150" in caplog.text or "token" in caplog.text.lower(), (
+        "TEST-03: token counts must be logged after successful API call — "
+        "expected '150' or 'token' in caplog.text but got: " + repr(caplog.text[:200])
     )
 
 
