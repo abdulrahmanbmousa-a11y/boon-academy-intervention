@@ -136,7 +136,14 @@
   3. `tests/test_ingestion.py` includes tests that verify: missing numeric values are filled with 0, duplicate student_id rows are deduplicated, and an empty CSV does not crash the pipeline
   4. `tests/test_llm_engine.py` uses respx to mock a failed API call and asserts that the student row has `generated_by == "template"` and a non-empty message_text
   5. `tests/test_output_generator.py` asserts all 6 output files exist after a full generation run and that the Excel file contains the correct color-coded PatternFill values (8-character hex)
-**Plans:** TBD
+**Plans:** 3 plans
+
+**Wave 0**
+- [ ] 07-01-PLAN.md — Baseline pytest run (D-01) + tests/conftest.py shared minimal_enriched_df fixture (D-05) + cfg import (TEST-01, TEST-02, TEST-03, TEST-04 infrastructure)
+
+**Wave 1** *(parallel, blocked on Wave 0)*
+- [ ] 07-02-PLAN.md — tests/test_risk_engine.py boundary tests test_score_75_is_critical + test_score_74_is_high via score_risk() end-to-end; tests/test_ingestion.py D-03 explicit name alignment (TEST-01, TEST-02)
+- [ ] 07-03-PLAN.md — tests/test_llm_engine.py respx-based fallback (D-08) + campus batching (D-09) + token-logging caplog extension; tests/test_output_generator.py test_all_6_output_files_exist via tmp_path (D-06) + PatternFill 8-char hex verification (TEST-03, TEST-04)
 
 ### Phase 8: End-to-End Integration + Polish
 **Goal:** A single `python main.py` run on fresh synthetic data produces all 6 output files and all 8 documentation files, all quality gates pass, and the repository runs cleanly from a fresh clone.
@@ -163,7 +170,7 @@
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
 | 5. HTML Dashboard + Word Report | 3/3 | Complete | 2026-05-23 |
 | 6. Documentation Suite | 6/6 | Complete | 2026-05-24 |
-| 7. Test Suite | 0/? | Not started | - |
+| 7. Test Suite | 0/3 | Planned | - |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
 
 ---
@@ -210,4 +217,4 @@ These features were requested after v1 scope was locked. Implement after Phase 8
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-24 — Phase 6 complete (06-06: main.py wiring + smoke test, commit b562eed); Phase 7 Test Suite next*
+*Last updated: 2026-05-24 — Phase 7 planning complete (3 plans across 2 waves; Wave 0 baseline + conftest fixture, Wave 1 parallel TEST-01/02 and TEST-03/04 closure)*
