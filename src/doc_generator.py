@@ -383,8 +383,12 @@ def _write_analysis_docx(run_log: dict, docs_dir: Path, content: dict) -> Path:
 def _write_architecture(docs_dir: Path, content: dict) -> Path:
     """Write docs/architecture.docx — system architecture reference document.
 
-    TODO (Wave 2): Implement using _render_doc_from_content(content, docs_dir,
-    'architecture.docx'). Content loaded from docs_content.yaml 'architecture' key.
+    Hybrid structure (D-14): each section opens with a paragraph, then uses
+    bullet points. Rendered via _render_doc_from_content() shared helper which
+    maps type:paragraph → add_paragraph() and type:bullet → add_paragraph with
+    style='List Bullet'.
+
+    No OxmlElement. No custom styles. Table Grid only. per D-10.
 
     Args:
         docs_dir: Directory to write architecture.docx into.
@@ -393,7 +397,8 @@ def _write_architecture(docs_dir: Path, content: dict) -> Path:
     Returns:
         Path to docs/architecture.docx.
     """
-    path = docs_dir / "architecture.docx"
+    path = _render_doc_from_content(content, docs_dir, "architecture.docx")
+    logger.info("Wrote architecture.docx: %s", path)
     return path
 
 
@@ -434,8 +439,15 @@ def _write_engineering_decisions(docs_dir: Path, content: dict) -> Path:
 def _write_data_handling(docs_dir: Path, content: dict) -> Path:
     """Write docs/data_handling.docx — data handling reference document.
 
-    TODO (Wave 2): Implement using _render_doc_from_content(content, docs_dir,
-    'data_handling.docx'). Content loaded from docs_content.yaml 'data_handling' key.
+    Hybrid structure (D-14): each section opens with a paragraph, then uses
+    bullet points. Rendered via _render_doc_from_content() shared helper which
+    maps type:paragraph → add_paragraph() and type:bullet → add_paragraph with
+    style='List Bullet'.
+
+    Sections covered: Input Schema, Data Cleaning Pipeline, Missing Data Strategy,
+    Edge Cases and Quality Issues, Merge Logic.
+
+    No OxmlElement. No custom styles. Table Grid only. per D-10.
 
     Args:
         docs_dir: Directory to write data_handling.docx into.
@@ -444,7 +456,8 @@ def _write_data_handling(docs_dir: Path, content: dict) -> Path:
     Returns:
         Path to docs/data_handling.docx.
     """
-    path = docs_dir / "data_handling.docx"
+    path = _render_doc_from_content(content, docs_dir, "data_handling.docx")
+    logger.info("Wrote data_handling.docx: %s", path)
     return path
 
 
