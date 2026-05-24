@@ -15,7 +15,7 @@
 - [x] **Phase 4: Excel + CSV Output Generation** - intervention_priority_list.xlsx, per-campus dashboards, whatsapp_messages.csv, run_log.json — COMPLETE 2026-05-23
 - [x] **Phase 5: HTML Dashboard + Word Report** - Self-contained HTML dashboard and intervention_report.docx — COMPLETE 2026-05-23
 - [x] **Phase 6: Documentation Suite** - All 8 .docx documentation files and analysis.md — COMPLETE 2026-05-24
-- [ ] **Phase 7: Test Suite** - Full pytest suite covering risk engine, ingestion edge cases, LLM fallback, and output assertions
+- [x] **Phase 7: Test Suite** - Full pytest suite covering risk engine, ingestion edge cases, LLM fallback, and output assertions — COMPLETE 2026-05-25
 - [ ] **Phase 8: End-to-End Integration + Polish** - Full pipeline verified on synthetic data with all quality gates passing
 
 ---
@@ -139,11 +139,11 @@
 **Plans:** 3 plans
 
 **Wave 0**
-- [ ] 07-01-PLAN.md — Baseline pytest run (D-01) + tests/conftest.py shared minimal_enriched_df fixture (D-05) + cfg import (TEST-01, TEST-02, TEST-03, TEST-04 infrastructure)
+- [x] 07-01-PLAN.md — Baseline pytest run (D-01) + tests/conftest.py shared minimal_enriched_df fixture (D-05) + cfg import (TEST-01, TEST-02, TEST-03, TEST-04 infrastructure) — COMPLETE 2026-05-25
 
 **Wave 1** *(parallel, blocked on Wave 0)*
-- [ ] 07-02-PLAN.md — tests/test_risk_engine.py boundary tests test_score_75_is_critical + test_score_74_is_high via score_risk() end-to-end; tests/test_ingestion.py D-03 explicit name alignment (TEST-01, TEST-02)
-- [ ] 07-03-PLAN.md — tests/test_llm_engine.py respx-based fallback (D-08) + campus batching (D-09) + token-logging caplog extension; tests/test_output_generator.py test_all_6_output_files_exist via tmp_path (D-06) + PatternFill 8-char hex verification (TEST-03, TEST-04)
+- [x] 07-02-PLAN.md — tests/test_risk_engine.py boundary tests test_score_75_is_critical + test_score_74_is_high via score_risk() end-to-end; tests/test_ingestion.py D-03 explicit name alignment (TEST-01, TEST-02) — COMPLETE 2026-05-25
+- [x] 07-03-PLAN.md — tests/test_llm_engine.py respx-based fallback (D-08) + campus batching (D-09) + token-logging caplog extension; tests/test_output_generator.py test_all_6_output_files_exist via tmp_path (D-06) + PatternFill 8-char hex verification (TEST-03, TEST-04) — COMPLETE 2026-05-25
 
 ### Phase 8: End-to-End Integration + Polish
 **Goal:** A single `python main.py` run on fresh synthetic data produces all 6 output files and all 8 documentation files, all quality gates pass, and the repository runs cleanly from a fresh clone.
@@ -170,7 +170,7 @@
 | 4. Excel + CSV Output Generation | 3/3 | Complete | 2026-05-23 |
 | 5. HTML Dashboard + Word Report | 3/3 | Complete | 2026-05-23 |
 | 6. Documentation Suite | 6/6 | Complete | 2026-05-24 |
-| 7. Test Suite | 0/3 | Planned | - |
+| 7. Test Suite | 3/3 | Complete | 2026-05-25 |
 | 8. End-to-End Integration + Polish | 0/? | Not started | - |
 
 ---
@@ -217,4 +217,4 @@ These features were requested after v1 scope was locked. Implement after Phase 8
 ---
 
 *Roadmap created: 2026-05-21*
-*Last updated: 2026-05-24 — Phase 7 planning complete (3 plans across 2 waves; Wave 0 baseline + conftest fixture, Wave 1 parallel TEST-01/02 and TEST-03/04 closure)*
+*Last updated: 2026-05-25 — Phase 7 complete (114 tests passing; TEST-01..TEST-04 all covered; verification PASSED 12/12)*
