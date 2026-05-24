@@ -19,6 +19,7 @@ Risk-tier distribution per D-04 (baked into cohort-based metric distributions):
   - 40% MEDIUM:   moderate session / practice (Normal mid-mean)
   - 20% LOW:      high session / practice (Normal high-mean)
 """
+import logging
 import os
 from datetime import datetime, timedelta
 
@@ -26,6 +27,8 @@ import numpy as np
 import pandas as pd
 
 from src import config as cfg
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Module-level constants (D-01, D-02, D-03)
@@ -318,11 +321,7 @@ def main() -> None:
         cfg.DATA_DIR / "facilitator_notes.csv", index=False, encoding="utf-8"
     )
 
-    # Single summary print — permitted for utility scripts (01-RESEARCH.md L611)
-    print(
-        f"Generated synthetic data: {len(metadata)} students, "
-        f"{len(metrics)} metric rows, {len(notes)} notes in {cfg.DATA_DIR}"
-    )
+    logger.info("Generated synthetic data: %s students, %s metric rows, %s notes in %s", len(metadata), len(metrics), len(notes), cfg.DATA_DIR)
 
 
 if __name__ == "__main__":

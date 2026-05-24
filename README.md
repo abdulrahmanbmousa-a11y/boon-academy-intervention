@@ -20,7 +20,9 @@ make demo      # Unix/macOS
 - `outputs/whatsapp_messages.csv` — pre-drafted parent messages
 - `outputs/intervention_report.docx` — full narrative report
 - `outputs/facilitator_dashboard.html` — self-contained browser dashboard
+- `outputs/run_log.json` — pipeline run metadata (student counts, token usage)
+- `docs/` — 8 documentation .docx files (architecture, security, scalability, and more)
 
 ## Requirements
 
-Python 3.11+ recommended (3.12, 3.13 also tested).
+Python 3.12 required (pandas==2.2.3 has no wheel for Python 3.14).
