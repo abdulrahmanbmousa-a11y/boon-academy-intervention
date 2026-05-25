@@ -1,5 +1,10 @@
 .env
-outputs/
+outputs/*
+!outputs/intervention_priority_list.xlsx
+!outputs/whatsapp_messages.csv
+!outputs/run_log.json
+!outputs/facilitator_dashboard.html
+!outputs/intervention_report.docx
 data/
 __pycache__/
 *.pyc

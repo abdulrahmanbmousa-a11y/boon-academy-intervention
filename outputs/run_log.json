@@ -1,0 +1,1603 @@
+{
+  "run_timestamp": "2026-05-25T17:10:27.298113+00:00",
+  "students_processed": 300,
+  "api_calls_made": 14,
+  "tokens_used": {
+    "input": 18113,
+    "output": 7784
+  },
+  "errors_encountered": [],
+  "fallbacks_triggered": 30,
+  "data_quality_warnings": [
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0103"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0107"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0111"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0112"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0115"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0205"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0208"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0210"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0214"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0303"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0303"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0309"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0404"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0405"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0406"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0406"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0407"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0408"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0413"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0414"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0414"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0507"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0509"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0511"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0512"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0610"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0613"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0614"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0705"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0705"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0707"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0712"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0802"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0809"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0902"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0906"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0911"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0911"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0911"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0911"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0913"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S0914"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1008"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1009"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1011"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1012"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1013"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1014"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1103"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1107"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1108"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1110"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1110"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1115"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1208"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1208"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1302"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1303"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1304"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1307"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1307"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1307"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1307"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1402"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1402"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1405"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1412"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1413"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1415"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1503"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1601"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1603"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1609"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1612"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1612"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1614"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1705"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1706"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1710"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1712"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1713"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1715"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1802"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1802"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1803"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1804"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1806"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1811"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1811"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1811"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1902"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1904"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1908"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S1913"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S2001"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S2002"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "session_attended_min",
+      "student_id": "S2005"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0101",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0107",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0109",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0115",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0204",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0208",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0210",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0213",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0303",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0306",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0308",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0310",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0314",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0402",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0408",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0414",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0414",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0415",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0510",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0513",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0515",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0515",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0601",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0605",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0608",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0611",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0702",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0703",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0705",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0709",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0711",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0711",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0712",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0803",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0805",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0904",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0905",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0909",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0912",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S0912",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1002",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1003",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1005",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1006",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1103",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1115",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1203",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1206",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1211",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1212",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1213",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1214",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1214",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1215",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1215",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1310",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1407",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1501",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1502",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1505",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1506",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1607",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1609",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1609",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1703",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1705",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1707",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1708",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1712",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1713",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1714",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1803",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1806",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1811",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1815",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1905",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1910",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1911",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1911",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1913",
+      "raw_value": "many"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S1915",
+      "raw_value": "?"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S2003",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S2004",
+      "raw_value": "abc"
+    },
+    {
+      "type": "type_mismatch",
+      "column": "practice_questions",
+      "student_id": "S2010",
+      "raw_value": "many"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0101"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0101"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0102"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0102"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0111"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0205"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0205"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0208"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0213"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0214"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0214"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0215"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0302"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0304"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0305"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0305"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0310"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0312"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0401"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0409"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0414"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0415"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0501"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0502"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0503"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0506"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0510"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0605"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0608"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0610"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0613"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0614"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0701"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0703"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0703"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0711"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0802"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0805"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0811"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0811"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0813"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0815"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0901"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0909"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0912"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0912"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S0913"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1006"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1007"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1009"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1101"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1101"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1102"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1102"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1103"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1105"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1110"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1110"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1114"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1202"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1210"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1211"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1211"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1214"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1303"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1305"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1308"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1308"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1310"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1311"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1401"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1406"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1408"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1411"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1412"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1413"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1503"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1504"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1505"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1506"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1510"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1511"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1512"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1605"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1613"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1614"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1614"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1702"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1706"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1707"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1709"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1709"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1709"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1712"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1714"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1802"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1803"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1807"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1808"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1809"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1810"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1814"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1814"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1901"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1901"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1907"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1909"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1910"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S1911"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S2011"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S2011"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S2013"
+    },
+    {
+      "type": "missing_numeric",
+      "column": "practice_questions",
+      "student_id": "S2015"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S0314"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S0702"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S0703"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S0711"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S0809"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S0912"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S1005"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S1506"
+    },
+    {
+      "type": "duplicate_id",
+      "student_id": "S1915"
+    }
+  ]
+}
