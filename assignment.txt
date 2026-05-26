@@ -1,0 +1,187 @@
+website link 
+https://noonacademy.notion.site/AI-Systems-Engineer-Case-Study-462943f5b2a5438ba4cb3f36ae35be74 
+
+
+
+# AI Systems Engineer — Case Study
+
+---
+
+## Background
+
+You are interviewing for an **AI Systems Engineer** role at Noon Academy, an EdTech company in Saudi Arabia.
+
+Noon runs hybrid test-prep classrooms where students attend physical locations with facilitators managing each classroom, while teachers deliver instruction remotely to multiple classrooms in parallel. Students are expected to:
+
+- Attend morning sessions (90 minutes, Mon-Thu)
+- Complete evening practice at home
+
+**The Problem:**
+
+In a parallel universe, Boon Academy is doing the same thing as Noon. Boon is running into a problem: when students fall behind, facilitators are supposed to intervene — call parents, schedule 1-on-1 tutoring, send motivational messages, etc. However, **only ~30% of students who fail quizzes actually receive any intervention before the next quiz.** Facilitators say they're overwhelmed and don't know who to prioritize.
+
+**Boon Academy is scaling from 1,000 students (18 campuses) to 5,000 students (100 campuses) next year. Intervention at scale will completely collapse.**
+
+---
+
+## Your Challenge
+
+<aside>
+➡️
+
+Context: It's Day 14. Quiz 1 (Quantitative) happened on Day 10. Quiz 2 (Verbal) is scheduled for Day 20 — just 6 days away.
+
+</aside>
+
+**Fix this problem before it's too late — we already left students behind before Quiz 1, we have six days to ensure we're not repeating that mistake before Quiz 2.**
+
+Design and build an intelligent system that dramatically improves intervention rates while keeping facilitator workload manageable.
+
+**Success looks like:**
+
+- Intervention rate: 30% → 80%+
+- Facilitators can actually use what you build
+- The right students get help at the right time
+- The system improves over time as it learns
+
+**You decide:**
+
+- What to build (pipeline? API? dashboard? automation engine? all of the above?)
+- What technology stack to use
+- How AI/LLMs fit into the solution
+- How it integrates into facilitator workflows
+- How to prioritize which students need help most urgently
+
+---
+
+## Constraints
+
+- **Timeline:** Must work for 20 campuses in 2 days, but be architected to scale to 100 campuses in 6 months
+- **Budget:** $200/month for tools, APIs, subscriptions, etc.
+- **Team:** You'll have 1 engineer part-time to help maintain this after you ship it
+- **Users:** Facilitators are comfortable with WhatsApp and Google Sheets, but not highly technical
+- **Data quality:** Real operational data is messy — missing values, inconsistencies, errors. Your system should handle this gracefully, not break.
+
+---
+
+## The Data
+
+We'll provide you with 14 days of data representing where we are **today (Day 14)**. 
+
+[student_daily_metrics.csv](attachment:7d533f47-fd91-4be5-ac40-28734e6d430f:student_daily_metrics.csv)
+
+`student_id`, `date`, `session_attended_min`, `practice_questions`
+
+[facilitator_notes.csv](attachment:5296843f-9629-49d2-8827-115ebadb0ca3:facilitator_notes.csv)
+
+`note_id`, `student_id`, `facilitator_email`, `date`, `note_text`
+
+[student_metadata.csv](attachment:6228fadd-9a8e-4379-a94e-fd9e7e00ede5:student_metadata.csv)
+
+`student_id`, `student_name`, `campus_id`, `facilitator_email`, `grade`, `parent_phone`, `target_score`, `learning_track`
+
+---
+
+## What We Expect
+
+You will be judged only on what you actually submit. 
+Missing any of the four deliverables below means we won't review your submission. 
+
+### 1. GitHub repository
+
+- Runnable from a fresh clone with a single command (`make demo`, `python main.py`, `docker compose up` — your choice)
+- All paths read from environment variables. **No hardcoded paths**.
+- All secrets read from environment variables. **No hardcoded API keys, even as fallbacks**.
+- A `requirements.txt` or equivalent that locks dependencies.
+- `README.md` at the root explaining how to run it in under 30 lines.
+
+### 2. `analysis.md` (one page, max ~600 words)
+
+A written memo with five sections, in this order:
+
+1. **Diagnosis (3 sentences):** what's the real problem behind the 30% intervention rate, in your own words.
+2. **What you found in the data (3 bullets):** at least three specific numbers you pulled from the dataset. Not vibes — numbers.
+3. **What you built and why (5 bullets max):** the components, in order, with one-sentence reasoning per component.
+4. **What you cut and why:** name two things you decided NOT to build, and why those were the right cuts.
+5. **What you'd build next:** the single most important thing you'd add if we gave you one more week.
+
+If your analysis is longer than one page, we'll only read the first page.
+
+### 3. `outputs/` folder, committed to the repo
+
+The actual files your system produces when you run it end-to-end *with the LLM enabled* on the provided data. We will look at this folder to verify your system runs as you describe it. Empty or stub outputs are an automatic fail.
+
+### 4. A 5–10 minute video walkthrough (Loom or equivalent link in the README)
+
+A screen recording of you running your own system, end-to-end, with the LLM on, on the provided data. Show:
+
+- The system starting up
+- The pipeline running to completion
+- The actual outputs being produced
+- A walkthrough of 2–3 specific students at different risk levels
+
+---
+
+## Live Presentation (60 minutes)
+
+### Part A — Demo (30 minutes)
+
+You will share your screen and:
+
+1. Run your system live, end-to-end, with the LLM enabled.
+2. Walk us through 3–4 specific students at different risk levels.
+3. Show us the code where you made interesting choices (not all of it).
+4. Tell us what you cut and what you'd build differently.
+
+You drive. We will not interrupt. Plan for 30 minutes flat — we'll cut you off at minute 30 to move to Q&A.
+
+### Part B — Q&A (30 minutes)
+
+We'll go deep on:
+
+- The data — what you found, what you didn't notice
+- System design — your architecture choices and their failure modes
+- AI usage — your prompts, fallbacks, and how you measure quality
+- Scaling — what breaks at 100 campuses and what you'd re-engineer
+
+---
+
+## Evaluation Criteria
+
+| **Criteria** | **What we're assessing** |
+| --- | --- |
+| **Technical depth** | Clean code, sensible architecture, handles data quality issues programmatically, system is extensible. |
+| **AI/LLM fluency** | Uses AI where it genuinely helps. Understands tradeoffs (cost, latency, accuracy). Can evaluate output quality. |
+| **Product sense** | Starts with the problem, not the technology. Solution actually fits how facilitators work. |
+| **Execution** | Ships something that runs. Scopes ruthlessly. 80/20 mindset. |
+| **Communication** | Explains complex systems clearly. Engages well in Q&A. No jargon. |
+
+---
+
+## What I am NOT Looking For
+
+❌ **Over-engineered systems** — We want something that works today and can evolve, not a Kubernetes cluster for 20 campuses.
+
+❌ **AI for the sake of AI** — If a simple rule does the job, say so. We want to see judgment about when AI adds value.
+
+❌ **No-code only** — Zapier/Airtable can be part of your stack, but we need to see real code. This is an AI engineering role.
+
+❌ **Perfect polish** — An imperfect system that runs is better than a perfect architecture that's just a diagram.
+
+---
+
+## Important Notes
+ 
+* make sure the code is clean 
+* decide if i should use n8n or zapier, or airtable, and why. 
+* i need a documentation document that shows the architecture of everything with graphs, when the api is being used and why, when certine parts of the code is being used and why.
+* i need you to create for me a security document 
+* I need a reasoning and engineering document explain the reasoning and engineering behind every choice 
+* I you to create for me a full architecture 
+* i need to see an actually working system, something that runs with actual real data
+* I need to be able to Walk through 3–4 specific students at different risk levels
+* I need you to Show us the code parts where you made interesting choices
+* I need a list of things that was build differently, and alienate choices that we could have done. 
+* I need to create for me a system design document, i need you to put for me the ai choices and why,
+* I need you to create a document that include data handling
+* I need you to create for me a scalability document and how this will scale across 100 campuses 
