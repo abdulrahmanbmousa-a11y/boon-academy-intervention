@@ -39,8 +39,24 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _CONTENT_PATH = Path(__file__).parent / "templates" / "docs_content.yaml"
-with _CONTENT_PATH.open(encoding="utf-8") as _fh:
-    _DOCS_CONTENT: dict = yaml.safe_load(_fh)
+try:
+    with _CONTENT_PATH.open(encoding="utf-8") as _fh:
+        _DOCS_CONTENT: dict = yaml.safe_load(_fh)
+except FileNotFoundError as exc:
+    raise FileNotFoundError(
+        f"docs_content.yaml not found at {_CONTENT_PATH}. "
+        "Ensure src/templates/docs_content.yaml is present."
+    ) from exc
+except yaml.YAMLError as exc:
+    raise ValueError(f"docs_content.yaml is malformed: {exc}") from exc
+
+_REQUIRED_KEYS = {
+    "architecture", "security", "engineering_decisions",
+    "data_handling", "scalability", "system_design", "alternatives"
+}
+missing = _REQUIRED_KEYS - set(_DOCS_CONTENT.keys())
+if missing:
+    raise ValueError(f"docs_content.yaml is missing required keys: {missing}")
 
 
 # ---------------------------------------------------------------------------
@@ -87,7 +103,6 @@ def _render_doc_from_content(content_dict: dict, docs_dir: Path, filename: str) 
     path = docs_dir / filename
     # str() required for python-docx 1.1.2 on Windows (CLAUDE.md critical pitfall)
     doc.save(str(path))
-    logger.info("Wrote doc: %s", path)
     return path
 
 
@@ -132,7 +147,7 @@ def write_docs(df: pd.DataFrame, run_log: dict, docs_dir: Path) -> dict[str, Pat
     paths: dict[str, Path] = {}
 
     paths["analysis_md"] = _write_analysis_md(df, run_log, docs_dir)
-    paths["analysis_docx"] = _write_analysis_docx(run_log, docs_dir, _DOCS_CONTENT)
+    paths["analysis_docx"] = _write_analysis_docx(run_log, docs_dir)
     paths["architecture"] = _write_architecture(docs_dir, _DOCS_CONTENT.get("architecture", {}))
     paths["security"] = _write_security(docs_dir, _DOCS_CONTENT.get("security", {}))
     paths["engineering_decisions"] = _write_engineering_decisions(
@@ -167,8 +182,8 @@ def _write_analysis_md(df: pd.DataFrame, run_log: dict, docs_dir: Path) -> Path:
     Embeds live run_log numbers (students_processed, api_calls_made, tokens_used)
     and the runtime risk distribution from df[COL_RISK_LEVEL].value_counts().
 
-    analysis.md is written at the project root (docs_dir.parent / "analysis.md"),
-    not inside docs_dir, because it is the primary deliverable memo (D-11).
+    analysis.md is written inside docs_dir (docs_dir / "analysis.md"), keeping
+    all outputs within the env-var-controlled directory (D-11).
 
     Security: No student names, parent phones, or API key are embedded — only
     aggregate counts from run_log and df (T-06-04).
@@ -182,10 +197,17 @@ def _write_analysis_md(df: pd.DataFrame, run_log: dict, docs_dir: Path) -> Path:
     Returns:
         Path to analysis.md at project root.
     """
-    path = docs_dir.parent / "analysis.md"
+    path = docs_dir / "analysis.md"
 
     # Risk distribution from DataFrame at runtime
-    risk_dist = df[cfg.COL_RISK_LEVEL].value_counts().to_dict()
+    if cfg.COL_RISK_LEVEL not in df.columns:
+        logger.warning(
+            "Column '%s' missing from DataFrame — risk distribution will show all zeros",
+            cfg.COL_RISK_LEVEL,
+        )
+        risk_dist = {}
+    else:
+        risk_dist = df[cfg.COL_RISK_LEVEL].value_counts().to_dict()
     n_critical = risk_dist.get("CRITICAL", 0)
     n_high = risk_dist.get("HIGH", 0)
     n_medium = risk_dist.get("MEDIUM", 0)
@@ -279,13 +301,13 @@ Output files produced per run:
     return path
 
 
-def _write_analysis_docx(run_log: dict, docs_dir: Path, content: dict) -> Path:
+def _write_analysis_docx(run_log: dict, docs_dir: Path) -> Path:
     """Write docs/analysis.docx — Word version of the 5-section analysis.
 
     Produces a python-docx Document with a Title heading and five level=1
     section headings mirroring analysis.md: Diagnosis, What You Found,
     What You Built, What You Cut, What Next. Driven entirely by run_log;
-    the content parameter is unused (analysis is runtime-driven, not YAML-static).
+    analysis is runtime-driven, not YAML-static.
 
     D-10 constraints: add_heading(level=0/1), add_paragraph() only — no
     OxmlElement, no custom styles, Table Grid only if tables are added.
@@ -298,7 +320,6 @@ def _write_analysis_docx(run_log: dict, docs_dir: Path, content: dict) -> Path:
     Args:
         run_log: Pipeline run metadata dict with live numbers.
         docs_dir: Directory to write analysis.docx into.
-        content: Unused — analysis.docx is fully run_log-driven, not YAML-static.
 
     Returns:
         Path to docs/analysis.docx.

@@ -393,6 +393,12 @@ def enrich_with_llm(
                     messages=[{"role": "user", "content": prompt}],
                 )
                 # Parse tool response — KeyError -> Layer 3 (Pitfall 1, T-03-05)
+                if response.stop_reason == "max_tokens":
+                    logger.warning(
+                        f"Campus {campus_id}: response truncated (max_tokens={cfg.MAX_TOKENS}) "
+                        f"— increase MAX_TOKENS env var"
+                    )
+                    raise ValueError("max_tokens exceeded")
                 tool_block = next(
                     b for b in response.content
                     if isinstance(b, anthropic.types.ToolUseBlock)

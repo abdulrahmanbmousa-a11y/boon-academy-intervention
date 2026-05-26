@@ -43,7 +43,7 @@ if _llm_enabled_raw not in ("true", "false"):
         f"LLM_ENABLED must be 'true' or 'false', got {_llm_enabled_raw!r}"
     )
 LLM_ENABLED: bool = _llm_enabled_raw == "true"
-MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "1024"))
+MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "4096"))
 TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.3"))
 TIMEOUT_SECONDS: int = int(os.getenv("TIMEOUT_SECONDS", "30"))
 
