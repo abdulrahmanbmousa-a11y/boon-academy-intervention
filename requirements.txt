@@ -1,6 +1,6 @@
 pandas==2.2.3
 openpyxl==3.1.5
-python-docx==1.1.2
+fpdf2==2.8.3
 anthropic==0.103.1
 python-dotenv==1.2.2
 tenacity==9.1.4
