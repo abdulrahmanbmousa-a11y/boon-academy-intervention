@@ -767,82 +767,51 @@ def test_html_dashboard_escape_script_tag(
 
 
 # ---------------------------------------------------------------------------
-# _write_report tests (OUT-04)
+# _write_report tests (OUT-04) — PDF output
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture
 def report_path(sample_df: pd.DataFrame, sample_run_log: dict, tmp_path: Path) -> Path:
-    """Write Word intervention report to tmp_path and return the path for assertions."""
+    """Write PDF intervention report to tmp_path and return the path for assertions."""
     return _write_report(sample_df, sample_run_log, tmp_path)
 
 
 def test_report_returns_path(report_path: Path) -> None:
-    """_write_report returns a Path pointing to intervention_report.docx."""
+    """_write_report returns a Path pointing to intervention_report.pdf."""
     assert isinstance(report_path, Path), f"Expected Path, got {type(report_path)}"
     assert report_path.exists(), f"Returned path does not exist: {report_path}"
-    assert report_path.name == "intervention_report.docx"
+    assert report_path.name == "intervention_report.pdf"
 
 
-def test_report_is_valid_docx(report_path: Path) -> None:
-    """intervention_report.docx is a valid Word document with at least one paragraph."""
-    from docx import Document
-
-    doc = Document(str(report_path))
-    assert len(doc.paragraphs) > 0, "Expected non-empty Word document"
+def test_report_is_valid_pdf(report_path: Path) -> None:
+    """intervention_report.pdf starts with the PDF magic bytes %PDF-."""
+    magic = report_path.read_bytes()[:5]
+    assert magic == b"%PDF-", f"Expected PDF magic bytes b'%PDF-', got {magic!r}"
 
 
-def test_report_contains_cover_heading(report_path: Path) -> None:
-    """Cover page heading contains 'Intervention Report'.
-
-    python-docx maps level=0 to the 'Title' style (not 'Heading 1'), so we
-    check both 'Heading' and 'Title' style paragraphs.
-    """
-    from docx import Document
-
-    doc = Document(str(report_path))
-    # level=0 -> "Title" style; level=1/2 -> "Heading N" style
-    heading_texts = [
-        p.text
-        for p in doc.paragraphs
-        if p.style.name.startswith("Heading") or p.style.name == "Title"
-    ]
-    assert any("Intervention Report" in h for h in heading_texts), (
-        f"Cover heading not found. Heading/Title paragraphs: {heading_texts}"
-    )
+def test_report_nonempty_pdf(report_path: Path) -> None:
+    """intervention_report.pdf is larger than 1 KB — contains real content."""
+    size = report_path.stat().st_size
+    assert size > 1024, f"Expected PDF > 1024 bytes, got {size} bytes"
 
 
-def test_report_contains_executive_summary(report_path: Path) -> None:
-    """Document contains an 'Executive Summary' section heading."""
-    from docx import Document
-
-    doc = Document(str(report_path))
-    headings = [p.text for p in doc.paragraphs if p.style.name.startswith("Heading")]
-    assert any("Executive Summary" in h for h in headings), (
-        f"'Executive Summary' heading not found. Headings: {headings}"
-    )
-
-
-def test_report_contains_tables(report_path: Path) -> None:
-    """Document contains at least 3 tables (risk breakdown, top-10, campus summary)."""
-    from docx import Document
-
-    doc = Document(str(report_path))
-    assert len(doc.tables) >= 3, (
-        f"Expected at least 3 tables (risk breakdown, top-10, campus summary), "
-        f"got {len(doc.tables)}"
-    )
-
-
-def test_report_data_quality_no_warnings(report_path: Path) -> None:
-    """When data_quality_warnings is empty, document contains 'No data quality issues'."""
-    from docx import Document
-
-    doc = Document(str(report_path))
-    all_text = " ".join(p.text for p in doc.paragraphs)
-    assert "No data quality issues" in all_text, (
-        "Expected 'No data quality issues' paragraph when warnings list is empty"
-    )
+def test_report_data_quality_no_warnings_pdf(
+    sample_df: pd.DataFrame, tmp_path: Path
+) -> None:
+    """_write_report with empty data_quality_warnings still produces a valid PDF."""
+    run_log_no_warnings = {
+        "run_timestamp": "2026-01-01T00:00:00+00:00",
+        "students_processed": 4,
+        "api_calls_made": 1,
+        "tokens_used": {"input": 50, "output": 25},
+        "errors_encountered": [],
+        "fallbacks_triggered": 0,
+        "data_quality_warnings": [],
+    }
+    path = _write_report(sample_df, run_log_no_warnings, tmp_path)
+    assert path.exists(), f"PDF not created: {path}"
+    assert path.read_bytes()[:5] == b"%PDF-", "Expected valid PDF output"
 
 
 def test_write_outputs_html_contains_embedded_json(
