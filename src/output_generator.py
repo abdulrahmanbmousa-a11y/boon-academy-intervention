@@ -18,7 +18,7 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from docx import Document
+from fpdf import FPDF, FontFace
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -26,6 +26,29 @@ from openpyxl.utils import get_column_letter
 from src import config as cfg
 
 logger = logging.getLogger(__name__)
+
+
+def _make_pdf() -> FPDF:
+    """Return a pre-configured FPDF instance: A4, 20mm margins, auto page break."""
+    pdf = FPDF()
+    pdf.set_margins(left=20, top=15, right=20)
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "", 11)
+    return pdf
+
+
+def _safe_text(text: str) -> str:
+    """Replace non-latin1 Unicode chars with ASCII equivalents for Helvetica rendering."""
+    replacements = {
+        "—": " - ", "–": " - ",
+        "‘": "'", "’": "'",
+        "“": '"', "”": '"',
+        "•": "-", "→": "->",
+    }
+    for char, sub in replacements.items():
+        text = text.replace(char, sub)
+    return text.encode("latin-1", errors="replace").decode("latin-1")
 
 
 def _write_whatsapp_csv(df: pd.DataFrame, output_dir: Path) -> Path:
@@ -162,54 +185,42 @@ def _str_or_na(val: object) -> str:
 
 
 def _write_report(df: pd.DataFrame, run_log: dict, output_dir: Path) -> Path:
-    """Write intervention_report.docx — programmatic python-docx builder (OUT-04).
+    """Write intervention_report.pdf — programmatic fpdf2 builder (OUT-04).
 
-    Builds a 7-section Word document using only Document(), add_heading(),
-    add_paragraph(), and add_table() — no OxmlElement, no custom styles (D-10).
-    All headings use built-in levels (level=0/1/2) per D-11. All tables use
-    style="Table Grid" per D-12. Section order follows D-13.
-
-    Sections produced (D-13 order):
-      1. Cover page — title, run date, campus count, students processed
-      2. Executive Summary — narrative paragraph + risk breakdown table
-      3. Top 10 Most At-Risk Students — ranked table (capped at 10 rows, T-05-06)
-      4. Campus Summary — per-campus totals, critical/high counts, coverage %
-      5. Student Deep-Dives — up to 4 sections, one per risk tier (D-08 graceful degradation)
-      6. Data Quality Notes — warnings from run_log['data_quality_warnings']
-      7. Methodology Appendix — weighted formula table + risk threshold paragraphs
+    Produces a 7-section A4 PDF document. Uses Helvetica (built-in) with
+    _safe_text() for latin-1 safety.
 
     Args:
         df: Fully enriched one-row-per-student DataFrame from enrich_with_llm().
-            Must contain COL_RISK_LEVEL, COL_RISK_SCORE, COL_STUDENT_NAME,
-            COL_CAMPUS_ID, COL_ATTENDANCE_RATE, COL_AVG_PRACTICE, COL_TREND_DIR,
-            COL_DAYS_SINCE_NOTE, COL_FACILITATOR_SUMMARY, COL_RECOMMENDED_ACTION.
-            Component columns (COL_*_COMPONENT) are optional — missing columns are
-            handled gracefully with "N/A" fallback.
-        run_log: Pipeline run metadata dict. Keys used: run_timestamp,
-            students_processed, data_quality_warnings.
-        output_dir: Directory to write intervention_report.docx into.
+        run_log: Pipeline run metadata dict.
+        output_dir: Directory to write intervention_report.pdf into.
 
     Returns:
-        Path to the written intervention_report.docx file.
+        Path to the written intervention_report.pdf file.
     """
     df_copy = df.copy()
-    doc = Document()
+    pdf = _make_pdf()
+    hs = FontFace(emphasis="BOLD", fill_color=(220, 220, 220))
 
     # -----------------------------------------------------------------------
     # Section 1 — Cover page
     # -----------------------------------------------------------------------
-    doc.add_heading("Boon Academy — Student Intervention Report", level=0)
-    doc.add_paragraph(f"Run date: {run_log.get('run_timestamp', 'N/A')}")
+    pdf.set_font("Helvetica", "B", 20)
+    pdf.multi_cell(0, 10, _safe_text("Boon Academy - Student Intervention Report"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(0, 6, f"Run date: {run_log.get('run_timestamp', 'N/A')}", new_x="LMARGIN", new_y="NEXT")
     campus_count = df_copy[cfg.COL_CAMPUS_ID].nunique()
-    doc.add_paragraph(f"Campuses: {campus_count}")
-    doc.add_paragraph(
-        f"Students processed: {run_log.get('students_processed', len(df_copy))}"
-    )
+    pdf.multi_cell(0, 6, f"Campuses: {campus_count}", new_x="LMARGIN", new_y="NEXT")
+    pdf.multi_cell(0, 6, f"Students processed: {run_log.get('students_processed', len(df_copy))}", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(4)
 
     # -----------------------------------------------------------------------
     # Section 2 — Executive Summary
     # -----------------------------------------------------------------------
-    doc.add_heading("Executive Summary", level=1)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.multi_cell(0, 8, "Executive Summary", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
 
     total = len(df_copy)
     risk_counts = df_copy[cfg.COL_RISK_LEVEL].value_counts()
@@ -217,89 +228,94 @@ def _write_report(df: pd.DataFrame, run_log: dict, output_dir: Path) -> Path:
     high_count = int(risk_counts.get("HIGH", 0))
     medium_count = int(risk_counts.get("MEDIUM", 0))
     low_count = int(risk_counts.get("LOW", 0))
-
     critical_pct = (critical_count / total * 100) if total > 0 else 0.0
-    doc.add_paragraph(
+
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(
+        0, 6,
         f"Of {total} students, {critical_count} ({critical_pct:.0f}%) are at CRITICAL "
         "risk requiring immediate intervention. The pipeline has generated prioritised "
         "facilitator action items and drafted WhatsApp parent messages for all CRITICAL "
-        "and HIGH risk students."
+        "and HIGH risk students.",
+        new_x="LMARGIN", new_y="NEXT",
     )
+    pdf.ln(3)
 
-    # Risk breakdown table: header + 4 risk level rows, 3 columns
-    risk_table = doc.add_table(rows=5, cols=3, style="Table Grid")
-    risk_table.cell(0, 0).text = "Risk Level"
-    risk_table.cell(0, 1).text = "Count"
-    risk_table.cell(0, 2).text = "% of Total"
-
-    for row_idx, (level, count) in enumerate(
-        [
+    pdf.set_font("Helvetica", "", 10)
+    with pdf.table(headings_style=hs, num_heading_rows=1, col_widths=(70, 50, 50)) as table:
+        row = table.row()
+        for h in ("Risk Level", "Count", "% of Total"):
+            row.cell(h)
+        for level, count in [
             ("CRITICAL", critical_count),
             ("HIGH", high_count),
             ("MEDIUM", medium_count),
             ("LOW", low_count),
-        ],
-        start=1,
-    ):
-        pct = (count / total * 100) if total > 0 else 0.0
-        risk_table.cell(row_idx, 0).text = level
-        risk_table.cell(row_idx, 1).text = str(count)
-        risk_table.cell(row_idx, 2).text = f"{pct:.1f}%"
+        ]:
+            pct = (count / total * 100) if total > 0 else 0.0
+            row = table.row()
+            row.cell(level)
+            row.cell(str(count))
+            row.cell(f"{pct:.1f}%")
+    pdf.ln(4)
 
     # -----------------------------------------------------------------------
-    # Section 3 — Top 10 Most At-Risk Students (T-05-06: hard cap at 10 rows)
+    # Section 3 — Top 10 Most At-Risk Students
     # -----------------------------------------------------------------------
-    doc.add_heading("Top 10 Most At-Risk Students", level=1)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.multi_cell(0, 8, "Top 10 Most At-Risk Students", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
 
     top10 = df_copy.nlargest(10, cfg.COL_RISK_SCORE)
-    top10_table = doc.add_table(rows=len(top10) + 1, cols=5, style="Table Grid")
-    top10_table.cell(0, 0).text = "Rank"
-    top10_table.cell(0, 1).text = "Student Name"
-    top10_table.cell(0, 2).text = "Campus"
-    top10_table.cell(0, 3).text = "Risk Score"
-    top10_table.cell(0, 4).text = "Risk Level"
-
-    for row_idx, (_, student) in enumerate(top10.iterrows(), start=1):
-        top10_table.cell(row_idx, 0).text = str(row_idx)
-        top10_table.cell(row_idx, 1).text = str(student[cfg.COL_STUDENT_NAME])
-        top10_table.cell(row_idx, 2).text = str(student[cfg.COL_CAMPUS_ID])
-        top10_table.cell(row_idx, 3).text = f"{student[cfg.COL_RISK_SCORE]:.1f}"
-        top10_table.cell(row_idx, 4).text = str(student[cfg.COL_RISK_LEVEL])
+    pdf.set_font("Helvetica", "", 10)
+    with pdf.table(headings_style=hs, num_heading_rows=1, col_widths=(15, 55, 40, 30, 30)) as table:
+        row = table.row()
+        for h in ("Rank", "Student Name", "Campus", "Risk Score", "Risk Level"):
+            row.cell(h)
+        for rank_idx, (_, student) in enumerate(top10.iterrows(), start=1):
+            row = table.row()
+            row.cell(str(rank_idx))
+            row.cell(_safe_text(str(student[cfg.COL_STUDENT_NAME])))
+            row.cell(_safe_text(str(student[cfg.COL_CAMPUS_ID])))
+            row.cell(f"{student[cfg.COL_RISK_SCORE]:.1f}")
+            row.cell(str(student[cfg.COL_RISK_LEVEL]))
+    pdf.ln(4)
 
     # -----------------------------------------------------------------------
     # Section 4 — Campus Summary
     # -----------------------------------------------------------------------
-    doc.add_heading("Campus Summary", level=1)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.multi_cell(0, 8, "Campus Summary", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
 
     campus_groups = df_copy.groupby(cfg.COL_CAMPUS_ID, dropna=True)
-    campus_table = doc.add_table(
-        rows=campus_count + 1, cols=5, style="Table Grid"
-    )
-    campus_table.cell(0, 0).text = "Campus"
-    campus_table.cell(0, 1).text = "Total Students"
-    campus_table.cell(0, 2).text = "Critical"
-    campus_table.cell(0, 3).text = "High"
-    campus_table.cell(0, 4).text = "Intervention Coverage %"
-
-    for row_idx, (campus_id, campus_df) in enumerate(campus_groups, start=1):
-        c_total = len(campus_df)
-        c_critical = int((campus_df[cfg.COL_RISK_LEVEL] == "CRITICAL").sum())
-        c_high = int((campus_df[cfg.COL_RISK_LEVEL] == "HIGH").sum())
-        c_coverage = (
-            round((c_critical + c_high) / c_total * 100, 1) if c_total > 0 else 0.0
-        )
-        campus_table.cell(row_idx, 0).text = str(campus_id)
-        campus_table.cell(row_idx, 1).text = str(c_total)
-        campus_table.cell(row_idx, 2).text = str(c_critical)
-        campus_table.cell(row_idx, 3).text = str(c_high)
-        campus_table.cell(row_idx, 4).text = f"{c_coverage}%"
+    pdf.set_font("Helvetica", "", 10)
+    with pdf.table(headings_style=hs, num_heading_rows=1, col_widths=(45, 35, 25, 25, 40)) as table:
+        row = table.row()
+        for h in ("Campus", "Total Students", "Critical", "High", "Intervention Coverage %"):
+            row.cell(h)
+        for campus_id, campus_df in campus_groups:
+            c_total = len(campus_df)
+            c_critical = int((campus_df[cfg.COL_RISK_LEVEL] == "CRITICAL").sum())
+            c_high = int((campus_df[cfg.COL_RISK_LEVEL] == "HIGH").sum())
+            c_coverage = (
+                round((c_critical + c_high) / c_total * 100, 1) if c_total > 0 else 0.0
+            )
+            row = table.row()
+            row.cell(_safe_text(str(campus_id)))
+            row.cell(str(c_total))
+            row.cell(str(c_critical))
+            row.cell(str(c_high))
+            row.cell(f"{c_coverage}%")
+    pdf.ln(4)
 
     # -----------------------------------------------------------------------
-    # Section 5 — Student Deep-Dives (D-08: graceful degradation — skip empty tiers)
+    # Section 5 — Student Deep-Dives
     # -----------------------------------------------------------------------
-    doc.add_heading("Student Deep-Dives", level=1)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.multi_cell(0, 8, "Student Deep-Dives", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
 
-    # End-user-facing component columns — always present in enriched DataFrame
     component_cols = [
         cfg.COL_ATTENDANCE_RATE,
         cfg.COL_AVG_PRACTICE,
@@ -316,109 +332,130 @@ def _write_report(df: pd.DataFrame, run_log: dict, output_dir: Path) -> Path:
     for tier in ["CRITICAL", "HIGH", "MEDIUM", "LOW"]:
         tier_df = df_copy[df_copy[cfg.COL_RISK_LEVEL] == tier]
         if tier_df.empty:
-            continue  # D-08: skip tier with no students — no section added
+            continue
         student = tier_df.nlargest(1, cfg.COL_RISK_SCORE).iloc[0]
-        doc.add_heading(
-            f"{tier} — {student[cfg.COL_STUDENT_NAME]}", level=2
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.multi_cell(0, 7, _safe_text(f"{tier} - {student[cfg.COL_STUDENT_NAME]}"), new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Helvetica", "", 11)
+        pdf.multi_cell(
+            0, 6,
+            _safe_text(
+                f"Campus: {student[cfg.COL_CAMPUS_ID]} | "
+                f"Risk Score: {student[cfg.COL_RISK_SCORE]:.1f} | "
+                f"Level: {student[cfg.COL_RISK_LEVEL]}"
+            ),
+            new_x="LMARGIN", new_y="NEXT",
         )
-        doc.add_paragraph(
-            f"Campus: {student[cfg.COL_CAMPUS_ID]} | "
-            f"Risk Score: {student[cfg.COL_RISK_SCORE]:.1f} | "
-            f"Level: {student[cfg.COL_RISK_LEVEL]}"
+        pdf.set_font("Helvetica", "", 10)
+        with pdf.table(headings_style=hs, num_heading_rows=1, col_widths=(100, 70)) as table:
+            row = table.row()
+            row.cell("Component")
+            row.cell("Score")
+            for col, label in zip(component_cols, component_labels):
+                value = student[col] if col in df_copy.columns else "N/A"
+                row = table.row()
+                row.cell(label)
+                row.cell(_safe_text(str(value)))
+        pdf.set_font("Helvetica", "", 11)
+        pdf.multi_cell(
+            0, 6,
+            f"Facilitator Summary: {_safe_text(_str_or_na(student[cfg.COL_FACILITATOR_SUMMARY]))}",
+            new_x="LMARGIN", new_y="NEXT",
         )
-
-        # Component scores table: header + 4 component rows, 2 columns
-        comp_table = doc.add_table(
-            rows=len(component_cols) + 1, cols=2, style="Table Grid"
+        pdf.multi_cell(
+            0, 6,
+            f"Recommended Action: {_safe_text(_str_or_na(student[cfg.COL_RECOMMENDED_ACTION]))}",
+            new_x="LMARGIN", new_y="NEXT",
         )
-        comp_table.cell(0, 0).text = "Component"
-        comp_table.cell(0, 1).text = "Score"
-        for comp_row_idx, (col, label) in enumerate(
-            zip(component_cols, component_labels), start=1
-        ):
-            value = (
-                student[col] if col in df_copy.columns else "N/A"
-            )
-            comp_table.cell(comp_row_idx, 0).text = label
-            comp_table.cell(comp_row_idx, 1).text = str(value)
-
-        facilitator_summary = _str_or_na(student[cfg.COL_FACILITATOR_SUMMARY])
-        recommended_action = _str_or_na(student[cfg.COL_RECOMMENDED_ACTION])
-        doc.add_paragraph(f"Facilitator Summary: {facilitator_summary}")
-        doc.add_paragraph(f"Recommended Action: {recommended_action}")
+        pdf.ln(3)
 
     # -----------------------------------------------------------------------
     # Section 6 — Automated Data Cleanup Summary
     # -----------------------------------------------------------------------
-    doc.add_heading("Automated Data Cleanup Summary", level=1)
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.multi_cell(0, 8, "Automated Data Cleanup Summary", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
 
     warnings = run_log.get("data_quality_warnings", [])
     missing_count = sum(1 for w in warnings if w.get("type") == "missing_numeric")
     mismatch_count = sum(1 for w in warnings if w.get("type") == "type_mismatch")
     duplicate_count = sum(1 for w in warnings if w.get("type") == "duplicate_id")
 
+    pdf.set_font("Helvetica", "", 11)
     if not warnings:
-        doc.add_paragraph(
-            "No data quality issues detected. All student records were complete and valid."
+        pdf.multi_cell(
+            0, 6,
+            "No data quality issues detected. All student records were complete and valid.",
+            new_x="LMARGIN", new_y="NEXT",
         )
     else:
-        doc.add_paragraph(
-            "The pipeline automatically detected and resolved the following data quality issues "
-            "before scoring. No students were excluded — all records were corrected and included "
-            "in the risk analysis."
+        pdf.multi_cell(
+            0, 6,
+            "The pipeline automatically detected and resolved the following data quality "
+            "issues before scoring. No students were excluded - all records were corrected "
+            "and included in the risk analysis.",
+            new_x="LMARGIN", new_y="NEXT",
         )
-        summary_table = doc.add_table(rows=4, cols=3, style="Table Grid")
-        summary_table.cell(0, 0).text = "Issue Type"
-        summary_table.cell(0, 1).text = "Count"
-        summary_table.cell(0, 2).text = "Action Taken"
-        summary_table.cell(1, 0).text = "Missing numeric values"
-        summary_table.cell(1, 1).text = str(missing_count)
-        summary_table.cell(1, 2).text = "Filled with 0"
-        summary_table.cell(2, 0).text = "Non-numeric values"
-        summary_table.cell(2, 1).text = str(mismatch_count)
-        summary_table.cell(2, 2).text = "Coerced to 0"
-        summary_table.cell(3, 0).text = "Duplicate student IDs"
-        summary_table.cell(3, 1).text = str(duplicate_count)
-        summary_table.cell(3, 2).text = "Kept last record"
+        pdf.ln(2)
+        pdf.set_font("Helvetica", "", 10)
+        with pdf.table(headings_style=hs, num_heading_rows=1, col_widths=(80, 30, 60)) as table:
+            row = table.row()
+            for h in ("Issue Type", "Count", "Action Taken"):
+                row.cell(h)
+            for issue_type, count, action in [
+                ("Missing numeric values", str(missing_count), "Filled with 0"),
+                ("Non-numeric values", str(mismatch_count), "Coerced to 0"),
+                ("Duplicate student IDs", str(duplicate_count), "Kept last record"),
+            ]:
+                row = table.row()
+                row.cell(issue_type)
+                row.cell(count)
+                row.cell(action)
+    pdf.ln(4)
 
     # -----------------------------------------------------------------------
     # Section 7 — Methodology Appendix
     # -----------------------------------------------------------------------
-    doc.add_heading("Methodology Appendix", level=1)
-    doc.add_heading("Risk Score Formula", level=2)
-    doc.add_paragraph(
-        "Risk score (0-100) is computed as a weighted sum of four components:"
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.multi_cell(0, 8, "Methodology Appendix", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.multi_cell(0, 7, "Risk Score Formula", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(0, 6, "Risk score (0-100) is computed as a weighted sum of four components:", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "", 10)
+    with pdf.table(headings_style=hs, num_heading_rows=1, col_widths=(120, 50)) as table:
+        row = table.row()
+        row.cell("Component")
+        row.cell("Weight")
+        for component, weight in [
+            ("Attendance Rate", f"{cfg.WEIGHT_ATTENDANCE:.0%}"),
+            ("Avg Practice Questions", f"{cfg.WEIGHT_PRACTICE:.0%}"),
+            ("Trend Direction", f"{cfg.WEIGHT_TREND:.0%}"),
+            ("Days Since Last Note", f"{cfg.WEIGHT_NOTES:.0%}"),
+        ]:
+            row = table.row()
+            row.cell(component)
+            row.cell(weight)
+    pdf.ln(3)
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.multi_cell(0, 7, "Risk Level Thresholds", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 11)
+    pdf.multi_cell(0, 6, f"CRITICAL: score >= {cfg.RISK_THRESHOLD_CRITICAL}", new_x="LMARGIN", new_y="NEXT")
+    pdf.multi_cell(
+        0, 6, f"HIGH: {cfg.RISK_THRESHOLD_HIGH} <= score < {cfg.RISK_THRESHOLD_CRITICAL}",
+        new_x="LMARGIN", new_y="NEXT",
     )
-
-    # Weights table: header + 4 component rows, 2 columns
-    weights_table = doc.add_table(rows=5, cols=2, style="Table Grid")
-    weights_table.cell(0, 0).text = "Component"
-    weights_table.cell(0, 1).text = "Weight"
-    weights_table.cell(1, 0).text = "Attendance Rate"
-    weights_table.cell(1, 1).text = f"{cfg.WEIGHT_ATTENDANCE:.0%}"
-    weights_table.cell(2, 0).text = "Avg Practice Questions"
-    weights_table.cell(2, 1).text = f"{cfg.WEIGHT_PRACTICE:.0%}"
-    weights_table.cell(3, 0).text = "Trend Direction"
-    weights_table.cell(3, 1).text = f"{cfg.WEIGHT_TREND:.0%}"
-    weights_table.cell(4, 0).text = "Days Since Last Note"
-    weights_table.cell(4, 1).text = f"{cfg.WEIGHT_NOTES:.0%}"
-
-    doc.add_heading("Risk Level Thresholds", level=2)
-    doc.add_paragraph(f"CRITICAL: score >= {cfg.RISK_THRESHOLD_CRITICAL}")
-    doc.add_paragraph(
-        f"HIGH: {cfg.RISK_THRESHOLD_HIGH} <= score < {cfg.RISK_THRESHOLD_CRITICAL}"
+    pdf.multi_cell(
+        0, 6, f"MEDIUM: {cfg.RISK_THRESHOLD_MEDIUM} <= score < {cfg.RISK_THRESHOLD_HIGH}",
+        new_x="LMARGIN", new_y="NEXT",
     )
-    doc.add_paragraph(
-        f"MEDIUM: {cfg.RISK_THRESHOLD_MEDIUM} <= score < {cfg.RISK_THRESHOLD_HIGH}"
-    )
-    doc.add_paragraph(f"LOW: score < {cfg.RISK_THRESHOLD_MEDIUM}")
+    pdf.multi_cell(0, 6, f"LOW: score < {cfg.RISK_THRESHOLD_MEDIUM}", new_x="LMARGIN", new_y="NEXT")
 
-    # -----------------------------------------------------------------------
-    # Save — str() required on Windows for python-docx 1.1.2 (STATE.md constraint)
-    # -----------------------------------------------------------------------
-    path = output_dir / "intervention_report.docx"
-    doc.save(str(path))
-    logger.info("Wrote Word report: %s (%d students)", path, len(df_copy))
+    path = output_dir / "intervention_report.pdf"
+    pdf.output(str(path))
+    logger.info("Wrote PDF report: %s (%d students)", path, len(df_copy))
     return path
 
 
