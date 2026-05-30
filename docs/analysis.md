@@ -15,9 +15,9 @@ Student intake: 300 students processed in this run.
 Risk distribution at runtime:
 
 - CRITICAL: 1
-- HIGH: 71
-- MEDIUM: 162
-- LOW: 66
+- HIGH: 79
+- MEDIUM: 173
+- LOW: 47
 
 Duplicate student IDs removed during ingestion: 9. All data quality
 issues (missing metrics, type-mismatch strings, blank notes) were auto-resolved
@@ -27,8 +27,8 @@ by the ingestion layer — no manual cleanup required.
 
 A five-stage pipeline: ingest → score → LLM enrich → outputs → docs.
 
-LLM usage this run: 14 API calls, 25897 tokens total
-(18113 input + 7784 output). Fallbacks triggered: 30.
+LLM usage this run: 15 API calls, 32994 tokens total
+(20893 input + 12101 output). Fallbacks triggered: 10.
 
 Output files produced per run:
 
@@ -36,7 +36,7 @@ Output files produced per run:
 - campus_dashboard_<id>.xlsx — one tab per campus with LLM summaries
 - whatsapp_messages.csv — ready-to-send parent messages (UTF-8 BOM for Arabic)
 - dashboard.html — self-contained, filterable HTML dashboard (no server needed)
-- word_report.docx — executive summary with per-campus tables
+- intervention_report.pdf — executive summary with per-campus tables
 - docs/ — nine technical reference documents (this suite)
 
 ## What You Cut
