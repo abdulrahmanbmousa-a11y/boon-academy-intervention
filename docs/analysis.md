@@ -27,8 +27,8 @@ by the ingestion layer — no manual cleanup required.
 
 A five-stage pipeline: ingest → score → LLM enrich → outputs → docs.
 
-LLM usage this run: 15 API calls, 32994 tokens total
-(20893 input + 12101 output). Fallbacks triggered: 10.
+LLM usage this run: 7 API calls, 17558 tokens total
+(11258 input + 6300 output). Fallbacks triggered: 43.
 
 Output files produced per run:
 
