@@ -4,7 +4,7 @@ outputs/*
 !outputs/whatsapp_messages.csv
 !outputs/run_log.json
 !outputs/facilitator_dashboard.html
-!outputs/intervention_report.docx
+!outputs/intervention_report.pdf
 data/
 __pycache__/
 *.pyc
