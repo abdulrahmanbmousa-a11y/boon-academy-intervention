@@ -696,7 +696,7 @@ def write_outputs(
         Dict mapping output file keys to their resolved Path objects.
         Keys: "priority_list", "campus_{campus_id}" per campus, "whatsapp", "run_log",
               "dashboard" (Path to facilitator_dashboard.html, OUT-05),
-              "report" (Path to intervention_report.docx, OUT-04).
+              "report" (Path to intervention_report.pdf, OUT-04).
     """
     output_dir.mkdir(parents=True, exist_ok=True)   # D-03
 
