@@ -15,9 +15,9 @@ Student intake: 300 students processed in this run.
 Risk distribution at runtime:
 
 - CRITICAL: 1
-- HIGH: 79
-- MEDIUM: 173
-- LOW: 47
+- HIGH: 80
+- MEDIUM: 175
+- LOW: 44
 
 Duplicate student IDs removed during ingestion: 9. All data quality
 issues (missing metrics, type-mismatch strings, blank notes) were auto-resolved
@@ -27,8 +27,8 @@ by the ingestion layer — no manual cleanup required.
 
 A five-stage pipeline: ingest → score → LLM enrich → outputs → docs.
 
-LLM usage this run: 7 API calls, 17558 tokens total
-(11258 input + 6300 output). Fallbacks triggered: 43.
+LLM usage this run: 7 API calls, 12451 tokens total
+(8974 input + 3477 output). Fallbacks triggered: 56.
 
 Output files produced per run:
 
