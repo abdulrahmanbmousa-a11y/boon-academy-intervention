@@ -58,6 +58,10 @@ _TEMPLATES_PATH = Path(__file__).parent / "llm_templates.yaml"
 
 with _TEMPLATES_PATH.open("r", encoding="utf-8") as _f:
     _TEMPLATES: dict = yaml.safe_load(_f)
+
+_REQUIRED_LLM_KEYS: frozenset[str] = frozenset(
+    {cfg.COL_STUDENT_ID, cfg.COL_FACILITATOR_SUMMARY, cfg.COL_WHATSAPP_MESSAGE}
+)
 # Loaded once at import — not per-call (D-01)
 
 INTERVENTION_TOOL: dict = {
@@ -304,6 +308,8 @@ def _process_campus(
             )
             results = tool_block.input["students"]  # KeyError falls to outer except
             for r in results:
+                if missing := _REQUIRED_LLM_KEYS - r.keys():
+                    raise KeyError(f"LLM result missing keys: {missing}")
                 r.setdefault(cfg.COL_GENERATED_BY, "llm")
                 r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
             tokens["input"] += response.usage.input_tokens
@@ -343,6 +349,8 @@ def _process_campus(
                 )
                 results2 = tool_block2.input["students"]
                 for r in results2:
+                    if missing := _REQUIRED_LLM_KEYS - r.keys():
+                        raise KeyError(f"LLM result missing keys: {missing}")
                     r.setdefault(cfg.COL_GENERATED_BY, "llm")
                     r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
                 tokens["input"] += response2.usage.input_tokens
