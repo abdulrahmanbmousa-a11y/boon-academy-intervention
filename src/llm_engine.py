@@ -36,6 +36,8 @@ Pitfalls avoided:
 - Pitfall 6: http_client injected via Anthropic(http_client=...) with max_retries=0 in tests
 """
 import logging
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Optional
 
@@ -215,6 +217,162 @@ def _write_results_back(
 
 
 # ---------------------------------------------------------------------------
+# Campus processor (runs in thread pool — returns results, never mutates shared state)
+# ---------------------------------------------------------------------------
+
+def _process_campus(
+    campus_id: str,
+    campus_df: pd.DataFrame,
+    client: anthropic.Anthropic,
+) -> tuple[list[dict], int, dict[str, int], int]:
+    """Process all chunks for one campus.
+
+    Thread-safe — accumulates results locally without writing to the shared DataFrame.
+    Caller merges results back in the main thread after all campuses complete.
+
+    Returns:
+        Tuple of (results, api_calls, tokens_dict, fallbacks).
+        Every result dict carries 'generated_by' and 'llm_error_reason' keys so
+        _write_results_back() can use per-result values uniformly.
+    """
+    campus_results: list[dict] = []
+    api_calls: int = 0
+    tokens: dict[str, int] = {"input": 0, "output": 0}
+    fallbacks: int = 0
+
+    # D-05: CRITICAL first (descending risk_score), then HIGH (descending risk_score)
+    campus_students = campus_df.sort_values(
+        by=[cfg.COL_RISK_LEVEL, cfg.COL_RISK_SCORE],
+        ascending=[True, False],
+        key=lambda col: (
+            col.map({"CRITICAL": 0, "HIGH": 1})
+            if col.name == cfg.COL_RISK_LEVEL
+            else col
+        ),
+    )
+
+    logger.info(
+        f"Campus {campus_id}: processing {len(campus_students)} CRITICAL/HIGH students"
+    )
+
+    for i in range(0, len(campus_students), cfg.MAX_STUDENTS_PER_LLM_CALL):
+        chunk = campus_students.iloc[i : i + cfg.MAX_STUDENTS_PER_LLM_CALL]
+
+        # PII-safe student data — NEVER include student_name or parent_phone (LLM-08, T-03-04)
+        student_data = [
+            {
+                cfg.COL_STUDENT_ID: row[cfg.COL_STUDENT_ID],
+                cfg.COL_RISK_LEVEL: row[cfg.COL_RISK_LEVEL],
+                cfg.COL_RISK_SCORE: float(row[cfg.COL_RISK_SCORE]),
+                cfg.COL_ATTENDANCE_RATE: float(row[cfg.COL_ATTENDANCE_RATE]),
+                cfg.COL_AVG_PRACTICE: float(row[cfg.COL_AVG_PRACTICE]),
+                cfg.COL_TREND_DIR: row[cfg.COL_TREND_DIR],
+                cfg.COL_DAYS_SINCE_NOTE: float(row[cfg.COL_DAYS_SINCE_NOTE]),
+                cfg.COL_RECOMMENDED_ACTION: row[cfg.COL_RECOMMENDED_ACTION],
+            }
+            for _, row in chunk.iterrows()
+        ]
+
+        prompt = _build_prompt(student_data)
+
+        logger.debug(
+            f"Campus {campus_id}: chunk {i // cfg.MAX_STUDENTS_PER_LLM_CALL + 1} — "
+            f"{len(chunk)} students"
+        )
+
+        # Layer 1: SDK call (max_retries=1 in production, 0 in tests)
+        # Layer 2: one re-prompt after 1s sleep (rate-limiter breathing room)
+        # Layer 3: YAML template on re-prompt failure or malformed response
+        try:
+            response = client.messages.create(
+                model=cfg.ANTHROPIC_MODEL,
+                max_tokens=cfg.MAX_TOKENS,
+                temperature=cfg.TEMPERATURE,
+                tools=[INTERVENTION_TOOL],
+                tool_choice={"type": "tool", "name": "generate_interventions"},
+                messages=[{"role": "user", "content": prompt}],
+            )
+            if response.stop_reason == "max_tokens":
+                logger.warning(
+                    f"Campus {campus_id}: response truncated (max_tokens={cfg.MAX_TOKENS}) "
+                    f"— increase MAX_TOKENS env var"
+                )
+                raise ValueError("max_tokens exceeded")
+            tool_block = next(
+                b for b in response.content
+                if isinstance(b, anthropic.types.ToolUseBlock)
+            )
+            results = tool_block.input["students"]  # KeyError falls to outer except
+            for r in results:
+                r.setdefault(cfg.COL_GENERATED_BY, "llm")
+                r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
+            tokens["input"] += response.usage.input_tokens
+            tokens["output"] += response.usage.output_tokens
+            api_calls += 1
+            campus_results.extend(results)
+            logger.debug(
+                f"Campus {campus_id}: chunk LLM success — "
+                f"input_tokens={response.usage.input_tokens}, "
+                f"output_tokens={response.usage.output_tokens}"
+            )
+
+        except (
+            anthropic.APIConnectionError,
+            anthropic.APITimeoutError,
+            anthropic.RateLimitError,
+            anthropic.APIStatusError,
+        ) as exc:
+            error_reason = _classify_error(exc)
+            logger.warning(
+                f"Campus {campus_id}: API error ({error_reason}) after retries — "
+                f"re-prompt in 1s"
+            )
+            time.sleep(1)  # give rate limiter breathing room before Layer 2
+            try:
+                response2 = client.messages.create(
+                    model=cfg.ANTHROPIC_MODEL,
+                    max_tokens=cfg.MAX_TOKENS,
+                    temperature=cfg.TEMPERATURE,
+                    tools=[INTERVENTION_TOOL],
+                    tool_choice={"type": "tool", "name": "generate_interventions"},
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                tool_block2 = next(
+                    b for b in response2.content
+                    if isinstance(b, anthropic.types.ToolUseBlock)
+                )
+                results2 = tool_block2.input["students"]
+                for r in results2:
+                    r.setdefault(cfg.COL_GENERATED_BY, "llm")
+                    r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
+                tokens["input"] += response2.usage.input_tokens
+                tokens["output"] += response2.usage.output_tokens
+                api_calls += 1
+                campus_results.extend(results2)
+                logger.info(f"Campus {campus_id}: re-prompt succeeded for chunk")
+
+            except Exception:
+                logger.warning(
+                    f"Campus {campus_id}: re-prompt failed — "
+                    f"applying template fallback for {len(chunk)} students"
+                )
+                template_results = _apply_templates(chunk, error_reason)
+                campus_results.extend(template_results)
+                fallbacks += len(chunk)
+
+        except (KeyError, ValueError, StopIteration) as exc:
+            logger.warning(
+                f"Campus {campus_id}: malformed LLM tool response ({type(exc).__name__}) "
+                f"— applying template fallback for {len(chunk)} students"
+            )
+            template_results = _apply_templates(chunk, "malformed_response")
+            campus_results.extend(template_results)
+            fallbacks += len(chunk)
+
+    return campus_results, api_calls, tokens, fallbacks
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
@@ -231,10 +389,10 @@ def enrich_with_llm(
     using tool-use structured output.
 
     Three-layer fallback per chunk:
-      Layer 1: SDK automatic retry (max_retries=3 with exponential backoff).
+      Layer 1: SDK automatic retry (max_retries=1 with exponential backoff).
                Handles transient network errors without any code here.
-      Layer 2: One re-prompt attempt on APIConnectionError/APITimeoutError/
-               RateLimitError/APIStatusError after Layer 1 exhaustion.
+      Layer 2: One re-prompt attempt (after 1s sleep) on APIConnectionError/
+               APITimeoutError/RateLimitError/APIStatusError after Layer 1 exhaustion.
       Layer 3: YAML template fallback on re-prompt failure OR malformed tool response
                (KeyError/StopIteration). Always succeeds.
 
@@ -309,7 +467,7 @@ def enrich_with_llm(
         # Production path: SDK handles Layer 1 retries automatically (LLM-04)
         client = anthropic.Anthropic(
             api_key=api_key,
-            max_retries=3,
+            max_retries=1,
             timeout=float(cfg.TIMEOUT_SECONDS),
         )
     else:
@@ -333,141 +491,21 @@ def enrich_with_llm(
             "fallbacks_triggered": fallbacks,
         }
 
-    for campus_id, campus_df in at_risk_df.groupby(cfg.COL_CAMPUS_ID):
-        # D-05: CRITICAL first (descending risk_score), then HIGH (descending risk_score)
-        # Cannot use plain ascending=[True,False] on risk_level strings — "CRITICAL" > "HIGH"
-        # alphabetically, which sorts HIGH-first (Pitfall 2). Use map key instead.
-        campus_students = campus_df.sort_values(
-            by=[cfg.COL_RISK_LEVEL, cfg.COL_RISK_SCORE],
-            ascending=[True, False],
-            key=lambda col: (
-                col.map({"CRITICAL": 0, "HIGH": 1})
-                if col.name == cfg.COL_RISK_LEVEL
-                else col
-            ),
-        )
-
-        logger.info(
-            f"Campus {campus_id}: processing {len(campus_students)} CRITICAL/HIGH students"
-        )
-
-        # D-04: chunk loop — 15 students -> 2 calls (10+5), no truncation
-        for i in range(0, len(campus_students), cfg.MAX_STUDENTS_PER_LLM_CALL):
-            chunk = campus_students.iloc[i : i + cfg.MAX_STUDENTS_PER_LLM_CALL]
-
-            # Build PII-safe student data list for the prompt (LLM-08, T-03-04)
-            # NEVER include student_name or parent_phone
-            student_data = [
-                {
-                    cfg.COL_STUDENT_ID: row[cfg.COL_STUDENT_ID],
-                    cfg.COL_RISK_LEVEL: row[cfg.COL_RISK_LEVEL],
-                    cfg.COL_RISK_SCORE: float(row[cfg.COL_RISK_SCORE]),
-                    cfg.COL_ATTENDANCE_RATE: float(row[cfg.COL_ATTENDANCE_RATE]),
-                    cfg.COL_AVG_PRACTICE: float(row[cfg.COL_AVG_PRACTICE]),
-                    cfg.COL_TREND_DIR: row[cfg.COL_TREND_DIR],
-                    cfg.COL_DAYS_SINCE_NOTE: float(row[cfg.COL_DAYS_SINCE_NOTE]),
-                    cfg.COL_RECOMMENDED_ACTION: row[cfg.COL_RECOMMENDED_ACTION],
-                }
-                for _, row in chunk.iterrows()
-            ]
-
-            prompt = _build_prompt(student_data)
-
-            logger.debug(
-                f"Campus {campus_id}: chunk {i // cfg.MAX_STUDENTS_PER_LLM_CALL + 1} — "
-                f"{len(chunk)} students"
-            )
-
-            # ----------------------------------------------------------
-            # Layer 1: SDK call (max_retries=3 in production, 0 in tests)
-            # Layer 2: one re-prompt on API exceptions
-            # Layer 3: YAML template on re-prompt failure or malformed response
-            # ----------------------------------------------------------
-            try:
-                response = client.messages.create(
-                    model=cfg.ANTHROPIC_MODEL,
-                    max_tokens=cfg.MAX_TOKENS,
-                    temperature=cfg.TEMPERATURE,
-                    tools=[INTERVENTION_TOOL],
-                    tool_choice={"type": "tool", "name": "generate_interventions"},
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                # Parse tool response — KeyError -> Layer 3 (Pitfall 1, T-03-05)
-                if response.stop_reason == "max_tokens":
-                    logger.warning(
-                        f"Campus {campus_id}: response truncated (max_tokens={cfg.MAX_TOKENS}) "
-                        f"— increase MAX_TOKENS env var"
-                    )
-                    raise ValueError("max_tokens exceeded")
-                tool_block = next(
-                    b for b in response.content
-                    if isinstance(b, anthropic.types.ToolUseBlock)
-                )
-                results = tool_block.input["students"]  # KeyError falls to outer except
-                tokens["input"] += response.usage.input_tokens
-                tokens["output"] += response.usage.output_tokens
-                api_calls += 1
-                _write_results_back(df, results, generated_by="llm")
-                logger.debug(
-                    f"Campus {campus_id}: chunk LLM success — "
-                    f"input_tokens={response.usage.input_tokens}, "
-                    f"output_tokens={response.usage.output_tokens}"
-                )
-
-            except (
-                anthropic.APIConnectionError,
-                anthropic.APITimeoutError,
-                anthropic.RateLimitError,
-                anthropic.APIStatusError,
-            ) as exc:
-                # Layer 1 exhausted — attempt Layer 2 re-prompt
-                error_reason = _classify_error(exc)
-                logger.warning(
-                    f"Campus {campus_id}: API error ({error_reason}) after retries — "
-                    f"attempting re-prompt"
-                )
-                try:
-                    # Layer 2: simplified re-prompt (same structure)
-                    response2 = client.messages.create(
-                        model=cfg.ANTHROPIC_MODEL,
-                        max_tokens=cfg.MAX_TOKENS,
-                        temperature=cfg.TEMPERATURE,
-                        tools=[INTERVENTION_TOOL],
-                        tool_choice={"type": "tool", "name": "generate_interventions"},
-                        messages=[{"role": "user", "content": prompt}],
-                    )
-                    tool_block2 = next(
-                        b for b in response2.content
-                        if isinstance(b, anthropic.types.ToolUseBlock)
-                    )
-                    results2 = tool_block2.input["students"]
-                    tokens["input"] += response2.usage.input_tokens
-                    tokens["output"] += response2.usage.output_tokens
-                    api_calls += 1
-                    _write_results_back(df, results2, generated_by="llm")
-                    logger.info(
-                        f"Campus {campus_id}: re-prompt succeeded for chunk"
-                    )
-
-                except Exception:
-                    # Layer 3: YAML template fallback
-                    logger.warning(
-                        f"Campus {campus_id}: re-prompt failed — "
-                        f"applying template fallback for {len(chunk)} students"
-                    )
-                    template_results = _apply_templates(chunk, error_reason)
-                    _write_results_back(df, template_results, generated_by="template")
-                    fallbacks += len(chunk)
-
-            except (KeyError, ValueError, StopIteration) as exc:
-                # Malformed tool response — skip directly to Layer 3 (Pitfall 1, T-03-05)
-                logger.warning(
-                    f"Campus {campus_id}: malformed LLM tool response ({type(exc).__name__}) "
-                    f"— applying template fallback for {len(chunk)} students"
-                )
-                template_results = _apply_templates(chunk, "malformed_response")
-                _write_results_back(df, template_results, generated_by="template")
-                fallbacks += len(chunk)
+    # D-04 / parallel: all campuses submitted at once; results merged in main thread
+    campus_groups = list(at_risk_df.groupby(cfg.COL_CAMPUS_ID))
+    with ThreadPoolExecutor(max_workers=cfg.LLM_MAX_WORKERS) as executor:
+        futures = {
+            executor.submit(_process_campus, campus_id, campus_df, client): campus_id
+            for campus_id, campus_df in campus_groups
+        }
+        for future in as_completed(futures):
+            campus_results, c_calls, c_tokens, c_fallbacks = future.result()
+            # Write-back runs in main thread — no concurrent mutation of df
+            _write_results_back(df, campus_results, generated_by="llm")
+            api_calls += c_calls
+            tokens["input"] += c_tokens["input"]
+            tokens["output"] += c_tokens["output"]
+            fallbacks += c_fallbacks
 
     # Aggregate log only — no per-student identifiers (LLM-08, T-03-03)
     logger.info(

@@ -229,10 +229,10 @@ def test_tool_use_structured_output(respx_mock) -> None:
 
 
 def test_max_retries_config(monkeypatch) -> None:
-    """LLM-04: Production Anthropic client is created with max_retries=3.
+    """LLM-04: Production Anthropic client is created with max_retries=1.
 
     When enrich_with_llm is called without an http_client (production path),
-    the Anthropic constructor must receive max_retries=3.
+    the Anthropic constructor must receive max_retries=1.
     """
     captured_kwargs: dict = {}
 
@@ -260,8 +260,8 @@ def test_max_retries_config(monkeypatch) -> None:
     # http_client=None triggers the production branch
     enrich_with_llm(df, "test-key", http_client=None)
 
-    assert captured_kwargs.get("max_retries") == 3, (
-        f"LLM-04: production Anthropic client must have max_retries=3, "
+    assert captured_kwargs.get("max_retries") == 1, (
+        f"LLM-04: production Anthropic client must have max_retries=1, "
         f"got max_retries={captured_kwargs.get('max_retries')}"
     )
 

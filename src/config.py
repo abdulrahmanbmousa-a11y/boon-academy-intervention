@@ -34,9 +34,10 @@ DOCS_DIR: Path = Path(os.getenv("DOCS_DIR", "docs"))
 # ---------------------------------------------------------------------------
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 MAX_STUDENTS_PER_LLM_CALL: int = int(os.getenv("MAX_STUDENTS_PER_LLM_CALL", "10"))
+LLM_MAX_WORKERS: int = int(os.getenv("LLM_MAX_WORKERS", "5"))
 
 # LLM tunables — all env-overridable, safe defaults (D-09)
-ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5")
 _llm_enabled_raw = os.getenv("LLM_ENABLED", "true").lower()
 if _llm_enabled_raw not in ("true", "false"):
     raise ValueError(
@@ -45,7 +46,7 @@ if _llm_enabled_raw not in ("true", "false"):
 LLM_ENABLED: bool = _llm_enabled_raw == "true"
 MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "4096"))
 TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.3"))
-TIMEOUT_SECONDS: int = int(os.getenv("TIMEOUT_SECONDS", "30"))
+TIMEOUT_SECONDS: int = int(os.getenv("TIMEOUT_SECONDS", "10"))
 
 # ---------------------------------------------------------------------------
 # Risk thresholds (D-07) — CRITICAL and HIGH are env-overridable; MEDIUM is fixed
