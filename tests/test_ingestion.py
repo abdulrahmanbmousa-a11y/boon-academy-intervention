@@ -202,6 +202,60 @@ def test_empty_csv_does_not_crash() -> None:
 # Security V7: PII-safe logging assertion (caplog)
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Real-schema columns: grade, target_score, learning_track, quiz data
+# ---------------------------------------------------------------------------
+
+def test_new_metadata_columns_present(sample_csv_paths: dict) -> None:
+    """New metadata cols grade/target_score/learning_track flow through ingest."""
+    df = ingest(sample_csv_paths)
+    for col in [cfg.COL_GRADE, cfg.COL_TARGET_SCORE, cfg.COL_LEARNING_TRACK]:
+        assert col in df.columns, f"Column {col!r} missing from merged DataFrame"
+    assert df[cfg.COL_GRADE].dtype == pd.StringDtype(), (
+        f"COL_GRADE must be StringDtype, got {df[cfg.COL_GRADE].dtype}"
+    )
+    assert df[cfg.COL_LEARNING_TRACK].dtype == pd.StringDtype(), (
+        f"COL_LEARNING_TRACK must be StringDtype, got {df[cfg.COL_LEARNING_TRACK].dtype}"
+    )
+
+
+def test_quiz_score_aggregated_last_non_null(sample_csv_paths: dict) -> None:
+    """last_quiz_score is the last non-null value per student across daily rows.
+
+    happy fixture: S0101 has quiz=72 on row 5 only; rows 1-4 are blank.
+    Aggregation must pick up 72.0, not NA.
+    """
+    df = ingest(sample_csv_paths)
+    row = df[df[cfg.COL_STUDENT_ID] == "S0101"].iloc[0]
+    assert float(row["last_quiz_score"]) == pytest.approx(72.0), (
+        f"Expected last_quiz_score=72.0 for S0101, got {row['last_quiz_score']}"
+    )
+
+
+def test_quiz_score_gap_computed_and_non_negative(sample_csv_paths: dict) -> None:
+    """quiz_score_gap = target_score - last_quiz_score, clipped >= 0.
+
+    happy fixture: S0101 target=80, quiz=72, gap=8.
+    S0102 target=85, quiz=55, gap=30.
+    All gaps must be >= 0.
+    """
+    df = ingest(sample_csv_paths)
+    assert cfg.COL_QUIZ_GAP in df.columns, f"Column {cfg.COL_QUIZ_GAP!r} missing"
+
+    row_s0101 = df[df[cfg.COL_STUDENT_ID] == "S0101"].iloc[0]
+    assert float(row_s0101[cfg.COL_QUIZ_GAP]) == pytest.approx(8.0), (
+        f"Expected quiz_score_gap=8.0 for S0101, got {row_s0101[cfg.COL_QUIZ_GAP]}"
+    )
+
+    row_s0102 = df[df[cfg.COL_STUDENT_ID] == "S0102"].iloc[0]
+    assert float(row_s0102[cfg.COL_QUIZ_GAP]) == pytest.approx(30.0), (
+        f"Expected quiz_score_gap=30.0 for S0102, got {row_s0102[cfg.COL_QUIZ_GAP]}"
+    )
+
+    non_null_gaps = df[cfg.COL_QUIZ_GAP].dropna()
+    assert (non_null_gaps >= 0).all(), "quiz_score_gap has negative values — clip(lower=0) not applied"
+
+
 def test_pii_safe_logging(caplog: pytest.LogCaptureFixture) -> None:
     """Security V7: logger.warning/info must include only student_id — never student_name/phone/note_text."""
     data_paths = {

@@ -29,27 +29,34 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 DTYPE_METRICS: dict[str, str] = {
-    cfg.COL_STUDENT_ID:  "string",
-    cfg.COL_METRIC_DATE: "string",    # parse to datetime AFTER load (Pitfall #6)
-    cfg.COL_SESSION_MIN: "string",    # load as string so read_csv never crashes on "many"/"abc"
-    cfg.COL_PRACTICE_Q:  "string",    # _fill_numeric_with_zero applies pd.to_numeric(errors='coerce')
+    cfg.COL_STUDENT_ID:      "string",
+    "date":                  "string",    # raw column name in real file — renamed after load
+    cfg.COL_SESSION_MIN:     "string",    # load as string; _fill_numeric_with_zero coerces
+    cfg.COL_PRACTICE_Q:      "string",    # load as string; _fill_numeric_with_zero coerces
+    cfg.COL_LAST_QUIZ_SCORE: "Float64",   # nullable numeric — last non-null aggregated
+    cfg.COL_DAYS_UNTIL_QUIZ: "Float64",   # nullable numeric — last non-null aggregated
 }
 
 # The final in-memory dtype for numeric columns after coercion (Float64 = nullable, capital F)
 _NUMERIC_DTYPE: str = "Float64"
 
 DTYPE_NOTES: dict[str, str] = {
-    cfg.COL_STUDENT_ID: "string",
-    cfg.COL_NOTE_DATE:  "string",   # parse to datetime AFTER load
-    cfg.COL_NOTE_TEXT:  "string",
+    "note_id":                 "string",   # present in real file — read but not used downstream
+    cfg.COL_STUDENT_ID:        "string",
+    cfg.COL_FACILITATOR_EMAIL: "string",   # present in real file — not merged (metadata has it)
+    "date":                    "string",   # raw column name in real file — renamed after load
+    cfg.COL_NOTE_TEXT:         "string",
 }
 
 DTYPE_META: dict[str, str] = {
     cfg.COL_STUDENT_ID:        "string",
     cfg.COL_STUDENT_NAME:      "string",
     cfg.COL_CAMPUS_ID:         "string",
-    cfg.COL_PARENT_PHONE:      "string",   # CRITICAL — never let pandas infer as int (Pitfall #3)
+    cfg.COL_PARENT_PHONE:      "string",   # CRITICAL — never infer as int (Pitfall #3)
     cfg.COL_FACILITATOR_EMAIL: "string",
+    cfg.COL_GRADE:             "string",   # "10" or "11" — kept as string
+    cfg.COL_TARGET_SCORE:      "Float64",  # nullable numeric
+    cfg.COL_LEARNING_TRACK:    "string",   # Standard/Accelerated/Remedial
 }
 
 # ---------------------------------------------------------------------------
@@ -285,7 +292,9 @@ def ingest(data_paths: dict[str, Path]) -> pd.DataFrame:
     # Pattern 2: dtype-locked CSV reads
     # ------------------------------------------------------------------
     metrics = _read_csv_safe(data_paths["metrics"], DTYPE_METRICS)
+    metrics = metrics.rename(columns={"date": cfg.COL_METRIC_DATE})
     notes = _read_csv_safe(data_paths["notes"], DTYPE_NOTES)
+    notes = notes.rename(columns={"date": cfg.COL_NOTE_DATE})
     metadata = _read_csv_safe(data_paths["metadata"], DTYPE_META)
 
     # ------------------------------------------------------------------
@@ -326,6 +335,14 @@ def ingest(data_paths: dict[str, Path]) -> pd.DataFrame:
                 daily_session_series=(cfg.COL_SESSION_MIN, list),
                 daily_practice_series=(cfg.COL_PRACTICE_Q, list),
                 daily_dates=(cfg.COL_METRIC_DATE, list),
+                last_quiz_score=(
+                    cfg.COL_LAST_QUIZ_SCORE,
+                    lambda s: s.dropna().iloc[-1] if s.notna().any() else pd.NA,
+                ),
+                days_until_next_quiz=(
+                    cfg.COL_DAYS_UNTIL_QUIZ,
+                    lambda s: s.dropna().iloc[-1] if s.notna().any() else pd.NA,
+                ),
             )
             .reset_index()
         )
@@ -340,6 +357,8 @@ def ingest(data_paths: dict[str, Path]) -> pd.DataFrame:
                 "daily_session_series",
                 "daily_practice_series",
                 "daily_dates",
+                "last_quiz_score",
+                "days_until_next_quiz",
             ]
         )
 
@@ -377,6 +396,13 @@ def ingest(data_paths: dict[str, Path]) -> pd.DataFrame:
     for col in numeric_fill_cols:
         if col in df.columns:
             df[col] = df[col].fillna(0)
+
+    # Compute academic gap: target minus last quiz score, clipped >= 0.
+    # NaN preserved for students with no quiz data (neutral score handled in risk_engine).
+    if cfg.COL_TARGET_SCORE in df.columns and "last_quiz_score" in df.columns:
+        df[cfg.COL_QUIZ_GAP] = (
+            df[cfg.COL_TARGET_SCORE].astype("Float64") - df["last_quiz_score"].astype("Float64")
+        ).clip(lower=0)
 
     # ------------------------------------------------------------------
     # Attach warnings side-channel (caller flushes to run_log in Phase 4)

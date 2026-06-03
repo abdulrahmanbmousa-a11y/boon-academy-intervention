@@ -1,6 +1,6 @@
-student_id,note_date,note_text
-S0101,2026-05-03,Missed class today
-S0101,2026-05-07,Strong performance this week
-S0102,2026-05-04,Parent meeting scheduled
-S0201,2026-05-05,Disengaged in group work
-S0301,2026-05-06,Submitted late assignment
+note_id,student_id,facilitator_email,date,note_text
+N001,S0101,facilitator.c01@boon.academy,2026-05-03,Missed class today
+N002,S0101,facilitator.c01@boon.academy,2026-05-07,Strong performance this week
+N003,S0102,facilitator.c01@boon.academy,2026-05-04,Parent meeting scheduled
+N004,S0201,facilitator.c02@boon.academy,2026-05-05,Disengaged in group work
+N005,S0301,facilitator.c03@boon.academy,2026-05-06,Submitted late assignment
