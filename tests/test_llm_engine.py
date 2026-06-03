@@ -692,3 +692,65 @@ def test_prompt_includes_academic_context(respx_mock) -> None:
     assert cfg.COL_QUIZ_GAP in prompt_text, (
         f"REBUILD-P4: '{cfg.COL_QUIZ_GAP}' key must appear in prompt"
     )
+
+
+def test_partial_recovery_on_missing_keys(respx_mock, monkeypatch) -> None:
+    """LLM-10: When one student result is missing required keys, only that student
+    gets a template fallback — valid results from the same chunk are still used.
+
+    Prevents the per-chunk over-fallback where one bad result poisons the whole batch.
+    This was the root cause of C04's 100% fallback rate in production (REBUILD-P5).
+    """
+    monkeypatch.setattr(cfg, "MAX_STUDENTS_PER_LLM_CALL", 10)
+
+    df = pd.DataFrame([
+        _build_student_row(student_id="S0001", campus_id="C01", risk_level="HIGH"),
+        _build_student_row(student_id="S0002", campus_id="C01", risk_level="HIGH"),
+    ])
+
+    # S0001 has all required keys; S0002 is missing whatsapp_message
+    respx_mock.post(ANTHROPIC_API_URL).mock(
+        return_value=httpx.Response(
+            200,
+            json=_make_tool_response([
+                {
+                    cfg.COL_STUDENT_ID: "S0001",
+                    cfg.COL_FACILITATOR_SUMMARY: "Valid summary sentence one. Sentence two.",
+                    cfg.COL_WHATSAPP_MESSAGE: "Dear parent of S0001.",
+                },
+                {
+                    cfg.COL_STUDENT_ID: "S0002",
+                    cfg.COL_FACILITATOR_SUMMARY: "Another summary. Follow up required.",
+                    # whatsapp_message intentionally absent
+                },
+            ]),
+        )
+    )
+
+    http_client = httpx.Client(transport=httpx.MockTransport(respx_mock.handler))
+    result_df, counts = enrich_with_llm(df, "test-key", http_client=http_client)
+
+    s0001 = result_df[result_df[cfg.COL_STUDENT_ID] == "S0001"].iloc[0]
+    s0002 = result_df[result_df[cfg.COL_STUDENT_ID] == "S0002"].iloc[0]
+
+    assert s0001[cfg.COL_GENERATED_BY] == "llm", (
+        "LLM-10: S0001 had valid keys — must use LLM content, not template"
+    )
+    assert s0001[cfg.COL_WHATSAPP_MESSAGE] == "Dear parent of S0001.", (
+        "LLM-10: S0001 LLM whatsapp_message must be preserved"
+    )
+    assert s0002[cfg.COL_GENERATED_BY] == "template", (
+        "LLM-10: S0002 missing whatsapp_message — must fall back to template"
+    )
+    assert s0002[cfg.COL_LLM_ERROR_REASON] == "malformed_response", (
+        "LLM-10: S0002 template fallback must set llm_error_reason='malformed_response'"
+    )
+    assert s0002[cfg.COL_WHATSAPP_MESSAGE] is not None, (
+        "LLM-10: template must provide a whatsapp_message for the fallback student"
+    )
+    assert counts["api_calls_made"] == 1, (
+        "LLM-10: partial success still counts as one API call"
+    )
+    assert counts["fallbacks_triggered"] == 1, (
+        "LLM-10: only the bad student counts as a fallback, not the whole chunk"
+    )

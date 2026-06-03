@@ -324,15 +324,28 @@ def _process_campus(
                 if isinstance(b, anthropic.types.ToolUseBlock)
             )
             results = tool_block.input["students"]  # KeyError falls to outer except
+            valid_results: list[dict] = []
             for r in results:
                 if missing := _REQUIRED_LLM_KEYS - r.keys():
-                    raise KeyError(f"LLM result missing keys: {missing}")
-                r.setdefault(cfg.COL_GENERATED_BY, "llm")
-                r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
+                    logger.warning(
+                        f"Campus {campus_id}: student result missing keys {missing} "
+                        "— template fallback for 1 student"
+                    )
+                    sid = r.get(cfg.COL_STUDENT_ID)
+                    bad_rows = (
+                        chunk[chunk[cfg.COL_STUDENT_ID] == sid]
+                        if sid else chunk.iloc[0:0]
+                    )
+                    campus_results.extend(_apply_templates(bad_rows, "malformed_response"))
+                    fallbacks += len(bad_rows)
+                else:
+                    r.setdefault(cfg.COL_GENERATED_BY, "llm")
+                    r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
+                    valid_results.append(r)
             tokens["input"] += response.usage.input_tokens
             tokens["output"] += response.usage.output_tokens
             api_calls += 1
-            campus_results.extend(results)
+            campus_results.extend(valid_results)
             logger.debug(
                 f"Campus {campus_id}: chunk LLM success — "
                 f"input_tokens={response.usage.input_tokens}, "
@@ -365,15 +378,30 @@ def _process_campus(
                     if isinstance(b, anthropic.types.ToolUseBlock)
                 )
                 results2 = tool_block2.input["students"]
+                valid_results2: list[dict] = []
                 for r in results2:
                     if missing := _REQUIRED_LLM_KEYS - r.keys():
-                        raise KeyError(f"LLM result missing keys: {missing}")
-                    r.setdefault(cfg.COL_GENERATED_BY, "llm")
-                    r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
+                        logger.warning(
+                            f"Campus {campus_id}: re-prompt student result missing "
+                            f"keys {missing} — template fallback for 1 student"
+                        )
+                        sid = r.get(cfg.COL_STUDENT_ID)
+                        bad_rows = (
+                            chunk[chunk[cfg.COL_STUDENT_ID] == sid]
+                            if sid else chunk.iloc[0:0]
+                        )
+                        campus_results.extend(
+                            _apply_templates(bad_rows, "malformed_response")
+                        )
+                        fallbacks += len(bad_rows)
+                    else:
+                        r.setdefault(cfg.COL_GENERATED_BY, "llm")
+                        r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
+                        valid_results2.append(r)
                 tokens["input"] += response2.usage.input_tokens
                 tokens["output"] += response2.usage.output_tokens
                 api_calls += 1
-                campus_results.extend(results2)
+                campus_results.extend(valid_results2)
                 logger.info(f"Campus {campus_id}: re-prompt succeeded for chunk")
 
             except Exception:
