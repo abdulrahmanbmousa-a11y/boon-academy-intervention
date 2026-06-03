@@ -170,14 +170,18 @@ def minimal_enriched_df() -> pd.DataFrame:
         ],
         cfg.COL_GENERATED_BY: ["llm", "template", None, "llm", None],
         cfg.COL_LLM_ERROR_REASON: [None, None, None, None, None],
-        # Component scores: attendance*0.35 + practice*0.30 + trend*0.20 + notes*0.15
-        # Row 0 (S001): 31.5 + 27.0 + 20.0 + 11.5 = 90.0
-        # Row 1 (S002): 24.5 + 22.5 + 10.0 +  8.0 = 65.0 (risk_score stored as 75.0 — fixture)
-        # Row 2 (S003):  7.0 + 12.0 + 10.0 +  3.0 = 32.0 (approx MEDIUM)
-        # Row 3 (S004): 28.0 + 24.0 + 20.0 +  8.0 = 80.0
-        # Row 4 (S005):  1.5 +  3.0 +  0.0 +  0.5 =  5.0 (approx LOW)
+        # Component scores (5-component formula — stored values are NOT recomputable;
+        # this fixture is ONLY valid for output_generator and llm_engine tests).
         cfg.COL_ATTENDANCE_COMPONENT: [31.5, 24.5, 7.0, 28.0, 1.5],
         cfg.COL_PRACTICE_COMPONENT: [27.0, 22.5, 12.0, 24.0, 3.0],
         cfg.COL_TREND_COMPONENT: [20.0, 10.0, 10.0, 20.0, 0.0],
         cfg.COL_NOTES_COMPONENT: [11.5, 8.0, 3.0, 8.0, 0.5],
+        # New real-schema columns
+        # academic = (quiz_score_gap / 50) * 100: gaps [35,20,5,15,3] -> [70,40,10,30,6]
+        cfg.COL_GRADE: ["10", "11", "10", "11", "10"],
+        cfg.COL_LEARNING_TRACK: ["Standard", "Accelerated", "Standard", "Remedial", "Standard"],
+        cfg.COL_TARGET_SCORE: [85.0, 90.0, 80.0, 60.0, 88.0],
+        "last_quiz_score": [50.0, 70.0, 75.0, 45.0, 85.0],
+        cfg.COL_QUIZ_GAP: [35.0, 20.0, 5.0, 15.0, 3.0],
+        cfg.COL_ACADEMIC_COMPONENT: [70.0, 40.0, 10.0, 30.0, 6.0],
     })
