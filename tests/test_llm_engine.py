@@ -39,7 +39,9 @@ def _build_student_row(
 ) -> dict:
     """Build a minimal student row dict for pd.DataFrame([_build_student_row(...)]).
 
-    Includes all columns output by score_risk() that enrich_with_llm() consumes.
+    Includes all columns output by score_risk() that enrich_with_llm() consumes,
+    including Phase 3/4 academic columns (grade, learning_track, target_score,
+    last_quiz_score, quiz_score_gap, academic_component).
     Uses cfg.COL_* for all dict keys — no bare column-name strings.
     student_name and parent_phone are present in the DataFrame but must NOT reach
     the API prompt or any log output (LLM-08).
@@ -62,6 +64,13 @@ def _build_student_row(
         cfg.COL_PRACTICE_COMPONENT: 15.0,
         cfg.COL_TREND_COMPONENT: 10.0,
         cfg.COL_NOTES_COMPONENT: 5.0,
+        # Phase 3/4 academic context columns
+        cfg.COL_GRADE: "10",
+        cfg.COL_LEARNING_TRACK: "Standard",
+        cfg.COL_TARGET_SCORE: 85.0,
+        cfg.COL_LAST_QUIZ_SCORE: 50.0,
+        cfg.COL_QUIZ_GAP: 35.0,
+        cfg.COL_ACADEMIC_COMPONENT: 70.0,
     }
 
 
@@ -630,4 +639,56 @@ def test_no_bare_column_strings_in_llm_engine() -> None:
         f"Unexpected bare lowercase strings in src/llm_engine.py: {sorted(unexpected)}. "
         f"If these are not column names, add them to the allowed set in this test. "
         f"If they are column names, replace with cfg.COL_* constants."
+    )
+
+
+def test_prompt_includes_academic_context(respx_mock) -> None:
+    """REBUILD-P4: student_data sent to Claude includes grade, learning_track,
+    target_score, last_quiz_score, and quiz_score_gap fields.
+
+    Captures the raw API request body and asserts all 5 academic context
+    field keys appear in the serialised student_data block sent to Claude.
+    """
+    import json as _json
+
+    captured: dict = {}
+
+    def _capture_and_respond(request):
+        captured["body"] = _json.loads(request.content)
+        return httpx.Response(
+            200,
+            json=_make_tool_response([
+                {
+                    cfg.COL_STUDENT_ID: "S0001",
+                    cfg.COL_FACILITATOR_SUMMARY: "Academic context test. Action required.",
+                    cfg.COL_WHATSAPP_MESSAGE: "Academic context parent message.",
+                }
+            ]),
+        )
+
+    df = pd.DataFrame([
+        _build_student_row(student_id="S0001", campus_id="C01", risk_level="CRITICAL"),
+    ])
+
+    respx_mock.post(ANTHROPIC_API_URL).mock(side_effect=_capture_and_respond)
+    http_client = httpx.Client(transport=httpx.MockTransport(respx_mock.handler))
+    enrich_with_llm(df, "test-key", http_client=http_client)
+
+    prompt_text = str(captured["body"].get("messages", [{}])[0].get("content", ""))
+
+    assert cfg.COL_GRADE in prompt_text, (
+        f"REBUILD-P4: '{cfg.COL_GRADE}' key must appear in prompt — "
+        f"add cfg.COL_GRADE to student_data dict in _process_campus()"
+    )
+    assert cfg.COL_LEARNING_TRACK in prompt_text, (
+        f"REBUILD-P4: '{cfg.COL_LEARNING_TRACK}' key must appear in prompt"
+    )
+    assert cfg.COL_TARGET_SCORE in prompt_text, (
+        f"REBUILD-P4: '{cfg.COL_TARGET_SCORE}' key must appear in prompt"
+    )
+    assert cfg.COL_LAST_QUIZ_SCORE in prompt_text, (
+        f"REBUILD-P4: '{cfg.COL_LAST_QUIZ_SCORE}' key must appear in prompt"
+    )
+    assert cfg.COL_QUIZ_GAP in prompt_text, (
+        f"REBUILD-P4: '{cfg.COL_QUIZ_GAP}' key must appear in prompt"
     )

@@ -170,9 +170,11 @@ def _apply_templates(chunk: pd.DataFrame, error_reason: str) -> list[dict]:
 def _build_prompt(student_data: list[dict]) -> str:
     """Build a PII-safe batch prompt string from a list of student dicts.
 
-    Only includes: student_id, risk_level, risk_score, attendance_rate,
+    Includes: student_id, risk_level, risk_score, attendance_rate,
     avg_practice_questions, trend_direction, days_since_last_note,
-    recommended_action. Never includes student_name or parent_phone (LLM-08, T-03-04).
+    recommended_action, grade, learning_track, target_score,
+    last_quiz_score, quiz_score_gap (REBUILD-P4).
+    Never includes student_name or parent_phone (LLM-08, T-03-04).
     """
     return (
         f"Generate intervention content for {len(student_data)} at-risk students. "
@@ -273,6 +275,21 @@ def _process_campus(
                 cfg.COL_TREND_DIR: row[cfg.COL_TREND_DIR],
                 cfg.COL_DAYS_SINCE_NOTE: float(row[cfg.COL_DAYS_SINCE_NOTE]),
                 cfg.COL_RECOMMENDED_ACTION: row[cfg.COL_RECOMMENDED_ACTION],
+                # Academic context (REBUILD-P4) — aids Claude in personalising messages
+                cfg.COL_GRADE: row[cfg.COL_GRADE],
+                cfg.COL_LEARNING_TRACK: row[cfg.COL_LEARNING_TRACK],
+                cfg.COL_TARGET_SCORE: (
+                    float(row[cfg.COL_TARGET_SCORE])
+                    if pd.notna(row[cfg.COL_TARGET_SCORE]) else None
+                ),
+                cfg.COL_LAST_QUIZ_SCORE: (
+                    float(row[cfg.COL_LAST_QUIZ_SCORE])
+                    if pd.notna(row[cfg.COL_LAST_QUIZ_SCORE]) else None
+                ),
+                cfg.COL_QUIZ_GAP: (
+                    float(row[cfg.COL_QUIZ_GAP])
+                    if pd.notna(row[cfg.COL_QUIZ_GAP]) else None
+                ),
             }
             for _, row in chunk.iterrows()
         ]
