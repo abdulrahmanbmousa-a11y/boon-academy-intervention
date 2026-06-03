@@ -58,10 +58,11 @@ RISK_THRESHOLD_MEDIUM: int = 25  # not env-overridable
 # ---------------------------------------------------------------------------
 # Weight constants (D-07) — must sum to 1.0
 # ---------------------------------------------------------------------------
-WEIGHT_ATTENDANCE: float = 0.35
-WEIGHT_PRACTICE: float = 0.30
-WEIGHT_TREND: float = 0.20
-WEIGHT_NOTES: float = 0.15
+WEIGHT_ATTENDANCE: float = 0.30   # was 0.35
+WEIGHT_PRACTICE:   float = 0.25   # was 0.30
+WEIGHT_TREND:      float = 0.15   # was 0.20
+WEIGHT_NOTES:      float = 0.10   # was 0.15
+WEIGHT_ACADEMIC:   float = 0.20   # NEW — academic gap component
 
 # ---------------------------------------------------------------------------
 # Column name constants (D-07) — all 17 columns across the 3 CSVs + derived
@@ -73,11 +74,16 @@ COL_STUDENT_NAME: str = "student_name"
 COL_CAMPUS_ID: str = "campus_id"
 COL_PARENT_PHONE: str = "parent_phone"
 COL_FACILITATOR_EMAIL: str = "facilitator_email"
+COL_GRADE: str = "grade"                    # "10" or "11" — kept as string
+COL_TARGET_SCORE: str = "target_score"      # student's target score (Float64)
+COL_LEARNING_TRACK: str = "learning_track"  # Standard/Accelerated/Remedial
 
 # Daily metrics CSV
 COL_METRIC_DATE: str = "metric_date"
 COL_SESSION_MIN: str = "session_attended_min"
 COL_PRACTICE_Q: str = "practice_questions"
+COL_LAST_QUIZ_SCORE: str = "last_quiz_score"       # most recent quiz score
+COL_DAYS_UNTIL_QUIZ: str = "days_until_next_quiz"  # days to next quiz
 
 # Facilitator notes CSV
 COL_NOTE_DATE: str = "note_date"
@@ -97,6 +103,8 @@ COL_ATTENDANCE_COMPONENT: str = "attendance_component"
 COL_PRACTICE_COMPONENT: str = "practice_component"
 COL_TREND_COMPONENT: str = "trend_component"
 COL_NOTES_COMPONENT: str = "notes_component"
+COL_QUIZ_GAP: str = "quiz_score_gap"               # target_score - last_quiz_score, clipped >= 0
+COL_ACADEMIC_COMPONENT: str = "academic_component" # 5th risk component
 
 # LLM output columns (Phase 3 — D-06)
 COL_FACILITATOR_SUMMARY: str = "facilitator_summary"
@@ -125,8 +133,9 @@ OUTPUT_COLS_PRIORITY: tuple[str, ...] = (
     COL_DAYS_SINCE_NOTE, COL_RECOMMENDED_ACTION,
 )
 
-# OUT-02 campus dashboard columns — standard 12 + 3 LLM columns = 15 total (D-05)
+# OUT-02 campus dashboard columns — standard 12 + 4 new schema + 3 LLM = 19 total (D-05)
 OUTPUT_COLS_CAMPUS: tuple[str, ...] = OUTPUT_COLS_PRIORITY + (
+    COL_GRADE, COL_LEARNING_TRACK, COL_TARGET_SCORE, COL_LAST_QUIZ_SCORE,
     COL_FACILITATOR_SUMMARY, COL_WHATSAPP_MESSAGE, COL_GENERATED_BY,
 )
 
@@ -140,4 +149,5 @@ DISPLAY_COLS_DASHBOARD: tuple[str, ...] = (
     COL_WHATSAPP_MESSAGE, COL_GENERATED_BY,
     COL_ATTENDANCE_COMPONENT, COL_PRACTICE_COMPONENT,
     COL_TREND_COMPONENT, COL_NOTES_COMPONENT,
+    COL_ACADEMIC_COMPONENT,
 )

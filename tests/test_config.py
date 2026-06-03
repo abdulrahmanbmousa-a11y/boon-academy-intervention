@@ -71,7 +71,7 @@ class TestPathDefaults:
 
 
 class TestColumnConstants:
-    """D-07: All 21 column constants defined in config.py from day 1 (17 from Phase 1 + 4 D-09 component columns from Phase 2)."""
+    """D-07: All 29 column constants defined in config.py (21 original + 7 new real-schema columns + 1 derived gap)."""
 
     EXPECTED_COLUMN_CONSTANTS = [
         "COL_STUDENT_ID",
@@ -79,11 +79,21 @@ class TestColumnConstants:
         "COL_CAMPUS_ID",
         "COL_PARENT_PHONE",
         "COL_FACILITATOR_EMAIL",
+        # metadata — new
+        "COL_GRADE",
+        "COL_TARGET_SCORE",
+        "COL_LEARNING_TRACK",
+        # metrics
         "COL_METRIC_DATE",
         "COL_SESSION_MIN",
         "COL_PRACTICE_Q",
+        # metrics — new
+        "COL_LAST_QUIZ_SCORE",
+        "COL_DAYS_UNTIL_QUIZ",
+        # notes
         "COL_NOTE_DATE",
         "COL_NOTE_TEXT",
+        # derived
         "COL_ATTENDANCE_RATE",
         "COL_AVG_PRACTICE",
         "COL_TREND_DIR",
@@ -91,10 +101,14 @@ class TestColumnConstants:
         "COL_RISK_SCORE",
         "COL_RISK_LEVEL",
         "COL_RECOMMENDED_ACTION",
+        # component scores
         "COL_ATTENDANCE_COMPONENT",
         "COL_PRACTICE_COMPONENT",
         "COL_TREND_COMPONENT",
         "COL_NOTES_COMPONENT",
+        # new derived
+        "COL_QUIZ_GAP",
+        "COL_ACADEMIC_COMPONENT",
     ]
 
     def test_column_constants_defined(self, monkeypatch):
@@ -123,11 +137,28 @@ class TestWeightConstants:
     """D-07: Weight constants defined and sum to exactly 1.0."""
 
     def test_weight_constants_sum_to_one(self, monkeypatch):
-        """WEIGHT_ATTENDANCE + WEIGHT_PRACTICE + WEIGHT_TREND + WEIGHT_NOTES == 1.0."""
+        """All five weight constants sum to exactly 1.0 (4-component formula retired)."""
         monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
         import src.config as cfg
-        total = cfg.WEIGHT_ATTENDANCE + cfg.WEIGHT_PRACTICE + cfg.WEIGHT_TREND + cfg.WEIGHT_NOTES
+        total = (
+            cfg.WEIGHT_ATTENDANCE
+            + cfg.WEIGHT_PRACTICE
+            + cfg.WEIGHT_TREND
+            + cfg.WEIGHT_NOTES
+            + cfg.WEIGHT_ACADEMIC
+        )
         assert abs(total - 1.0) < 1e-9, f"Weights sum to {total}, expected 1.0"
+
+
+    def test_weight_constant_values(self, monkeypatch):
+        """Each weight constant has its specified value per the 5-component formula."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
+        import src.config as cfg
+        assert cfg.WEIGHT_ATTENDANCE == pytest.approx(0.30)
+        assert cfg.WEIGHT_PRACTICE   == pytest.approx(0.25)
+        assert cfg.WEIGHT_TREND      == pytest.approx(0.15)
+        assert cfg.WEIGHT_NOTES      == pytest.approx(0.10)
+        assert cfg.WEIGHT_ACADEMIC   == pytest.approx(0.20)
 
 
 class TestPhase4FormattingConstants:
@@ -157,11 +188,11 @@ class TestPhase4FormattingConstants:
         )
 
     def test_output_cols_campus_length(self, monkeypatch):
-        """OUTPUT_COLS_CAMPUS has exactly 15 elements (standard 12 + 3 LLM columns)."""
+        """OUTPUT_COLS_CAMPUS has exactly 19 elements (12 priority + 4 new schema + 3 LLM columns)."""
         monkeypatch.setenv("ANTHROPIC_API_KEY", "dummy-key")
         import src.config as cfg
-        assert len(cfg.OUTPUT_COLS_CAMPUS) == 15, (
-            f"Expected 15 columns, got {len(cfg.OUTPUT_COLS_CAMPUS)}: {cfg.OUTPUT_COLS_CAMPUS}"
+        assert len(cfg.OUTPUT_COLS_CAMPUS) == 19, (
+            f"Expected 19 columns, got {len(cfg.OUTPUT_COLS_CAMPUS)}: {cfg.OUTPUT_COLS_CAMPUS}"
         )
 
     def test_output_cols_campus_is_superset(self, monkeypatch):
