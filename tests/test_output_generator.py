@@ -28,7 +28,7 @@ def sample_df() -> pd.DataFrame:
     """Minimal DataFrame with 4 rows covering all risk levels.
 
     Columns match the full enriched DataFrame schema including LLM outputs
-    and all columns required by OUTPUT_COLS_CAMPUS (15 cols).
+    and all columns required by OUTPUT_COLS_CAMPUS (19 cols).
     """
     return pd.DataFrame(
         {
@@ -72,6 +72,12 @@ def sample_df() -> pd.DataFrame:
             cfg.COL_PRACTICE_COMPONENT: [27.0, 21.0, 12.0, 3.0],
             cfg.COL_TREND_COMPONENT: [20.0, 10.0, 10.0, 0.0],
             cfg.COL_NOTES_COMPONENT: [11.5, 8.0, 3.0, 0.5],
+            cfg.COL_ACADEMIC_COMPONENT: [10.0, 14.0, 8.0, 1.5],
+            # New real-schema columns required by OUTPUT_COLS_CAMPUS
+            cfg.COL_GRADE: ["10", "11", "10", "11"],
+            cfg.COL_LEARNING_TRACK: ["Standard", "Accelerated", "Standard", "Remedial"],
+            cfg.COL_TARGET_SCORE: [85.0, 90.0, 80.0, 60.0],
+            cfg.COL_LAST_QUIZ_SCORE: [50.0, 70.0, 75.0, 45.0],
         }
     )
 
@@ -291,11 +297,9 @@ def multi_campus_df() -> pd.DataFrame:
     ALPHA: 1 CRITICAL + 1 MEDIUM
     BETA:  1 HIGH + 1 LOW
     Plus one row with campus_id=NaN (must be excluded from output files).
-    All 15 OUTPUT_COLS_CAMPUS columns are present. MEDIUM and LOW rows
+    All 19 OUTPUT_COLS_CAMPUS columns are present. MEDIUM and LOW rows
     have None in the 3 LLM columns per D-06.
     """
-    import math
-
     return pd.DataFrame(
         {
             cfg.COL_STUDENT_ID: ["S001", "S002", "S003", "S004", "S005"],
@@ -343,6 +347,11 @@ def multi_campus_df() -> pd.DataFrame:
                 "Message for Eve",
             ],
             cfg.COL_GENERATED_BY: ["llm", None, "template", None, "llm"],
+            # New real-schema columns required by OUTPUT_COLS_CAMPUS
+            cfg.COL_GRADE: ["10", "11", "10", "11", "10"],
+            cfg.COL_LEARNING_TRACK: ["Standard", "Accelerated", "Standard", "Remedial", "Standard"],
+            cfg.COL_TARGET_SCORE: [85.0, 80.0, 90.0, 60.0, 75.0],
+            cfg.COL_LAST_QUIZ_SCORE: [50.0, 75.0, 70.0, 45.0, 60.0],
         }
     )
 
@@ -389,11 +398,11 @@ def test_campus_dashboard_freeze_panes(campus_dashboard_paths: dict[str, Path]) 
 
 
 def test_campus_dashboard_column_count(campus_dashboard_paths: dict[str, Path]) -> None:
-    """Worksheet has exactly 15 columns (OUTPUT_COLS_CAMPUS length)."""
+    """Worksheet has exactly 19 columns (OUTPUT_COLS_CAMPUS length)."""
     wb = load_workbook(campus_dashboard_paths["campus_ALPHA"])
     ws = wb.active
-    assert ws.max_column == 15, (
-        f"Expected 15 columns (OUTPUT_COLS_CAMPUS), got {ws.max_column}"
+    assert ws.max_column == 19, (
+        f"Expected 19 columns (OUTPUT_COLS_CAMPUS), got {ws.max_column}"
     )
 
 
@@ -455,15 +464,16 @@ def test_campus_dashboard_medium_llm_cells_empty(
             medium_row = row
             break
     assert medium_row is not None, "Could not find MEDIUM student row in ALPHA dashboard"
-    # Columns 13 (facilitator_summary), 14 (whatsapp_message), 15 (generated_by) must be None
-    assert medium_row[12].value is None, (
-        f"Expected None in col 13 (facilitator_summary) for MEDIUM row, got {medium_row[12].value!r}"
+    # Columns 17 (facilitator_summary), 18 (whatsapp_message), 19 (generated_by) must be None
+    # Indices are 0-based: col 17 → index 16, col 18 → index 17, col 19 → index 18
+    assert medium_row[16].value is None, (
+        f"Expected None in col 17 (facilitator_summary) for MEDIUM row, got {medium_row[16].value!r}"
     )
-    assert medium_row[13].value is None, (
-        f"Expected None in col 14 (whatsapp_message) for MEDIUM row, got {medium_row[13].value!r}"
+    assert medium_row[17].value is None, (
+        f"Expected None in col 18 (whatsapp_message) for MEDIUM row, got {medium_row[17].value!r}"
     )
-    assert medium_row[14].value is None, (
-        f"Expected None in col 15 (generated_by) for MEDIUM row, got {medium_row[14].value!r}"
+    assert medium_row[18].value is None, (
+        f"Expected None in col 19 (generated_by) for MEDIUM row, got {medium_row[18].value!r}"
     )
 
 
@@ -562,6 +572,12 @@ def full_sample_df() -> pd.DataFrame:
             cfg.COL_PRACTICE_COMPONENT: [28.5, 20.0, 10.0, 25.0, 22.0, 3.0],
             cfg.COL_TREND_COMPONENT: [20.0, 10.0, 10.0, 20.0, 10.0, 0.0],
             cfg.COL_NOTES_COMPONENT: [11.3, 8.0, 3.0, 10.5, 5.0, 0.5],
+            cfg.COL_ACADEMIC_COMPONENT: [8.0, 14.0, 9.0, 10.0, 6.0, 2.0],
+            # New real-schema columns required by OUTPUT_COLS_CAMPUS
+            cfg.COL_GRADE: ["10", "11", "10", "11", "10", "11"],
+            cfg.COL_LEARNING_TRACK: ["Standard", "Accelerated", "Standard", "Remedial", "Standard", "Accelerated"],
+            cfg.COL_TARGET_SCORE: [85.0, 90.0, 80.0, 60.0, 88.0, 75.0],
+            cfg.COL_LAST_QUIZ_SCORE: [50.0, 70.0, 75.0, 45.0, 85.0, 70.0],
         }
     )
 
@@ -741,6 +757,7 @@ def test_html_dashboard_escape_script_tag(
             cfg.COL_PRACTICE_COMPONENT: [24.0],
             cfg.COL_TREND_COMPONENT: [20.0],
             cfg.COL_NOTES_COMPONENT: [8.0],
+            cfg.COL_ACADEMIC_COMPONENT: [10.0],
         }
     )
     path = _write_html_dashboard(injection_df, tmp_path)

@@ -618,6 +618,10 @@ def _write_campus_dashboards(
             "",
             "",
             "",
+            "",
+            "",
+            "",
+            "",
         ]
         for col_idx, val in enumerate(summary_values, start=1):
             cell = ws.cell(row=2, column=col_idx, value=val)

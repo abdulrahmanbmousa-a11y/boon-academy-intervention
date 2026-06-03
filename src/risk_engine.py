@@ -106,6 +106,17 @@ def _notes_component(days_since: pd.Series) -> pd.Series:
     return (days_since.clip(upper=_NOTES_MAX_DAYS) / _NOTES_MAX_DAYS * 100).clip(0, 100)
 
 
+def _academic_component(df: pd.DataFrame) -> pd.Series:
+    """D-05: academic risk — 0 (met target) to 100 (far below target).
+
+    Uses quiz_score_gap (target_score - last_quiz_score, clipped >= 0).
+    Cap gap at 50 points for normalization (50-point gap = 100% penalty).
+    Rows with no quiz data (NA gap) get neutral score of 50.0.
+    """
+    gap = df[cfg.COL_QUIZ_GAP].astype("Float64")
+    return (gap / 50.0 * 100).clip(0, 100).fillna(50.0)
+
+
 # ------------------------------------------------------------------
 # Public API
 # ------------------------------------------------------------------
@@ -169,15 +180,17 @@ def score_risk(df: pd.DataFrame) -> pd.DataFrame:
     df[cfg.COL_TREND_COMPONENT] = trend_c
     df[cfg.COL_TREND_DIR] = trend_d
     df[cfg.COL_NOTES_COMPONENT] = _notes_component(df[cfg.COL_DAYS_SINCE_NOTE])
+    df[cfg.COL_ACADEMIC_COMPONENT] = _academic_component(df)
 
     # ------------------------------------------------------------------
-    # D-05: weighted risk score
+    # D-05: weighted risk score (5-component formula)
     # ------------------------------------------------------------------
     df[cfg.COL_RISK_SCORE] = (
         df[cfg.COL_ATTENDANCE_COMPONENT] * cfg.WEIGHT_ATTENDANCE
         + df[cfg.COL_PRACTICE_COMPONENT] * cfg.WEIGHT_PRACTICE
         + df[cfg.COL_TREND_COMPONENT] * cfg.WEIGHT_TREND
         + df[cfg.COL_NOTES_COMPONENT] * cfg.WEIGHT_NOTES
+        + df[cfg.COL_ACADEMIC_COMPONENT] * cfg.WEIGHT_ACADEMIC
     ).round(2).clip(0, 100)
 
     # ------------------------------------------------------------------

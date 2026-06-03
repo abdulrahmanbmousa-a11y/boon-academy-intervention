@@ -27,6 +27,7 @@ def _build_student_row(
     practice_total_q: float = 210.0,
     session_series: list | None = None,
     latest_note_date: pd.Timestamp | None = None,
+    quiz_score_gap: float | None = None,
 ) -> dict:
     """Build a single-student dict suitable for pd.DataFrame([_build_student_row(...)]).
 
@@ -35,6 +36,7 @@ def _build_student_row(
     - 210 practice questions (15/day * 14 = full practice)
     - [30.0]*14 session series (constant engagement — not improving, not declining)
     - latest_note_date = 2026-05-23 (today in frozen-time tests)
+    - quiz_score_gap = None → pd.NA → academic_component = 50.0 (neutral)
     """
     if session_series is None:
         session_series = [30.0] * 14
@@ -56,6 +58,7 @@ def _build_student_row(
         ],
         "latest_note_date": latest_note_date,
         "latest_note_text": "test note",
+        cfg.COL_QUIZ_GAP: pd.NA if quiz_score_gap is None else quiz_score_gap,
     }
 
 
@@ -188,35 +191,40 @@ def test_notes_component_today_is_zero() -> None:
 # ---------------------------------------------------------------------------
 
 def test_risk_score_weighted_formula() -> None:
-    """RISK-05: weighted formula correctness — all-100, all-0, and attendance-only-100."""
-    # Case 1: all components = 100 → score = 100.0
-    # worst student: 0 attendance, 0 practice, declining series, no note
-    # All three rows constructed inside freeze_time for consistency — if worst_row
-    # ever changes from NaT to a specific date, the frozen context must be in effect.
+    """RISK-05: weighted formula correctness — all-100, all-0, and attendance-only-100.
+
+    5-component formula: attendance*0.30 + practice*0.25 + trend*0.15 + notes*0.10 + academic*0.20
+    """
     with freeze_time("2026-05-23"):
+        # Case 1: all 5 components = 100 → score = 100.0
+        # quiz_score_gap=50 → academic=100; 0 attendance, 0 practice, declining, NaT note
         worst_row = _build_student_row(
             student_id="S_worst",
             attendance_days=0,
             practice_total_q=0,
             session_series=[10.0] * 11 + [0.0] * 3,
             latest_note_date=pd.NaT,
+            quiz_score_gap=50.0,
         )
-        # Case 2: all components = 0 → score = 0.0
-        # perfect student: 14 days, 210 practice, improving series, note today
+        # Case 2: all 5 components = 0 → score = 0.0
+        # quiz_score_gap=0 → academic=0; 14 days, 210 practice, improving, note today
         perfect_row = _build_student_row(
             student_id="S_perfect",
             attendance_days=14,
             practice_total_q=210.0,
             session_series=[0.0] * 11 + [30.0] * 3,
             latest_note_date=pd.Timestamp("2026-05-23"),
+            quiz_score_gap=0.0,
         )
-        # Case 3: attendance_component=100, others=0 → score = 0.35 * 100 = 35.0
+        # Case 3: attendance_component=100, others=0 → score = 0.30 * 100 = 30.0
+        # quiz_score_gap=0 → academic=0; 0 attendance, full practice, improving, note today
         partial_row = _build_student_row(
             student_id="S_partial",
             attendance_days=0,           # → attendance_component=100
             practice_total_q=210.0,      # → practice_component=0
             session_series=[0.0] * 11 + [30.0] * 3,   # improving → trend_component=0
             latest_note_date=pd.Timestamp("2026-05-23"),  # note today → notes_component=0
+            quiz_score_gap=0.0,          # → academic_component=0
         )
         df = pd.DataFrame([worst_row, perfect_row, partial_row])
         result = score_risk(df)
@@ -231,8 +239,8 @@ def test_risk_score_weighted_formula() -> None:
     assert perfect_score == pytest.approx(0.0, abs=0.01), (
         f"All-0 components should produce risk_score=0, got {perfect_score}"
     )
-    assert partial_score == pytest.approx(round(100 * 0.35, 2), abs=0.01), (
-        f"attendance_component=100 only should produce risk_score=35.0, got {partial_score}"
+    assert partial_score == pytest.approx(round(100 * 0.30, 2), abs=0.01), (
+        f"attendance_component=100 only should produce risk_score=30.0, got {partial_score}"
     )
 
 
@@ -477,21 +485,20 @@ def test_pii_safe_logging_in_score_risk(caplog: pytest.LogCaptureFixture) -> Non
 def test_score_75_is_critical() -> None:
     """TEST-01 / ROADMAP SC-2: score_risk() returns risk_score==75.0 → risk_level=='CRITICAL'.
 
-    Input construction (analytically derived from weighted formula):
-      attendance_component = (1 - 0/14) * 100 = 100  →  100 * 0.35 = 35.0
-      practice_component   = (1 - (0/14)/15) * 100 = 100  →  100 * 0.30 = 30.0
-      trend_component      = 50 (series < 3 values)  →   50 * 0.20 = 10.0
-      notes_component      = 0  (note today)          →    0 * 0.15 =  0.0
-      total                = 35 + 30 + 10 + 0 = 75.0
-
-    This test calls score_risk() end-to-end (NOT pd.cut directly), confirming
-    the full pipeline honours the CRITICAL threshold at exactly 75.
+    Input construction (analytically derived from 5-component formula):
+      attendance_component = (1 - 0/14) * 100 = 100   →  100 * 0.30 = 30.0
+      practice_component   = (1 - 0/15) * 100 = 100   →  100 * 0.25 = 25.0
+      trend_component      = 100 (declining series)    →  100 * 0.15 = 15.0
+      notes_component      = 0   (note today)          →    0 * 0.10 =  0.0
+      academic_component   = (12.5/50)*100 = 25        →   25 * 0.20 =  5.0
+      total                = 30 + 25 + 15 + 0 + 5 = 75.0
     """
     df = pd.DataFrame([_build_student_row(
         attendance_days=0,
         practice_total_q=0.0,
-        session_series=[10.0, 20.0],                       # < 3 values → trend_component=50
+        session_series=[10.0] * 11 + [0.0] * 3,           # declining → trend_component=100
         latest_note_date=pd.Timestamp("2026-05-23"),       # today → notes_component=0
+        quiz_score_gap=12.5,                               # academic_component=25.0
     )])
     result = score_risk(df)
     actual_score = result[cfg.COL_RISK_SCORE].iloc[0]
@@ -508,24 +515,23 @@ def test_score_75_is_critical() -> None:
 def test_score_74_is_high() -> None:
     """TEST-01 / ROADMAP SC-2: score_risk() returns risk_score==74.0 → risk_level=='HIGH'.
 
-    Input construction (analytically derived from weighted formula):
-      attendance_component = (1 - 0/14) * 100 = 100       →  100 * 0.35 = 35.0
-      practice_component   = (1 - (7/14)/15) * 100 ≈ 96.667  →  96.667 * 0.30 ≈ 29.0
-      trend_component      = 50 (series < 3 values)        →   50 * 0.20 = 10.0
-      notes_component      = 0  (note today)               →    0 * 0.15 =  0.0
-      total                = 35 + 29 + 10 + 0 = 74.0
-
-    practice_total_q=7 → avg=0.5/day → practice_component=(1-0.5/15)*100=96.6̄%
-    0.30 * 96.6̄ = 29.0 exactly (0.30 * (1 - 1/30) * 100 = 30 - 1 = 29).
+    Input construction (analytically derived from 5-component formula):
+      attendance_component = (1 - 0/14) * 100 = 100   →  100 * 0.30 = 30.0
+      practice_component   = (1 - 0/15) * 100 = 100   →  100 * 0.25 = 25.0
+      trend_component      = 100 (declining series)    →  100 * 0.15 = 15.0
+      notes_component      = 0   (note today)          →    0 * 0.10 =  0.0
+      academic_component   = (10.0/50)*100 = 20        →   20 * 0.20 =  4.0
+      total                = 30 + 25 + 15 + 0 + 4 = 74.0
 
     This test calls score_risk() end-to-end (NOT pd.cut directly), confirming
     the full pipeline places score 74 just below the CRITICAL boundary at HIGH.
     """
     df = pd.DataFrame([_build_student_row(
         attendance_days=0,
-        practice_total_q=7.0,                              # avg=0.5/day → practice_component≈96.667
-        session_series=[10.0, 20.0],                       # < 3 values → trend_component=50
+        practice_total_q=0.0,
+        session_series=[10.0] * 11 + [0.0] * 3,           # declining → trend_component=100
         latest_note_date=pd.Timestamp("2026-05-23"),       # today → notes_component=0
+        quiz_score_gap=10.0,                               # academic_component=20.0
     )])
     result = score_risk(df)
     actual_score = result[cfg.COL_RISK_SCORE].iloc[0]
