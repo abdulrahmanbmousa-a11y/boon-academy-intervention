@@ -1,13 +1,13 @@
 {
-  "run_timestamp": "2026-06-04T00:02:33.244954+00:00",
+  "run_timestamp": "2026-06-04T00:43:46.398088+00:00",
   "students_processed": 200,
-  "api_calls_made": 5,
+  "api_calls_made": 3,
   "tokens_used": {
-    "input": 10961,
-    "output": 2637
+    "input": 6413,
+    "output": 1376
   },
   "errors_encountered": [],
-  "fallbacks_triggered": 34,
+  "fallbacks_triggered": 42,
   "data_quality_warnings": [
     {
       "type": "missing_numeric",
