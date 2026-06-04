@@ -18,10 +18,10 @@ make demo      # Unix/macOS
 - `outputs/intervention_priority_list.xlsx` — all students ranked
 - `outputs/facilitator_dashboard_*.xlsx` — per-campus dashboards
 - `outputs/whatsapp_messages.csv` — pre-drafted parent messages
-- `outputs/intervention_report.docx` — full narrative report
+- `outputs/intervention_report.pdf` — full narrative report
 - `outputs/facilitator_dashboard.html` — self-contained browser dashboard
 - `outputs/run_log.json` — pipeline run metadata (student counts, token usage)
-- `docs/` — 8 documentation .docx files (architecture, security, scalability, and more)
+- `docs/` — 8 PDF documentation files (architecture, security, scalability, and more)
 
 ## Requirements
 
