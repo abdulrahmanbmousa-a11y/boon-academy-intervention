@@ -17,3 +17,4 @@ htmlcov/
 skills-lock.json
 docs/superpowers/
 nul
+.claude/
