@@ -176,13 +176,21 @@ def _build_prompt(student_data: list[dict]) -> str:
     last_quiz_score, quiz_score_gap (REBUILD-P4).
     Never includes student_name or parent_phone (LLM-08, T-03-04).
     """
+    import json as _json
+    n = len(student_data)
     return (
-        f"Generate intervention content for {len(student_data)} at-risk students. "
-        f"For each student in the list below:\n"
-        f"- facilitator_summary must be exactly 2 sentences, action-oriented.\n"
-        f"- whatsapp_message must be under 100 words, warm and professional, "
-        f"and must NOT mention risk scores.\n\n"
-        f"Student data:\n{student_data}"
+        f"Generate intervention content for {n} at-risk students.\n\n"
+        f"IMPORTANT: You MUST return exactly {n} result objects in the tool call — "
+        f"one for EACH student_id listed. Every result MUST include student_id, "
+        f"facilitator_summary, AND whatsapp_message. Do NOT skip any student even "
+        f"if their risk profiles look similar — each student_id is unique and "
+        f"requires its own personalised response.\n\n"
+        f"Requirements per student:\n"
+        f"- facilitator_summary: exactly 2 sentences, action-oriented, specific "
+        f"to this student\'s data.\n"
+        f"- whatsapp_message: under 100 words, warm and professional, must NOT "
+        f"mention risk scores.\n\n"
+        f"Student data:\n{_json.dumps(student_data, indent=2)}"
     )
 
 
@@ -325,19 +333,12 @@ def _process_campus(
             )
             results = tool_block.input["students"]  # KeyError falls to outer except
             valid_results: list[dict] = []
+            malformed_sids: list[str] = []
             for r in results:
-                if missing := _REQUIRED_LLM_KEYS - r.keys():
-                    logger.warning(
-                        f"Campus {campus_id}: student result missing keys {missing} "
-                        "— template fallback for 1 student"
-                    )
-                    sid = r.get(cfg.COL_STUDENT_ID)
-                    bad_rows = (
-                        chunk[chunk[cfg.COL_STUDENT_ID] == sid]
-                        if sid else chunk.iloc[0:0]
-                    )
-                    campus_results.extend(_apply_templates(bad_rows, "malformed_response"))
-                    fallbacks += len(bad_rows)
+                sid = r.get(cfg.COL_STUDENT_ID)
+                if _REQUIRED_LLM_KEYS - r.keys():
+                    if sid:
+                        malformed_sids.append(sid)
                 else:
                     r.setdefault(cfg.COL_GENERATED_BY, "llm")
                     r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
@@ -346,6 +347,67 @@ def _process_campus(
             tokens["output"] += response.usage.output_tokens
             api_calls += 1
             campus_results.extend(valid_results)
+            if malformed_sids:
+                malformed_chunk = chunk[
+                    chunk[cfg.COL_STUDENT_ID].isin(malformed_sids)
+                ]
+                malformed_prompt = _build_prompt(malformed_chunk)
+                logger.info(
+                    f"Campus {campus_id}: retrying {len(malformed_sids)} students "
+                    f"with missing keys"
+                )
+                try:
+                    r_retry = client.messages.create(
+                        model=cfg.ANTHROPIC_MODEL,
+                        max_tokens=cfg.MAX_TOKENS,
+                        temperature=cfg.TEMPERATURE,
+                        tools=[INTERVENTION_TOOL],
+                        tool_choice={"type": "tool", "name": "generate_interventions"},
+                        messages=[{"role": "user", "content": malformed_prompt}],
+                    )
+                    tb_retry = next(
+                        b for b in r_retry.content
+                        if isinstance(b, anthropic.types.ToolUseBlock)
+                    )
+                    api_calls += 1
+                    tokens["input"] += r_retry.usage.input_tokens
+                    tokens["output"] += r_retry.usage.output_tokens
+                    returned_sids: set[str] = set()
+                    for r in tb_retry.input["students"]:
+                        rsid = r.get(cfg.COL_STUDENT_ID, "")
+                        returned_sids.add(rsid)
+                        if _REQUIRED_LLM_KEYS - r.keys():
+                            bad = (
+                                malformed_chunk[
+                                    malformed_chunk[cfg.COL_STUDENT_ID] == rsid
+                                ]
+                                if rsid else malformed_chunk.iloc[0:0]
+                            )
+                            campus_results.extend(
+                                _apply_templates(bad, "malformed_response")
+                            )
+                            fallbacks += len(bad)
+                        else:
+                            r.setdefault(cfg.COL_GENERATED_BY, "llm")
+                            r.setdefault(cfg.COL_LLM_ERROR_REASON, None)
+                            campus_results.append(r)
+                    not_returned = malformed_chunk[
+                        ~malformed_chunk[cfg.COL_STUDENT_ID].isin(returned_sids)
+                    ]
+                    if len(not_returned):
+                        campus_results.extend(
+                            _apply_templates(not_returned, "malformed_response")
+                        )
+                        fallbacks += len(not_returned)
+                except Exception:
+                    logger.warning(
+                        f"Campus {campus_id}: retry for malformed students failed "
+                        f"— template fallback for {len(malformed_chunk)} students"
+                    )
+                    campus_results.extend(
+                        _apply_templates(malformed_chunk, "malformed_response")
+                    )
+                    fallbacks += len(malformed_chunk)
             logger.debug(
                 f"Campus {campus_id}: chunk LLM success — "
                 f"input_tokens={response.usage.input_tokens}, "
