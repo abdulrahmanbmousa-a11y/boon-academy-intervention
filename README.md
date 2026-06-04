@@ -26,3 +26,6 @@ make demo      # Unix/macOS
 ## Requirements
 
 Python 3.12 required (pandas==2.2.3 has no wheel for Python 3.14).
+## Video Walkthrough
+
+[5-minute end-to-end demo (Google Drive)](https://drive.google.com/file/d/1_w3pM597HJP1c74WuEwq-Z_Ve_bJQrcT/view?usp=drive_link)
